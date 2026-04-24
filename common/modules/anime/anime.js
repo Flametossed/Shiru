@@ -21,7 +21,7 @@ const debug = Debug('ui:anime')
 
 const imageRx = /\.(jpeg|jpg|gif|png|webp)/i
 
-clipboard.on('files', ({ detail }) => {
+clipboard.addEventListener('files', ({ detail }) => {
   for (const file of detail) {
     if (file.type.startsWith('image')) {
       toast.promise(traceAnime(file), {
@@ -34,7 +34,7 @@ clipboard.on('files', ({ detail }) => {
   }
 })
 
-clipboard.on('text', ({ detail }) => {
+clipboard.addEventListener('text', ({ detail }) => {
   for (const { type, text } of detail) {
     let src = null
     if (type === 'text/html') {

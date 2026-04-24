@@ -62,7 +62,7 @@ export default class Discord {
 
     this.discord.on('disconnected', () => { if (this.enableRPC !== 'disabled') this.loginRPC() })
 
-    this.discord.on('ACTIVITY_JOIN', ({ secret }) => window.webContents.send('w2glink', secret))
+    this.discord.on('ACTIVITY_JOIN', ({ secret }) => window.webContents.send('common:onLobbyInvite', secret))
     this.debouncedDiscordRPC = debounce((status, clearActivity) => this.setDiscordRPC(status, clearActivity), 4_500)
   }
 

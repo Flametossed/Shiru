@@ -1,14 +1,14 @@
-import { IPC } from '../preload/preload.js'
 import { FileManager } from './plugin.js'
+import { ipcWire } from './ipc.js'
 import { toast } from 'svelte-sonner'
 
 export default class Dialog {
   STORAGE_TYPE_MAP = { primary: '/sdcard/', secondary: '/sdcard/'}
 
-  constructor() {
-    IPC.on('dialog', async () => {
+  constructor(debug) {
+    ipcWire.handle('common:pickFolder', async () => {
       const chosenPath = await FileManager.pickFolder().catch(() => null)
-      if (!chosenPath) return
+      if (!chosenPath) return { cancelled: true }
       const normalizedPath = decodeURIComponent(chosenPath)
       const [, uri, ...path] = normalizedPath.split(':')
       const [, , app, subpath, type, ...rest] = uri.split('/')
@@ -22,15 +22,16 @@ export default class Dialog {
         if (!/[a-z0-9]{4}-[a-z0-9]{4}/i.test(type)) return toast.error('Unsupported storage type')
         base = `/storage/${type}/`
       }
-      IPC.emit('path', base + path.join(''))
+      return { path: base + path.join('') }
     })
-    IPC.on('log-contents', async (log) => {
+    ipcWire.handle('common:exportLog', async () => {
       try {
+        const log = await debug.getLogContents()
         await window.cordova.plugins.saveDialog.saveFile(new Blob([log], { type: 'application/octet-stream' }), `shiru-log-${new Date().toISOString().replace(/[:.]/g, '-')}.log`)
-        IPC.emit('log-exported', { error: false })
+        return { error: false }
       } catch (error) {
         console.debug('Failed to export logs', error)
-        IPC.emit('log-exported', { error: true })
+        return { error: true }
       }
     })
   }

@@ -1,19 +1,19 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
-contextBridge.exposeInMainWorld('IPC', {
-  emit: (event, data) => {
-    ipcRenderer.send(event, data)
-  },
-  on: (event, callback) => {
-    ipcRenderer.on(event, (event, ...args) => callback(...args))
-  },
-  once: (event, callback) => {
-    ipcRenderer.once(event, (event, ...args) => callback(...args))
-  },
-  off: (event) => {
-    ipcRenderer.removeAllListeners(event)
-  },
-  invoke: (event, data) => ipcRenderer.invoke(event, data)
+contextBridge.exposeInMainWorld('torrent', {
+  reload: () => ipcRenderer.send('torrent:reload'),
+  onCrash: (callback) => ipcRenderer.on('torrent:onCrash', callback),
+  onRequest: (callback) => ipcRenderer.on('torrent:onRequest', (event, updateVersion) => callback(updateVersion)),
+  portRequest: async (settings) => {
+    const port = new Promise(resolve => {
+      ipcRenderer.once('electron:torrentPort', ({ ports }) => resolve({
+        onmessage: cb => { ports[0].onmessage = ({ type, data }) => cb({ type, data }) },
+        postMessage: (a, b) => ports[0].postMessage(a, b)
+      }))
+    })
+    await ipcRenderer.invoke('torrent:portRequest', settings)
+    return port
+  }
 })
 contextBridge.exposeInMainWorld('common', {
   getAppVersion: () => ipcRenderer.invoke('common:getAppVersion'),
@@ -22,8 +22,28 @@ contextBridge.exposeInMainWorld('common', {
     arch: process.arch,
     session: process.env.XDG_SESSION_TYPE || ''
   }),
+  getDeviceInfo: () => ipcRenderer.invoke('common:getDeviceInfo'),
+  exportLog: () => ipcRenderer.invoke('common:exportLog'),
+  resetLog: () => ipcRenderer.invoke('common:resetLog'),
+  notify: (opts) => ipcRenderer.send('common:notify', opts),
+  windowReady: () => ipcRenderer.send('common:windowReady'),
   openURI: (uri) => ipcRenderer.invoke('common:openURI', uri),
+  pickFile: (title) => ipcRenderer.invoke('common:pickFile', title),
+  pickFolder: (title) => ipcRenderer.invoke('common:pickFolder', title),
   linkAccount: (uri) => ipcRenderer.invoke('common:linkAccount', uri),
+  handleProtocol: (data) => ipcRenderer.send('common:handleProtocol', data),
+  setUpdateChannel: (channel) => ipcRenderer.send('common:setUpdateChannel', channel),
+  checkForUpdates: (channel) => ipcRenderer.send('common:checkForUpdates', channel),
+  onUpdateAvailable: (callback) => ipcRenderer.on('common:onUpdateAvailable', (event, updateVersion) => callback(updateVersion)),
+  onUpdateDownloaded: (callback) => ipcRenderer.on('common:onUpdateDownloaded', (event, updateVersion) => callback(updateVersion)),
+  onUpdateProgress: (callback) => {}, // Currently not used in updating for Electron...
+  onUpdateAborted: (callback) => ipcRenderer.on('common:onUpdateAborted', (event, aborted) => callback(aborted)),
+  quitAndInstall: () => ipcRenderer.send('common:quitAndInstall'),
+  onLobbyInvite: (callback) => ipcRenderer.on('common:onLobbyInvite', (event, link) => callback(link)),
+  onRequestPage: (callback) => ipcRenderer.on('common:onRequestPage', (event, page) => callback(page)),
+  onRequestModal: (callback) => ipcRenderer.on('common:onRequestModal',  (event, modal, opts) => callback(modal, opts)),
+  onProviderToken: (callback) => ipcRenderer.on('common:onProviderToken', (event, provider, opts) => callback(provider, opts)),
+  onRequestPlay: (callback) => ipcRenderer.on('common:onRequestPlay', (event, opts) => callback(opts))
 })
 contextBridge.exposeInMainWorld('electron', {
   exit: () => ipcRenderer.send('electron:Exit'),
@@ -43,20 +63,5 @@ contextBridge.exposeInMainWorld('electron', {
   setDiscordRPC: (state) => ipcRenderer.send('electron:setDiscordRPC', state),
   setPresence: (activity) => ipcRenderer.send('electron:setPresence', activity),
   clearPresence: () => ipcRenderer.send('electron:clearPresence'),
-  handleProtocol: () => ipcRenderer.send('electron:handleProtocol'),
   getYouTube: () => ipcRenderer.invoke('electron:getYouTube')
-})
-
-let _ports
-ipcRenderer.once('port', ({ ports }) => {
-  _ports = ports
-  contextBridge.exposeInMainWorld('port', {
-    onmessage: (cb) => {
-      _ports[0].onmessage = ({ type, data }) => cb({ type, data })
-    },
-    postMessage: (a, b) => {
-      _ports[0].postMessage(a, b)
-    }
-  })
-  ipcRenderer.on('port', ({ ports }) => _ports = ports)
 })

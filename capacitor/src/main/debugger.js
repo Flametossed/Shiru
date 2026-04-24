@@ -1,6 +1,6 @@
 import { SecureLogger, enableWebviewListener } from 'cordova-plugin-secure-logger'
-import { IPC } from '../preload/preload.js'
 import { Device } from '@capacitor/device'
+import { ipcWire } from './ipc.js'
 
 const _console = { ...console }
 const stripAnsi = str => str?.replace(/\x1b\[[0-9;]*m/g, '')
@@ -24,24 +24,19 @@ SecureLogger.configure({
 
 export default class Debug {
   constructor () {
-    IPC.on('get-log-contents', async () => {
-      try {
-        const blob = await SecureLogger.getCacheBlob()
-        IPC.emit('log-contents', new TextDecoder().decode(blob))
-      } catch (error) {
-        console.debug('Failed to fetch logs', error)
-        IPC.emit('log-contents', `Failed to fetch logs... ${JSON.stringify(error)}`)
+    ipcWire.handle('common:resetLog', async () => ({ success: await SecureLogger.clearCache() }))
+    ipcWire.handle('common:getDeviceInfo', async () => {
+      const [info, battery] = await Promise.all([Device.getInfo(), Device.getBatteryInfo(), Device.getId()])
+      return {
+        info,
+        battery,
+        ram: navigator.deviceMemory ?? {}
       }
     })
-    IPC.on('reset-log-contents', async () => { IPC.emit('log-reset', { success: await SecureLogger.clearCache() }) })
-    IPC.on('get-device-info', async () => {
-      const deviceInfo = {
-        features: {},
-        info: await Device.getInfo(),
-        cpu: {},
-        ram: {}
-      }
-      IPC.emit('device-info', JSON.stringify(deviceInfo))
-    })
+  }
+
+  async getLogContents() {
+    const blob = await SecureLogger.getCacheBlob()
+    return new TextDecoder().decode(blob)
   }
 }

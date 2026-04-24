@@ -1,6 +1,6 @@
 import ApkUpdater from 'cordova-plugin-apkupdater'
-import { IPC } from '../preload/preload.js'
 import { development } from './util.js'
+import { ipcWire } from './ipc.js'
 import { App as Capacitor } from '@capacitor/app'
 import semver from 'semver'
 import YAML from 'yaml'
@@ -26,7 +26,7 @@ export default class Updater {
   updateChannel = 'stable'
 
   /**
-   * Creates an updater instance and sets up IPC listeners.
+   * Creates an updater instance and sets up listeners.
    * @param {string} repoOwner GitHub repository owner
    * @param {string} repoName GitHub repository name
    */
@@ -34,11 +34,8 @@ export default class Updater {
     this.repoOwner = repoOwner
     this.repoName = repoName
     this.getInfo()
-    IPC.on('update', (channel) => {
-      if (channel) this.updateChannel = channel
-      this.checkForUpdates()
-    })
-    IPC.on('set-update-channel', (channel) => this.setUpdateChannel(channel))
+    ipcWire.on('common:checkForUpdates', (event, channel) => this.checkForUpdates(channel))
+    ipcWire.on('common:setUpdateChannel', (event, channel) => this.setUpdateChannel(channel))
   }
 
   /** Retrieves and stores app version information and device architecture. */
@@ -65,8 +62,13 @@ export default class Updater {
     return 'universal'
   }
 
-  /** Checks for available updates based on current update channel. */
-  async checkForUpdates() {
+  /**
+   * Checks for available updates based on current update channel.
+   *
+   * @param channel Optionally update the current update channel.
+   * */
+  async checkForUpdates(channel) {
+    if (channel) this.updateChannel = channel
     if (!development) {
       try {
         if (this.updateChannel === 'nightly') this.latestRelease = await this.getNightlyUpdate()
@@ -197,7 +199,7 @@ export default class Updater {
     this.updateAvailable = true
     clearInterval(this.availableInterval)
     this.availableInterval = setInterval(() => {
-      if (!this.hasUpdate) IPC.emit('update-available', this.latestRelease)
+      if (!this.hasUpdate) ipcWire.emit('common:onUpdateAvailable', this.latestRelease)
     }, 1_000)
     this.availableInterval.unref?.()
   }
@@ -224,7 +226,7 @@ export default class Updater {
         await ApkUpdater.download(asset.browser_download_url, {
           onDownloadProgress: (progress) => {
             console.debug(progress)
-            IPC.emit('update-progress', progress.progress ?? 0)
+            ipcWire.emit('common:onUpdateProgress', progress.progress ?? 0)
           }
         }, () => {
           const listener = Capacitor.addListener('appStateChange', (state) => {
@@ -240,7 +242,7 @@ export default class Updater {
         })
         return true
       } catch (error) {
-        IPC.emit('update-aborted')
+        ipcWire.emit('common:onUpdateAborted')
         clearInterval(this.availableInterval)
         this.updateAvailable = false
         this.hasUpdate = false
@@ -257,6 +259,6 @@ export default class Updater {
   updateAborted(aborted = false) {
     this.hasUpdate = false
     this.startUpdatePolling()
-    IPC.emit('update-aborted', aborted)
+    ipcWire.emit('common:onUpdateAborted', aborted)
   }
 }

@@ -1,20 +1,19 @@
 <script context='module'>
-  import { IPC, ELECTRON } from '@/modules/bridge.js'
+  import { COMMON, ELECTRON } from '@/modules/bridge.js'
   import { writable } from 'simple-store-svelte'
-  import { anilistClient } from '@/modules/anilist.js'
+  import { cache } from '@/modules/cache.js'
   import { page, modal, destroyHistory, enableHistory } from '@/modules/navigation.js'
 
   export const statusTransition = writable(false)
 
   export async function handleAnime (detail) {
-    ELECTRON.showAndFocus()
-    modal.close(modal.ANIME_DETAILS)
-    const foundMedia = (await anilistClient.searchIDSingle(!detail.mal ? { id: detail.id } : { idMal: detail.id })).data.Media
-    if (foundMedia) modal.open(modal.ANIME_DETAILS, foundMedia)
+    const foundMedia = await cache.requestMedia(detail.id, detail.isMal)
+    if (foundMedia) {
+      ELECTRON.showAndFocus()
+      modal.open(modal.ANIME_DETAILS, foundMedia)
+    }
   }
-  IPC.on('open-anime', handleAnime)
   window.addEventListener('open-anime', (event) => handleAnime(event.detail))
-  IPC.on('schedule', () => page.navigateTo(page.SCHEDULE))
 </script>
 
 <script>
@@ -32,8 +31,6 @@
   import { status } from '@/modules/networking.js'
   import { Toaster } from 'svelte-sonner'
   import { onMount, onDestroy } from 'svelte'
-
-  IPC.emit('main-ready')
 
   let currentStatus = status.value
   let transitionTimer
@@ -54,6 +51,7 @@
 
   onMount(() => {
     enableHistory()
+    COMMON.windowReady()
     document.addEventListener('fullscreenchange', updateFullscreen)
   })
   onDestroy(() => {

@@ -197,15 +197,12 @@ importers:
       bottleneck:
         specifier: ^2.19.5
         version: 2.19.5
-      browser-event-target-emitter:
-        specifier: ^1.0.1
-        version: 1.0.1
       comlink:
         specifier: ^4.4.2
         version: 4.4.2
       css-loader:
         specifier: ^7.1.4
-        version: 7.1.4(webpack@5.106.2(webpack-cli@7.0.2))
+        version: 7.1.4(webpack@5.106.2)
       dompurify:
         specifier: ^3.4.0
         version: 3.4.0
@@ -1672,9 +1669,6 @@ packages:
   braces@3.0.3:
     resolution: {integrity: sha512-yQbXgO/OSZVD2IsiLlro+7Hf6Q18EJrKSEsdoMzKePKXct3gvD8oLcOQdIzGupr5Fj+EDe8gO/lxc1BzfMpxvA==}
     engines: {node: '>=8'}
-
-  browser-event-target-emitter@1.0.1:
-    resolution: {integrity: sha512-mE3QuQF7knsHehiYyhjwpCI33W4VLltRvNaVfIHEXGfbzp2vkvvbv9fE/XQoLd2NWkD29ikQ92iWjw0Eg3CusA==}
 
   browserslist@4.28.1:
     resolution: {integrity: sha512-ZC5Bd0LgJXgwGqUknZY/vkUQ04r8NXnJZ3yYi4vDmSiZmC/pdSN0NbNRPxZpbtO4uAfDUAFffO8IZoM3Gj8IkA==}
@@ -8088,8 +8082,6 @@ snapshots:
     dependencies:
       fill-range: 7.1.1
 
-  browser-event-target-emitter@1.0.1: {}
-
   browserslist@4.28.1:
     dependencies:
       baseline-browser-mapping: 2.9.11
@@ -8696,7 +8688,7 @@ snapshots:
 
   crypto-random-string@2.0.0: {}
 
-  css-loader@7.1.4(webpack@5.106.2(webpack-cli@7.0.2)):
+  css-loader@7.1.4(webpack@5.106.2):
     dependencies:
       icss-utils: 5.1.0(postcss@8.5.6)
       postcss: 8.5.6
@@ -8707,7 +8699,7 @@ snapshots:
       postcss-value-parser: 4.2.0
       semver: 7.7.4
     optionalDependencies:
-      webpack: 5.106.2(webpack-cli@7.0.2)
+      webpack: 5.106.2
 
   css-select@4.3.0:
     dependencies:
@@ -12344,6 +12336,15 @@ snapshots:
       terser: 5.43.1
       webpack: 5.106.2(webpack-cli@7.0.2)
 
+  terser-webpack-plugin@5.3.17(webpack@5.106.2):
+    dependencies:
+      '@jridgewell/trace-mapping': 0.3.25
+      jest-worker: 27.5.1
+      schema-utils: 4.3.3
+      terser: 5.43.1
+      webpack: 5.106.2
+    optional: true
+
   terser@5.43.1:
     dependencies:
       '@jridgewell/source-map': 0.3.6
@@ -12770,6 +12771,38 @@ snapshots:
       wildcard: 2.0.1
 
   webpack-sources@3.3.4: {}
+
+  webpack@5.106.2:
+    dependencies:
+      '@types/eslint-scope': 3.7.7
+      '@types/estree': 1.0.8
+      '@types/json-schema': 7.0.15
+      '@webassemblyjs/ast': 1.14.1
+      '@webassemblyjs/wasm-edit': 1.14.1
+      '@webassemblyjs/wasm-parser': 1.14.1
+      acorn: 8.16.0
+      acorn-import-phases: 1.0.4(acorn@8.16.0)
+      browserslist: 4.28.1
+      chrome-trace-event: 1.0.4
+      enhanced-resolve: 5.20.0
+      es-module-lexer: 2.0.0
+      eslint-scope: 5.1.1
+      events: 3.3.0
+      glob-to-regexp: 0.4.1
+      graceful-fs: 4.2.11
+      loader-runner: 4.3.1
+      mime-db: 1.54.0
+      neo-async: 2.6.2
+      schema-utils: 4.3.3
+      tapable: 2.3.0
+      terser-webpack-plugin: 5.3.17(webpack@5.106.2)
+      watchpack: 2.5.1
+      webpack-sources: 3.3.4
+    transitivePeerDependencies:
+      - '@swc/core'
+      - esbuild
+      - uglify-js
+    optional: true
 
   webpack@5.106.2(webpack-cli@7.0.2):
     dependencies:

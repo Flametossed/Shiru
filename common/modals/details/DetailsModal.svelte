@@ -5,7 +5,6 @@
   import { copyToClipboard } from '@/modules/clipboard.js'
   import { settings } from '@/modules/settings.js'
   import { mediaCache } from '@/modules/cache.js'
-  import { add } from '@/modules/torrent.js'
   import { anilistClient } from '@/modules/anilist.js'
   import { isValidNumber } from '@/modules/util.js'
   import { click } from '@/modules/click.js'
@@ -17,7 +16,7 @@
   import SmartImage from '@/components/visual/SmartImage.svelte'
   import AudioLabel from '@/components/AudioLabel.svelte'
   import Following from '@/modals/details/components/Following.svelte'
-  import { IPC, COMMON } from '@/modules/bridge.js'
+  import { COMMON, ELECTRON } from '@/modules/bridge.js'
   import SmallCard from '@/components/cards/SmallCard.svelte'
   import SmallCardSk from '@/components/skeletons/SmallCardSk.svelte'
   import Helper from '@/modules/helper.js'
@@ -113,18 +112,14 @@
     } else play(cachedMedia, desiredEpisode)
   }
 
-  IPC.on('play-anime', (id, episode, torrentOnly) => {
-    handlePlay(id, episode, torrentOnly)
+  COMMON.onRequestPlay((opts) => {
+    ELECTRON.showAndFocus()
+    handlePlay(opts.id, opts.episode, opts.torrentOnly)
   })
-
   window.addEventListener('play-anime', (event) => {
     const { id, episode, torrentOnly } = event.detail
     handlePlay(id, episode, torrentOnly)
   })
-
-  window.addEventListener('play-torrent', (event) => add(event.detail.magnet, null, null, null, event.detail.base64))
-
-  IPC.on('play-torrent', (detail) => add(detail.magnet, null, null, null, detail.base64))
 
   function sanitize(body) {
     if (!body) return ''

@@ -57,10 +57,10 @@ export default class App {
   discord = new Discord(this.mainWindow)
   protocol = new Protocol(this.mainWindow)
   updater = new Updater(this.mainWindow, () => this.webtorrentWindow)
-  dialog = new Dialog()
+  debug = new Debug()
+  dialog = new Dialog(this.debug)
   tray = new Tray(this.trayIcon)
   imageDir = join(app.getPath('userData'), 'Cache', 'Image_Data')
-  debug = new Debug()
   close = false
   ready = false
   notifications = {}
@@ -69,7 +69,7 @@ export default class App {
     this.mainWindow.setMenuBarVisibility(false)
     this.mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
     if (development) this.mainWindow.once('ready-to-show', () => this.showAndFocus(true))
-    else ipcMain.once('main-ready', () => this.showAndFocus(true)) // HACK: Prevents the window from being shown while it's still loading. This is nice for production as the window can't be moved without the elements being rendered.
+    else ipcMain.on('common:windowReady', () => this.showAndFocus(true)) // HACK: Prevents the window from being shown while it's still loading. This is nice for production as the window can't be moved without the elements being rendered.
     ipcMain.on('electron:openTorrentDevTools', () => this.webtorrentWindow.webContents.openDevTools({ mode: 'detach' }))
     ipcMain.on('electron:openDevTools', ({ sender }) => sender.openDevTools({ mode: 'detach' }))
     ipcMain.on('electron:hideWindow', () => this.mainWindow.hide())
@@ -134,7 +134,7 @@ export default class App {
 
     fs.rmSync(this.imageDir, { recursive: true, force: true })
     ipcMain.on('electron:setUnreadCount', async (e, notificationCount) => this.setTrayIcon(notificationCount))
-    ipcMain.on('notification', async (e, opts) => {
+    ipcMain.on('common:notify', async (e, opts) => {
       opts.icon = opts.icon ? ((await this.getImage(opts.id, opts.icon)) || this.icon) : this.icon
       let notification
       if (process.platform === 'win32') {
@@ -190,19 +190,21 @@ export default class App {
       }
     })
 
-    ipcMain.on('portRequest', async (event, settings) => {
+    ipcMain.handle('torrent:portRequest', async (event, settings) => {
       const { port1, port2 } = new MessageChannelMain()
       await this.torrentLoad
-      ipcMain.once('webtorrent-heartbeat', () => {
-        this.webtorrentWindow.webContents.postMessage('main-heartbeat', settings)
-        ipcMain.once('torrentRequest', () => {
-          this.webtorrentWindow.webContents.postMessage('port', null, [port1])
-          event.sender.postMessage('port', null, [port2])
+      return new Promise(resolve => {
+        ipcMain.once('webtorrent-heartbeat', () => {
+          this.webtorrentWindow.webContents.postMessage('main-heartbeat', settings)
+          ipcMain.once('torrentRequest', () => {
+            this.webtorrentWindow.webContents.postMessage('torrent:port', null, [port1])
+            event.sender.postMessage('electron:torrentPort', null, [port2])
+            resolve()
+          })
         })
       })
     })
-
-    ipcMain.on('webtorrent-reload', () => { if (!this.mainWindow?.isDestroyed() && !this.webtorrentWindow?.isDestroyed()) this.webtorrentWindow.webContents.postMessage('webtorrent-reload', null) })
+    ipcMain.on('torrent:reload', () => { if (!this.mainWindow?.isDestroyed() && !this.webtorrentWindow?.isDestroyed()) this.webtorrentWindow.webContents.postMessage('torrent:reload', null) })
 
     let authWindow
     ipcMain.handle('common:linkAccount', (event, url) => {
@@ -264,7 +266,7 @@ export default class App {
       })
     })
 
-    ipcMain.on('quit-and-install', () => {
+    ipcMain.on('common:quitAndInstall', () => {
       if (this.updater.hasUpdate) this.destroy(true)
     })
   }
@@ -302,7 +304,7 @@ export default class App {
       }
       this.torrentLoad = this.webtorrentWindow.loadURL(development ? 'http://localhost:5000/background.html' : `file://${join(__dirname, '/background.html')}`)
       if (development) this.webtorrentWindow.webContents.openDevTools({ mode: 'detach' })
-      if (crashed) this.mainWindow.webContents.send('webtorrent-crashed')
+      if (crashed) this.mainWindow.webContents.send('torrent:onCrash')
       this.webtorrentWindow.on('closed', () => this.destroy())
       this.webtorrentWindow.webContents.on('render-process-gone', async (e, { reason }) => {
        if (reason === 'crashed') this.setWebTorrentWindow(true)

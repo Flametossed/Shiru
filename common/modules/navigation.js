@@ -1,7 +1,8 @@
+import { COMMON, ELECTRON, ANDROID } from '@/modules/bridge.js'
 import { files } from '@/components/MediaHandler.svelte'
-import { SUPPORTS } from '@/modules/support.js'
-import { writable } from 'simple-store-svelte'
 import { settings } from '@/modules/settings.js'
+import { writable } from 'simple-store-svelte'
+import { cache } from '@/modules/cache.js'
 import Debug from 'debug'
 const debug = Debug('ui:history')
 
@@ -229,6 +230,30 @@ export const modal = (() => {
   }
 })()
 
+const validPages = Object.values(page).filter(value => typeof value === 'string')
+COMMON.onRequestPage((pageName) => {
+  if (validPages.includes(pageName)) {
+    ELECTRON.showAndFocus()
+    page.navigateTo(pageName)
+  } else debug(`onRequestPage: unknown page "${pageName}"`)
+})
+
+const validModals = Object.values(modal).filter(value => typeof value === 'string')
+COMMON.onRequestModal(async (modalName, opts) => {
+  if (validModals.includes(modalName)) {
+    if (modalName === modal.ANIME_DETAILS && Object.keys(opts)?.length) {
+      const foundMedia = await cache.requestMedia(opts.id, opts.isMal)
+      if (foundMedia) {
+        ELECTRON.showAndFocus()
+        modal.open(modal.ANIME_DETAILS, foundMedia)
+      }
+    } else {
+      ELECTRON.showAndFocus()
+      modal.open(modalName)
+    }
+  } else debug(`onRequestModal: unknown modal "${modalName}" ${JSON.stringify(opts)}`)
+})
+
 /**
  * Manages navigation history for back/forward movement.
  * * TODO: Change the settings tabs have page routes to support history navigation.
@@ -254,26 +279,24 @@ class HistoryManager {
   canGoForward = writable(false)
 
   constructor() {
-    if (SUPPORTS.isAndroid) {
-      let minimizeApp = null
-      window.Capacitor.Plugins.App.addListener('backButton', () => {
-        debug('Android back button pressed', JSON.stringify({ canGoBack: canGoBack.value, minimizeApp: minimizeApp, currentIndex: this.currentIndex, historyLength: this.history.length }))
-        if (canGoBack.value) this.goBack()
-        else if (minimizeApp) {
-          debug('Second back press detected, minimizing app')
-          clearTimeout(minimizeApp)
+    let minimizeApp = null
+    ANDROID.onBackButton(() => {
+      debug('Android back button pressed', JSON.stringify({ canGoBack: canGoBack.value, minimizeApp: minimizeApp, currentIndex: this.currentIndex, historyLength: this.history.length }))
+      if (canGoBack.value) this.goBack()
+      else if (minimizeApp) {
+        debug('Second back press detected, minimizing app')
+        clearTimeout(minimizeApp)
+        minimizeApp = null
+        ANDROID.minimize()
+      } else {
+        debug('First back press, setting minimize timeout')
+        minimizeApp = setTimeout(() => {
+          debug('Resetting minimize timeout it has been 1000ms')
           minimizeApp = null
-          window.Capacitor.Plugins.App.minimizeApp()
-        } else {
-          debug('First back press, setting minimize timeout')
-          minimizeApp = setTimeout(() => {
-            debug('Resetting minimize timeout it has been 1000ms')
-            minimizeApp = null
-          }, 1_000)
-          minimizeApp?.unref?.()
-        }
-      })
-    }
+        }, 1_000)
+        minimizeApp?.unref?.()
+      }
+    })
     window.addEventListener('mouseup', (event) => {
       if (event.button === 3) {
         debug('Mouse back button pressed')

@@ -1,7 +1,7 @@
 <script>
   import { click } from '@/modules/click.js'
   import { debounce, defaults } from '@/modules/util.js'
-  import { IPC } from '@/modules/bridge.js'
+  import { COMMON } from '@/modules/bridge.js'
   import { toast } from 'svelte-sonner'
   import { Eraser } from 'lucide-svelte'
   import ConfirmButton from '@/components/inputs/ConfirmButton.svelte'
@@ -10,6 +10,7 @@
   import { loadedTorrent, completedTorrents, seedingTorrents, stagingTorrents } from '@/modules/torrent.js'
   import { SUPPORTS } from '@/modules/support.js'
   export let settings
+  export let requestFileAccess = () => {}
 
   let trackers = settings.trackers.join('\n') || ''
   const updateTrackers = debounce((event) => {
@@ -24,6 +25,18 @@
       settings.configTrackers = true
       return true
     }
+  }
+  function setTorrentPath() {
+    COMMON.pickFolder('Select torrent download location').then(({ path, cancelled = false }) => {
+      if (cancelled) {
+        toast.warning('No Path Selected', {
+          description: 'The torrent download location was not changed as the action was cancelled',
+          duration: 5_000
+        })
+      }
+      else if (SUPPORTS.isAndroid) requestFileAccess(path, () => settings.torrentPathNew = path)
+      else settings.torrentPathNew = path
+    })
   }
 </script>
 
@@ -44,7 +57,7 @@
 <SettingCard title='Download Location' description={'Path to the folder used to store torrents. By default this is the TMP folder, which might lose data when your OS tries to reclaim storage.' + (SUPPORTS.isAndroid ? '\n\nIn Android, /sdcard/ is internal storage not external SD Cards and /storage/AB12-34CD/ is external storage not internal.' : '')}>
   <div class='input-group mw-100 w-400 flex-nowrap'>
     <div class='input-group-prepend'>
-      <button type='button' use:click={() => IPC.emit('dialog')} class='btn btn-primary input-group-append d-flex align-items-center justify-content-center' title='Select a folder to store the torrents'><span>Select Folder</span></button>
+      <button type='button' use:click={setTorrentPath} class='btn btn-primary input-group-append d-flex align-items-center justify-content-center' title='Select a folder to store the torrents'><span>Select Folder</span></button>
     </div>
     {#if !SUPPORTS.isAndroid}
       <input type='url' class='form-control bg-dark mw-100 text-truncate' readonly bind:value={settings.torrentPathNew} placeholder='/tmp' />

@@ -1,4 +1,3 @@
-import 'browser-event-target-emitter'
 import { toast } from 'svelte-sonner'
 
 export function copyToClipboard(text, detail) {
@@ -13,9 +12,9 @@ export function copyToClipboard(text, detail) {
 export default new class extends EventTarget {
   constructor () {
     super()
-    window.on('drop', this.handleTransfer.bind(this))
-    window.on('paste', this.handleTransfer.bind(this))
-    window.on('dragover', e => e.preventDefault())
+    window.addEventListener('drop', this.handleTransfer.bind(this))
+    window.addEventListener('paste', this.handleTransfer.bind(this))
+    window.addEventListener('dragover', e => e.preventDefault())
   }
 
   async handleTransfer ({ dataTransfer, clipboardData }) {
@@ -35,7 +34,7 @@ export default new class extends EventTarget {
         text.push(item)
       }
     }
-    if (files.length) this.emit('files', files)
-    if (text.length) this.emit('text', text)
+    if (files.length) this.dispatchEvent(new CustomEvent('files', { detail: files }))
+    if (text.length) this.dispatchEvent(new CustomEvent('text', { detail: text }))
   }
 }()

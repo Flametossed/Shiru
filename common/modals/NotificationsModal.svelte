@@ -8,7 +8,7 @@
   import ErrorCard from '@/components/cards/ErrorCard.svelte'
   import SoftModal from '@/components/modals/SoftModal.svelte'
   import Helper from '@/modules/helper.js'
-  import { IPC, ELECTRON } from '@/modules/bridge.js'
+  import { COMMON, ELECTRON } from '@/modules/bridge.js'
   import { cache, caches } from '@/modules/cache.js'
   import { SUPPORTS } from '@/modules/support.js'
   import { settings } from '@/modules/settings.js'
@@ -85,7 +85,7 @@
     if (!incomingNotifications.length) return
     const { localNotifications, systemNotifications } = splitLocalAndSystem(dedupeNotifications(incomingNotifications))
     for (const notification of localNotifications) addNotification(notification)
-    systemNotifications.forEach((notification, i) => setTimeout(() => IPC.emit('notification', notification), 5 * (i + 1)))
+    systemNotifications.forEach((notification, i) => setTimeout(() => COMMON.notify(notification), 5 * (i + 1)))
     incomingNotifications.length = 0
   }
 

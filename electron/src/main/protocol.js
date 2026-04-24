@@ -18,14 +18,14 @@ export default class Protocol {
   protocolMap = {
     alauth: token => this.sendToken(token),
     malauth: token => this.sendMalToken(token),
-    anime: id => this.window.webContents.send('open-anime', { id }),
-    malanime: id => this.window.webContents.send('open-anime', { id, mal: true }),
+    anime: id => this.window.webContents.send('common:onRequestModal', 'anime_details', { id }),
+    malanime: id => this.window.webContents.send('common:onRequestModal', 'anime_details', { id, isMal: true}),
     torrent: magnet => this.add(magnet),
     search: id => this.play(id),
-    w2g: link => this.window.webContents.send('w2glink', link),
-    schedule: () => this.window.webContents.send('schedule'),
+    w2g: link => this.window.webContents.send('common:onLobbyInvite', link),
+    schedule: () => this.window.webContents.send('common:onRequestPage', 'schedule'),
     donate: () => shell.openExternal('https://github.com/sponsors/RockinChaos/'),
-    update: () => ipcMain.emit('quit-and-install'),
+    update: () => ipcMain.emit('common:quitAndInstall'),
     changelog: () => shell.openExternal('https://github.com/RockinChaos/Shiru/releases/latest'),
     show: () => ipcMain.emit('electron:showAndFocus')
   }
@@ -91,7 +91,7 @@ export default class Protocol {
       }
     })
 
-    ipcMain.on('electron:handleProtocol', (event, text) => this.handleProtocol(text))
+    ipcMain.on('common:handleProtocol', (event, text) => this.handleProtocol(text))
   }
 
   /**
@@ -109,7 +109,7 @@ export default class Protocol {
     let token = line.split('access_token=')[1].split('&token_type')[0]
     if (token) {
       if (token.endsWith('/')) token = token.slice(0, -1)
-      this.window.webContents.send('altoken', token)
+      this.window.webContents.send('common:onProviderToken', 'anilist', { token })
     }
   }
 
@@ -123,7 +123,7 @@ export default class Protocol {
       if (code.endsWith('/')) code = code.slice(0, -1)
       if (state.endsWith('/')) state = state.slice(0, -1)
       if (state.includes('%')) state = decodeURIComponent(state)
-      this.window.webContents.send('maltoken', code, state)
+      this.window.webContents.send('common:onProviderToken', 'myanimelist', { code, state })
     } 
   }
 
@@ -131,16 +131,14 @@ export default class Protocol {
    * @param {string} id - The media id.
    */
   play(id) {
-    this.window.webContents.send('play-anime', id)
-    ipcMain.emit('electron:showAndFocus')
+    this.window.webContents.send('common:onRequestPlay', { id })
   }
 
   /**
    * @param {string} magnet - The magnet link.
    */
   add(magnet) {
-    this.window.webContents.send('play-torrent', { magnet })
-    ipcMain.emit('electron:showAndFocus')
+    this.window.webContents.send('torrent:onRequest', { magnet })
   }
 
   /**

@@ -2,7 +2,7 @@ import { cache, caches } from '@/modules/cache.js'
 import { writable } from 'simple-store-svelte'
 import { defaults } from '@/modules/util.js'
 import { toast } from 'svelte-sonner'
-import { ELECTRON, IPC } from '@/modules/bridge.js'
+import { COMMON, TORRENT } from '@/modules/bridge.js'
 import Debug from 'debug'
 const debug = Debug('ui:settings')
 
@@ -17,7 +17,7 @@ export let malToken = JSON.parse(localStorage.getItem('MALviewer')) || null
  */
 const _onbeforeunload = window.onbeforeunload
 window.onbeforeunload = function (event) {
-  IPC.emit('webtorrent-reload')
+  TORRENT.reload()
   if (typeof _onbeforeunload === 'function') {
     const result = _onbeforeunload(event)
     if (typeof result === 'string') return result
@@ -69,46 +69,54 @@ export function isAuthorized() {
   return alToken || malToken
 }
 
-window.addEventListener('paste', ({ clipboardData }) => {
+window.addEventListener('paste', (event) => {
+  const { clipboardData } = event
   if (clipboardData.items?.[0]) {
     if (clipboardData.items[0].type === 'text/plain' && clipboardData.items[0].kind === 'string') {
-      clipboardData.items[0].getAsString(text => {
-        if (text.includes('access_token=')) { // is an AniList token
-          let token = text.split('access_token=')?.[1]?.split('&token_type')?.[0]
-          if (token) {
-            if (token.endsWith('/')) token = token.slice(0, -1)
-            handleToken(token)
-          }
-        } else if (text.includes('code=') && text.includes('&state')) { // is a MyAnimeList authorization
-          let code = text.split('code=')[1].split('&state')[0]
-          let state = text.split('&state=')[1]
-          if (code && state) {
-            if (code.endsWith('/')) code = code.slice(0, -1)
-            if (state.endsWith('/')) state = state.slice(0, -1)
-            if (state.includes('%')) state = decodeURIComponent(state)
-            // remove linefeed characters from the state
-            code = code.replace(/(\r\n|\n|\r)/gm, '')
-            state = state.replace(/(\r\n|\n|\r)/gm, '')
-            handleMalToken(code, state)
-          }
-        } else {
-          const anilistRegex = /(?:https?:\/\/)?anilist\.co\/anime\/(\d+)/
-          const malRegex = /(?:https?:\/\/)?myanimelist\.net\/anime\/(\d+)/
-          const anilistMatch = text.match(anilistRegex)
-          const malMatch = text.match(malRegex)
-          let protocol = text
-          if (anilistMatch) {
-            protocol = `shiru://anime/${anilistMatch[1]}`
-          } else if (malMatch) {
-            protocol = `shiru://malanime/${malMatch[1]}`
-          }
-          ELECTRON.handleProtocol(protocol)
+      const text = clipboardData.getData('text/plain')
+      if (text.includes('access_token=')) { // is an AniList token
+        let token = text.split('access_token=')?.[1]?.split('&token_type')?.[0]
+        if (token) {
+          if (token.endsWith('/')) token = token.slice(0, -1)
+          event.preventDefault()
+          handleToken(token)
         }
-      })
+      } else if (text.includes('code=') && text.includes('&state')) { // is a MyAnimeList authorization
+        let code = text.split('code=')[1].split('&state')[0]
+        let state = text.split('&state=')[1]
+        if (code && state) {
+          if (code.endsWith('/')) code = code.slice(0, -1)
+          if (state.endsWith('/')) state = state.slice(0, -1)
+          if (state.includes('%')) state = decodeURIComponent(state)
+          // remove linefeed characters from the state
+          code = code.replace(/(\r\n|\n|\r)/gm, '')
+          state = state.replace(/(\r\n|\n|\r)/gm, '')
+          event.preventDefault()
+          handleMalToken(code, state)
+        }
+      } else {
+        const anilistRegex = /(?:https?:\/\/)?anilist\.co\/anime\/(\d+)/
+        const malRegex = /(?:https?:\/\/)?myanimelist\.net\/anime\/(\d+)/
+        const anilistMatch = text.match(anilistRegex)
+        const malMatch = text.match(malRegex)
+        let protocol = text
+        if (anilistMatch || malMatch || text.match('shiru://')) event.preventDefault()
+        if (anilistMatch) {
+          protocol = `shiru://anime/${anilistMatch[1]}`
+        } else if (malMatch) {
+          protocol = `shiru://malanime/${malMatch[1]}`
+        }
+        COMMON.handleProtocol(protocol)
+      }
     }
   }
+}, true)
+
+COMMON.onProviderToken((provider, opts) => {
+  if (provider.match(/anilist/i)) handleToken(opts.token)
+  else if (provider.match(/myanimelist/i)) handleMalToken(opts.code, opts.state)
+  else debug(`onProviderToken: unknown provider ${provider}`)
 })
-IPC.on('altoken', handleToken)
 async function handleToken (token) {
   const { anilistClient } = await import('./anilist.js')
   const viewer = await anilistClient.viewer({token})
@@ -120,7 +128,6 @@ async function handleToken (token) {
   await swapProfiles({token, viewer}, true)
 }
 
-IPC.on('maltoken', handleMalToken)
 async function handleMalToken (code, state) {
   const { clientID, malClient } = await import('./myanimelist.js')
   if (!state || !code) {

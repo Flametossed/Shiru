@@ -1,17 +1,15 @@
 <script context='module'>
   import { copyToClipboard } from '@/modules/clipboard.js'
-  import { EventEmitter } from 'events'
   import { writable } from 'simple-store-svelte'
   import { status } from '@/modules/networking.js'
   import { SUPPORTS } from '@/modules/support.js'
   import { page } from '@/modules/navigation.js'
-  import { IPC } from '@/modules/bridge.js'
+  import { COMMON } from '@/modules/bridge.js'
   import WPC from '@/modules/wpc.js'
-  import 'browser-event-target-emitter'
   import Debug from 'debug'
   const debug = Debug('ui:w2g')
 
-  export const w2gEmitter = new EventEmitter()
+  export const w2gEmitter = new EventTarget()
 
   /** @type {import('simple-store-svelte').Writable<W2GClient | null>} */
   export const state = writable(null)
@@ -21,17 +19,17 @@
     if (state.value) state.value.destroy()
     const w2g = new W2GClient(code)
     state.value = w2g
-    w2g.on('index', i => w2gEmitter.emit('setindex', i))
-    w2g.on('player', state => w2gEmitter.emit('playerupdate', { time: state.time, paused: state.paused }))
+    w2g.addEventListener('index', ({ detail }) => w2gEmitter.dispatchEvent(new CustomEvent('setindex', { detail })))
+    w2g.addEventListener('player', ({ detail }) => w2gEmitter.dispatchEvent(new CustomEvent('playerupdate', { detail: { time: detail.time, paused: detail.paused } })))
 
     if (!code) invite()
   }
   WPC.listen('magnet', (detail) => state.value?.magnetLink(detail))
 
-  w2gEmitter.on('player', data => state.value?.playerStateChanged(data))
-  w2gEmitter.on('index', index => state.value?.mediaIndexChanged(index))
+  w2gEmitter.addEventListener('player', ({ detail }) => state.value?.playerStateChanged(detail))
+  w2gEmitter.addEventListener('index', ({ detail }) => state.value?.mediaIndexChanged(detail))
 
-  IPC.on('w2glink', (link) => {
+  COMMON.onLobbyInvite((link) => {
     joinLobby(link)
     page.navigateTo(page.WATCH_TOGETHER)
   })

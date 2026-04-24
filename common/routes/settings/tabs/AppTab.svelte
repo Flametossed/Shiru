@@ -2,9 +2,10 @@
   import { click } from '@/modules/click.js'
   import { cache, caches } from '@/modules/cache.js'
   import { SUPPORTS } from '@/modules/support.js'
-  import { IPC, COMMON, ELECTRON } from '@/modules/bridge.js'
+  import { COMMON, ELECTRON } from '@/modules/bridge.js'
+  import { toast } from 'svelte-sonner'
 
-  async function importSettings () {
+  async function importSettings() {
     try {
       const settings = JSON.parse(await navigator.clipboard.readText())
       await cache.write(caches.GENERAL, 'settings', settings)
@@ -17,32 +18,41 @@
     }
   }
 
-  IPC.on('log-exported', detail => {
-    if (detail.error) {
-      toast.error('Log Not Saved', {
-        description: 'Failed to save the log file to the selected location',
-        duration: 10_000
-      })
-    } else {
-      toast.success('Log Saved', {
-        description: 'The log file has been saved to the selected location',
-        duration: 5_000
-      })
-    }
-  })
-  IPC.on('log-reset', detail => {
-    if (detail.success) {
-      toast.success('Logs Reset', {
-        description: 'The log file has successfully been reset',
-        duration: 5_000
-      })
-    } else {
-      toast.error('Log Not Reset', {
-        description: 'Failed to reset the log file',
-        duration: 10_000
-      })
-    }
-  })
+  function exportLog() {
+    COMMON.exportLog().then(({ error, cancelled = false }) => {
+      if (error) {
+        toast.error('Log Not Saved', {
+          description: 'Failed to save the log file to the selected location',
+          duration: 10_000
+        })
+      } else if (cancelled) {
+        toast.warning('Log Not Saved', {
+          description: 'The log file was not saved as the action was cancelled',
+          duration: 5_000
+        })
+      } else {
+        toast.success('Log Saved', {
+          description: 'The log file has been saved to the selected location',
+          duration: 5_000
+        })
+      }
+    })
+  }
+  function resetLog() {
+    COMMON.resetLog().then(({ success }) => {
+      if (success) {
+        toast.success('Logs Reset', {
+          description: 'The log file has successfully been reset',
+          duration: 5_000
+        })
+      } else {
+        toast.error('Log Not Reset', {
+          description: 'Failed to reset the log file',
+          duration: 10_000
+        })
+      }
+    })
+  }
 </script>
 <script>
   import { persisted } from 'svelte-persisted-store'
@@ -56,7 +66,6 @@
   import { modal } from '@/modules/navigation.js'
   import WPC from '@/modules/wpc.js'
   import { copyToClipboard } from '@/modules/clipboard.js'
-  import { toast } from 'svelte-sonner'
   import semver from 'semver'
   import Debug from 'debug'
   const debugStore = persisted('debug', '', { serializer: { parse: e => e, stringify: e => e }})
@@ -85,24 +94,21 @@
     debugPrev = value
   })
 
-  onDestroy(() => {
-    unsubscribeDebug()
-    IPC.off('device-info', writeAppInfo)
-  })
+  onDestroy(() => unsubscribeDebug())
 
-  function writeAppInfo (info) {
-    const deviceInfo = JSON.parse(info)
-    deviceInfo.appInfo = {
-      version,
-      platform: COMMON.getPlatformInfo().platform,
-      userAgent: navigator.userAgent,
-      support: SUPPORTS,
-      settings
-    }
-    copyToClipboard(JSON.stringify(deviceInfo, null, 2), 'device info')
+  function writeAppInfo() {
+    COMMON.getDeviceInfo().then(info => {
+      const deviceInfo = info
+      deviceInfo.appInfo = {
+        version,
+        platform: COMMON.getPlatformInfo().platform,
+        userAgent: navigator.userAgent,
+        support: SUPPORTS,
+        settings
+      }
+      copyToClipboard(JSON.stringify(deviceInfo, null, 2), 'device info')
+    })
   }
-
-  IPC.on('device-info', writeAppInfo)
 </script>
 
 <h4 class='mb-10 font-weight-bold'>App Settings</h4>
@@ -191,12 +197,12 @@
   </select>
 </SettingCard>
 <SettingCard title='App and Device Info' description='Copy app and device debug info and capabilities, such as GPU information, GPU capabilities, version information and settings to clipboard.'>
-  <button type='button' use:click={() => IPC.emit('get-device-info')} class='btn btn-primary d-flex align-items-center justify-content-center'><span class='text-truncate'>Copy To Clipboard</span></button>
+  <button type='button' use:click={writeAppInfo} class='btn btn-primary d-flex align-items-center justify-content-center'><span class='text-truncate'>Copy To Clipboard</span></button>
 </SettingCard>
 <SettingCard title='Log Output' description='Export logs to a selection location or reset the log file. Once you enable a logging level you can use this to quickly get the created logs instead of navigating to the log file in directories.'>
   <div class='d-inline-flex flex-column'>
-    <button type='button' use:click={() => IPC.emit('get-log-contents')} class='btn btn-primary d-flex align-items-center justify-content-center px-40'><span class='text-truncate'>Export Logs</span></button>
-    <ConfirmButton click={() => IPC.emit('reset-log-contents')} class='btn btn-danger mt-5 d-flex align-items-center justify-content-center' confirmText='Confirm Reset' confirmClass='btn-danger-dim long-button' cancelClass='btn-secondary long-button' actionClass='d-inline-flex d-md-block'>
+    <button type='button' use:click={exportLog} class='btn btn-primary d-flex align-items-center justify-content-center px-40'><span class='text-truncate'>Export Logs</span></button>
+    <ConfirmButton click={resetLog} class='btn btn-danger mt-5 d-flex align-items-center justify-content-center' confirmText='Confirm Reset' confirmClass='btn-danger-dim long-button' cancelClass='btn-secondary long-button' actionClass='d-inline-flex d-md-block'>
       <span class='text-truncate'>Reset Logs</span>
     </ConfirmButton>
   </div>

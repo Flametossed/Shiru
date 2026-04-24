@@ -8,9 +8,8 @@ import { writable } from 'simple-store-svelte'
 import { toast } from 'svelte-sonner'
 import clipboard from '@/modules/clipboard.js'
 import { setHash } from '@/modules/anime/animehash.js'
-import { IPC } from '@/modules/bridge.js'
+import { TORRENT, ELECTRON } from '@/modules/bridge.js'
 import WPC from '@/modules/wpc.js'
-import 'browser-event-target-emitter'
 import Debug from 'debug'
 const debug = Debug('ui:torrent')
 
@@ -22,18 +21,17 @@ class TorrentWorker extends EventTarget {
   constructor () {
     super()
     this.ready = new Promise(resolve => {
-      IPC.once('port', () => {
-        this.port = window.port
+      _settings = { userID: cache.cacheID, dht: !settings.value.torrentDHT, torrentUTP: !settings.value.torrentUTP, torrentPeX: !settings.value.torrentPeX, maxConns: settings.value.maxConns, downloadLimit: (settings.value.torrentSpeed * 1048576) || 0, uploadLimit: (settings.value.torrentSpeed * 1048576) || 0, torrentPort: settings.value.torrentPort || 0, dhtPort: settings.value.dhtPort || 0, torrentPersist: settings.value.torrentPersist, torrentStreamedDownload: settings.value.torrentStreamedDownload, torrentPathNew: settings.value.torrentPathNew, playerPath: settings.value.playerPath, seedingLimit: settings.value.seedingLimit, trackers: settings.value.trackers }
+      TORRENT.portRequest(_settings).then((port) => {
+        this.port = port
         this.port.onmessage(this.handleMessage.bind(this))
         resolve()
       })
-      _settings = { userID: cache.cacheID, dht: !settings.value.torrentDHT, torrentUTP: !settings.value.torrentUTP, torrentPeX: !settings.value.torrentPeX, maxConns: settings.value.maxConns, downloadLimit: (settings.value.torrentSpeed * 1048576) || 0, uploadLimit: (settings.value.torrentSpeed * 1048576) || 0, torrentPort: settings.value.torrentPort || 0, dhtPort: settings.value.dhtPort || 0, torrentPersist: settings.value.torrentPersist, torrentStreamedDownload: settings.value.torrentStreamedDownload, torrentPathNew: settings.value.torrentPathNew, playerPath: settings.value.playerPath, seedingLimit: settings.value.seedingLimit, trackers: settings.value.trackers }
-      IPC.emit('portRequest', _settings)
     })
   }
 
   handleMessage ({ data }) {
-    this.emit(data.type, data.data)
+    this.dispatchEvent(new CustomEvent(data.type, { detail: data.data }))
   }
 
   async send (type, data, transfer) {
@@ -59,7 +57,7 @@ settings.subscribe(value => {
   }
 })
 
-IPC.on('webtorrent-crashed', () => {
+TORRENT.onCrash(() => {
   console.error('Ooops! WebTorrent Crashed! A crash has been detected... The process has automatically been restarted.')
   toast.dismiss()
   toast.error('Ooops! WebTorrent Crashed!', {
@@ -76,7 +74,12 @@ window.addEventListener('torrent-unload', () => {
 })
 window.addEventListener('add', (event) => add(event.detail.resolvedHash, event.detail.search, event.detail.resolvedHash))
 window.addEventListener('rescan', () => client.send('rescan'))
-clipboard.on('text', ({ detail }) => {
+TORRENT.onRequest((opts) => {
+  ELECTRON.showAndFocus()
+  add(opts.magnet, null, null, null, opts.base64)
+})
+window.addEventListener('play-torrent', (event) => add(event.detail.magnet, null, null, null, event.detail.base64))
+clipboard.addEventListener('text', ({ detail }) => {
   for (const { text } of detail) {
     if (page.value !== page.WATCH_TOGETHER && torrentRx.exec(text)) {
       media.value = { torrent: true }
@@ -85,10 +88,10 @@ clipboard.on('text', ({ detail }) => {
   }
 })
 if (!SUPPORTS.isAndroid) {
-  clipboard.on('files', async ({detail}) => {
+  clipboard.addEventListener('files', async ({ detail }) => {
     for (const file of detail) {
       if (file.name.endsWith('.torrent')) {
-        media.value = {torrent: true}
+        media.value = { torrent: true }
         add(new Uint8Array(await file.arrayBuffer()))
       }
     }
@@ -177,23 +180,23 @@ function setupTorrentClient() {
   }
   client.send('complete_all', cache.getEntry(caches.GENERAL, 'completedTorrents').filter(Boolean))
 
-  for (const event of ['magnet', 'stats', 'chapters', 'progress', 'externalReady', 'externalWatched', 'androidExternal', 'scrape_done', 'rescan_done']) client.on(event, ({ detail }) => WPC.send(event, detail))
+  for (const event of ['magnet', 'stats', 'chapters', 'progress', 'externalReady', 'externalWatched', 'androidExternal', 'scrape_done', 'rescan_done']) client.addEventListener(event, ({ detail }) => WPC.send(event, detail))
   for (const event of ['current', 'scrape', 'externalPlay', 'debug']) WPC.listen(event, (detail) => client.send(event, detail))
 
-  client.on('activity', ({ detail }) => {
+  client.addEventListener('activity', ({ detail }) => {
     loadedTorrent.update(() => ({ ...detail.current }))
     stagingTorrents.update(() => Array.from(new Map(detail.staging.map(torrent => [torrent.infoHash, torrent])).values()))
     seedingTorrents.update(() => Array.from(new Map(detail.seeding.map(torrent => [torrent.infoHash, torrent])).values()))
   })
 
-  client.on('files', ({ detail }) => files.set(detail))
+  client.addEventListener('files', ({ detail }) => files.set(detail))
 
-  client.on('loaded', ({ detail }) => {
+  client.addEventListener('loaded', ({ detail }) => {
     cache.setEntry(caches.GENERAL, 'loadedTorrent', detail)
     deduplicateTorrents(detail?.infoHash, 'stagingTorrents', 'seedingTorrents', 'completedTorrents')
-    client.emit('untrack', detail?.infoHash)
+    client.dispatchEvent(new CustomEvent('untrack', { detail: detail?.infoHash }))
   })
-  client.on('untrack',  ({ detail }) => {
+  client.addEventListener('untrack', ({ detail }) => {
     debug(`Untracking torrent:`, JSON.stringify(detail))
     for (const category of ['stagingTorrents', 'seedingTorrents', 'completedTorrents']) {
       const list = cache.getEntry(caches.GENERAL, category) || []
@@ -203,7 +206,7 @@ function setupTorrentClient() {
     seedingTorrents.update(arr => arr.filter(torrent => torrent.infoHash !== detail))
     completedTorrents.update(arr => arr.filter(torrent => torrent.infoHash !== detail))
   })
-  client.on('staging',  ({ detail }) => {
+  client.addEventListener('staging', ({ detail }) => {
     debug(`Staging torrent:`, JSON.stringify(detail))
     const torrents = cache.getEntry(caches.GENERAL, 'stagingTorrents') || []
     if (!torrents.includes(detail)) {
@@ -216,13 +219,13 @@ function setupTorrentClient() {
     completedTorrents.update(torrents => torrents.filter(torrent => torrent.infoHash !== detail))
     if (found) (found.incomplete ? stagingTorrents : seedingTorrents).update(prev => [found, ...prev.filter(torrent => torrent.infoHash !== detail)])
   })
-  client.on('seeding',  ({ detail }) => {
+  client.addEventListener('seeding', ({ detail }) => {
     debug(`Seeding torrent:`, JSON.stringify(detail))
     const torrents = cache.getEntry(caches.GENERAL, 'seedingTorrents') || []
     if (!torrents.includes(detail)) cache.setEntry(caches.GENERAL, 'seedingTorrents', Array.from(new Set([...torrents, detail])))
     deduplicateTorrents(detail, 'stagingTorrents', 'completedTorrents')
   })
-  client.on('completed',  ({ detail }) => {
+  client.addEventListener('completed', ({ detail }) => {
     debug(`Completed torrent:`, JSON.stringify(detail))
     const torrents = cache.getEntry(caches.GENERAL, 'completedTorrents') || []
     if (!torrents.includes(detail?.infoHash)) cache.setEntry(caches.GENERAL, 'completedTorrents', Array.from(new Set([...torrents, detail.infoHash])))
@@ -232,30 +235,30 @@ function setupTorrentClient() {
     seedingTorrents.update(arr => arr.filter(torrent => torrent.infoHash !== detail.infoHash))
     completedTorrents.update(prev => [detail, ...prev.filter(torrent => torrent.infoHash !== detail.infoHash)])
   })
-  client.on('completedStats', ({ detail }) => {
+  client.addEventListener('completedStats', ({ detail }) => {
     WPC.send('rescan_done')
     completedTorrents.update(torrents => [...Array.from(new Map(detail.map(torrent => [torrent.infoHash, torrent])).values()), ...torrents])
   })
 
-  client.on('error', ({ detail }) => {
+  client.addEventListener('error', ({ detail }) => {
     debug(`Error:`, detail.message || JSON.stringify(detail))
     if (settings.value.toasts.includes('All') || settings.value.toasts.includes('Errors')) {
       for (const exclude of excludedToastMessages) {
         if ((detail.message || detail)?.toLowerCase()?.includes(exclude)) return
       }
-      toast.error('Torrent Error', {description: '' + (detail.message || detail)})
+      toast.error('Torrent Error', { description: '' + (detail.message || detail) })
     }
   })
-  client.on('warn', ({ detail }) => {
+  client.addEventListener('warn', ({ detail }) => {
     debug(`Warn:`, detail.message || JSON.stringify(detail))
     if (settings.value.toasts.includes('All') || settings.value.toasts.includes('Warnings')) {
       for (const exclude of excludedToastMessages) {
         if ((detail.message || detail)?.toLowerCase()?.includes(exclude)) return
       }
-      toast.warning('Torrent Warning', {description: '' + (detail.message || detail)})
+      toast.warning('Torrent Warning', { description: '' + (detail.message || detail) })
     }
   })
-  client.on('info', ({ detail }) => {
+  client.addEventListener('info', ({ detail }) => {
     debug(`Info:`, detail.message || JSON.stringify(detail))
     for (const exclude of excludedToastMessages) {
       if ((detail.message || detail)?.toLowerCase()?.includes(exclude)) return

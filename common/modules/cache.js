@@ -1,4 +1,4 @@
-import { generalDefaults, historyDefaults, queryDefaults, notifyDefaults } from './util.js'
+import { generalDefaults, historyDefaults, queryDefaults, notifyDefaults, isValidNumber } from './util.js'
 import { writable } from 'simple-store-svelte'
 import equal from 'fast-deep-equal/es6'
 import rfdc from 'rfdc'
@@ -675,17 +675,20 @@ class Cache {
    * Returns media for the given ID, fetching it if missing.
    *
    * @param {number | string | null} id
+   * @param {boolean} isMal
    * @returns {Promise<Object | null>}
    */
-  async requestMedia(id) {
-    if (!id) return null
-    const media = mediaCache.value[id]
+  async requestMedia(id, isMal = false) {
+    if (!id || !isValidNumber(Number(id))) return null
+    const exactId = Number(id)
+    const media = isMal ? Object.values(mediaCache.value).find(media => media.idMal === exactId) : mediaCache.value[id]
     if (media) return media
     if (!this.anilistClient) {
       const { anilistClient } = await import('@/modules/anilist.js')
       this.anilistClient = anilistClient
     }
-    return this.anilistClient.requestMediaID(id)
+    if (isMal) return (await this.anilistClient.searchIDSingle({ idMal: exactId })).data.Media // TODO: need to add a requestMediaID in myanimelist.js...
+    else return this.anilistClient.requestMediaID(exactId)
   }
 
   /**
@@ -695,8 +698,8 @@ class Cache {
    * @returns {Object | null}
    */
   getMedia(id) {
-    if (!id) return null
-    return mediaCache.value[id] ?? {}
+    if (!id || !isValidNumber(Number(id))) return null
+    return mediaCache.value[Number(id)] ?? {}
   }
 
   /**

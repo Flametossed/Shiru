@@ -9,7 +9,7 @@
   import SmartImage from '@/components/visual/SmartImage.svelte'
   import { ClockAlert, LogOut, Plus, X } from 'lucide-svelte'
   import { modal } from '@/modules/navigation.js'
-  import { COMMON, ELECTRON } from '@/modules/bridge.js'
+  import { COMMON } from '@/modules/bridge.js'
 
   const { reactive, init } = createListener(['pa-button', 'p-button', 'custom-switch', 'profile-safe-area'])
   init(true)
@@ -58,7 +58,7 @@
   async function linkAccount(uri) {
     if (!uri) return
     COMMON.linkAccount(uri).then(tokenUri => {
-      if (tokenUri) ELECTRON.handleProtocol(tokenUri)
+      if (tokenUri) COMMON.handleProtocol(tokenUri)
     }).catch(error => {
       if (error.message?.match('common:failedAccount')) {
         toast.error('Login Cancelled', {

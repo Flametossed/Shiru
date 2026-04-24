@@ -74,7 +74,7 @@ public class FileManager extends Plugin {
         savedCall.reject("Selected path is not a valid directory");
       }
     } else {
-      savedCall.reject("Folder selection was canceled or an error occurred");
+      savedCall.reject("Folder selection was cancelled or an error occurred");
     }
   }
 }

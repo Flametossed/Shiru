@@ -1,7 +1,7 @@
 <script context='module'>
   import { version } from '@/routes/settings/SettingsPage.svelte'
   import { SUPPORTS } from '@/modules/support.js'
-  import { IPC, COMMON } from '@/modules/bridge.js'
+  import { COMMON } from '@/modules/bridge.js'
   import { writable } from 'simple-store-svelte'
   import { settings } from '@/modules/settings.js'
   import { uniqueStore } from '@/modules/util.js'
@@ -15,7 +15,7 @@
 
   uniqueStore(updateChannel).subscribe((channel) => {
     changeLog.set(getChanges())
-    setTimeout(() => IPC.emit('set-update-channel', channel))
+    setTimeout(() => COMMON.setUpdateChannel(channel))
   })
 
   window.addEventListener('online', () => changeLog.set(getChanges()))
@@ -25,12 +25,14 @@
   })
 
   const startedAt = Date.now()
-  IPC.on(SUPPORTS.isAndroid ? 'update-available' : 'update-downloaded', (version) => {
+  if (SUPPORTS.isAndroid) COMMON.onUpdateAvailable((version) => setChangeLog(version))
+  else COMMON.onUpdateDownloaded((version) => setChangeLog(version))
+  function setChangeLog(version) {
     if (latestVersion !== version) {
       latestVersion = version
       if ((Date.now() - startedAt) >= 30_000) changeLog.set(getChanges())
     }
-  })
+  }
 
   /**
    * Fetches and filters GitHub releases based on current version and update channel.

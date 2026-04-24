@@ -6,26 +6,23 @@ import { Keyboard } from '@capacitor/keyboard'
 import { NodeJS } from 'capacitor-nodejs'
 import { App as Capacitor } from '@capacitor/app'
 
-import Debugger from './debugger.js'
+import '../preload/preload.js'
 import Protocol from './protocol.js'
 import Updater from './updater.js'
+import Debug from './debugger.js'
 import Dialog from './dialog.js'
 
 import { cache, caches } from '@/modules/cache.js'
-import { IPC } from '../preload/preload.js'
-import { loadingClient } from './util.js'
+import { development, loadingClient } from './util.js'
+import { ipcWire } from './ipc.js'
 
 export default class App {
   protocol = new Protocol()
-  debugger = new Debugger()
   updater = new Updater('RockinChaos', 'Shiru')
-  dialog = new Dialog()
+  debug = new Debug()
+  dialog = new Dialog(this.debug)
 
   ready = NodeJS.whenReady()
-
-  kbLastScrollY = null
-  kbHideTimeout = null
-  kbScrollContainer = null
 
   canNotify = false
   handleNotify = false
@@ -65,10 +62,11 @@ export default class App {
     Capacitor.addListener('appStateChange', (state) => {
       if (state.isActive) SystemBars.hide({ bar: SystemBarType.StatusBar })
     })
-    IPC.once('main-ready', async () => setTimeout(() => SplashScreen.hide({ fadeOutDuration: 200 }), 150).unref?.())
+    if (development) SplashScreen.hide()
+    else ipcWire.once('common:windowReady', () => setTimeout(() => SplashScreen.hide({ fadeOutDuration: 200 }), 150).unref?.()) // HACK: Prevents the window from being shown while it's still loading. This is nice for production as the window can't be moved without the elements being rendered.
 
-    IPC.on('portRequest', async () => {
-      window.port = {
+    ipcWire.handle('torrent:portRequest', async () => {
+      const port = {
         onmessage: cb => {
           NodeJS.addListener('ipc', ({ args }) => cb(args[0]))
         },
@@ -81,19 +79,21 @@ export default class App {
       this.handleNotify = true
       NodeJS.send({ eventName: 'port-init', args: [] })
       let stethoscope = true
-      NodeJS.addListener('webtorrent-heartbeat', () => {
-        if (stethoscope) {
-          stethoscope = false
-          NodeJS.send({ eventName: 'main-heartbeat', args: [{ ...cache.getEntry(caches.GENERAL, 'settings'), userID: cache.cacheID }] })
-          NodeJS.addListener('torrentRequest', () => {
-            NodeJS.send({ eventName: 'torrentPort', args: [] })
-            IPC.emit('port')
-          })
-          loadingClient.resolve()
-        }
+      return new Promise(resolve => {
+        NodeJS.addListener('webtorrent-heartbeat', () => {
+          if (stethoscope) {
+            stethoscope = false
+            NodeJS.send({ eventName: 'main-heartbeat', args: [{ ...cache.getEntry(caches.GENERAL, 'settings'), userID: cache.cacheID }] })
+            NodeJS.addListener('torrentRequest', () => {
+              NodeJS.send({ eventName: 'torrentPort', args: [] })
+              resolve(port)
+            })
+            loadingClient.resolve()
+          }
+        })
       })
     })
-    IPC.on('webtorrent-reload', () => NodeJS.send({eventName: 'webtorrent-reload', args: []}))
+    ipcWire.on('torrent:reload', () => NodeJS.send({ eventName: 'torrent:reload', args: [] }))
 
     LocalNotifications.registerActionTypes({ types: this.notifyTypes })
     LocalNotifications.checkPermissions().then(value => {
@@ -116,7 +116,7 @@ export default class App {
         }, 50)
       }
     })
-    IPC.on('notification', opts => {
+    ipcWire.on('common:notify', (event, opts) => {
       if (!this.canNotify) return
       LocalNotifications.schedule({
         notifications: [{
@@ -134,7 +134,7 @@ export default class App {
       })
     })
 
-    IPC.on('quit-and-install', () => {
+    ipcWire.on('common:quitAndInstall', () => {
       if (this.updater.updateAvailable) this.updater.install(true)
     })
   }

@@ -19,7 +19,7 @@ export default class Updater {
   updateChannel = 'stable'
 
   /**
-   * Creates an updater instance and sets up IPC listeners.
+   * Creates an updater instance and sets up listeners.
    * @param {import('electron').BrowserWindow} window Main application window
    * @param {() => import('electron').BrowserWindow} torrentWindow Function returning torrent window
    */
@@ -28,14 +28,14 @@ export default class Updater {
     this.window = window
     this.torrentWindow = torrentWindow
     autoUpdater.autoInstallOnAppQuit = false
-    ipcMain.on('update', (event, channel) => {
+    ipcMain.on('common:checkForUpdates', (event, channel) => {
       if (channel) this.updateChannel = channel
       autoUpdater.channel = this.updateChannel === 'nightly' ? 'beta' : 'latest'
       autoUpdater.allowPrerelease = this.updateChannel === 'nightly'
       autoUpdater.checkForUpdates()
     })
-    ipcMain.on('set-update-channel', (event, channel) => this.setUpdateChannel(channel))
-    autoUpdater.on('error', () => this.window.webContents.send('update-aborted'))
+    ipcMain.on('common:setUpdateChannel', (event, channel) => this.setUpdateChannel(channel))
+    autoUpdater.on('error', () => this.window.webContents.send('common:onUpdateAborted'))
     autoUpdater.on('update-available', (info) => {
       if (this.skipUpdate(info.version)) return
       else if (this.latestVersion !== info.version) {
@@ -47,7 +47,7 @@ export default class Updater {
       if (!this.downloading) {
         this.downloading = true
         this.availableInterval = setInterval(() => {
-          if (!this.hasUpdate) this.window.webContents.send('update-available', info.version)
+          if (!this.hasUpdate) this.window.webContents.send('common:onUpdateAvailable', info.version)
         }, 1_000)
         this.availableInterval.unref?.()
       }
@@ -59,7 +59,7 @@ export default class Updater {
         this.hasUpdate = true
         clearInterval(this.availableInterval)
         this.downloadedInterval = setInterval(() => {
-          if (this.hasUpdate) this.window.webContents.send('update-downloaded', info.version)
+          if (this.hasUpdate) this.window.webContents.send('common:onUpdateDownloaded', info.version)
         }, 1_000)
         this.downloadedInterval.unref?.()
       }

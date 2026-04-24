@@ -30,12 +30,12 @@ channel.on('port-init', () => {
   if (!client) {
     setHeartBeat()
     channel.on('torrentPort', () => {
-      channel.emit('port', {
+      channel.emit('torrent:port', {
         ports: [port]
       })
     })
   }
-  channel.on('webtorrent-reload', async () => {
+  channel.on('torrent:reload', async () => {
     if (client) {
       client.destroy()
       await new Promise(resolve => {

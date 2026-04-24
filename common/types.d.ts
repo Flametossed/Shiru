@@ -13,21 +13,69 @@ type Track = {
 
 declare global {
   interface Window {
-    IPC: any
-    port: MessagePort
-    version: {
-      platform: string
-      arch: string
-      session: string
+    torrent: {
+      reload: () => void
+      onCrash: (callback: () => void) => void
+      onRequest: (callback: (updateVersion: any) => void) => void
+      portRequest: (settings: any) => Promise<{
+        onmessage: (cb: (data: { type: string; data: any }) => void) => void
+        postMessage: (a: any, b: any) => void
+      }>
     }
-  }
-  interface EventTarget {
-    on: (type: string, callback: (any) => void, options?: boolean | {}) => void
-    once: (type: string, callback: (any) => void, options?: boolean | {}) => void
-    emit: (type: string, data?: any) => void
-    dispatch: (type: string, data?: any) => void
-    removeListener: (type: string, callback: (any) => void) => void
-    off: (type: string, callback: (any) => void) => void
+    common: {
+      getAppVersion: () => Promise<string>
+      getPlatformInfo: () => { platform: string; arch: string; session: string }
+      getDeviceInfo: () => Promise<any>
+      exportLog: () => Promise<any>
+      resetLog: () => Promise<any>
+      notify: (opts: any) => void
+      windowReady: () => void
+      openURI: (uri: string) => Promise<any>
+      pickFile: (title: string) => Promise<string>
+      pickFolder: (title: string) => Promise<string>
+      linkAccount: (uri: string) => Promise<any>
+      handleProtocol: (data: any) => void
+      setUpdateChannel: (channel: 'stable' | 'nightly') => void
+      checkForUpdates: (channel: 'stable' | 'nightly') => void
+      onUpdateAvailable: (callback: (updateVersion: any) => void) => void
+      onUpdateDownloaded: (callback: (updateVersion: any) => void) => void
+      onUpdateProgress: (callback: (progress: number) => void) => void
+      onUpdateAborted: (callback: (aborted: boolean) => void) => void
+      quitAndInstall: () => void
+      onLobbyInvite: (callback: (link: string) => void) => void
+      onRequestPage: (callback: (page: any) => void) => void
+      onRequestModal: (callback: (modal: any, opts: any) => void) => void
+      onProviderToken: (callback: (provider: any, opts: any) => void) => void
+      onRequestPlay: (callback: (opts: any) => void) => void
+    }
+    android?: {
+      minimize: () => void
+      onBackButton: (callback: (event: any) => void) => void
+      hideStatusBar: () => void
+      setSystemStyle: (style: 'LIGHT' | 'DARK') => void
+      requestFileAccess: () => Promise<{ granted: boolean; error?: string | null }>
+      launchExternal: (url: string) => Promise<void>
+    }
+    electron?: {
+      exit: () => void
+      setDoH: (url: string) => void
+      getAngle: () => Promise<string>
+      setAngle: (angle: any) => void
+      isMinimized: () => Promise<boolean>
+      isFullScreen: () => Promise<boolean>
+      onMinimize: (callback: (isMinimized: boolean) => void) => void
+      onFullScreen: (callback: (isFullScreen: boolean) => void) => void
+      hideWindow: () => void
+      showAndFocus: () => void
+      onExitIntent: (callback: () => void) => void
+      openTorrentDevTools: () => void
+      openDevTools: () => void
+      setUnreadCount: (notificationCount: number) => void
+      setDiscordRPC: (state: any) => void
+      setPresence: (activity: any) => void
+      clearPresence: () => void
+      getYouTube: () => Promise<string>
+    }
   }
   interface HTMLMediaElement {
     videoTracks: Track[]

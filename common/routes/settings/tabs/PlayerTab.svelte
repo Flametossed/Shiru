@@ -4,7 +4,7 @@
   import { playPage } from '@/modules/navigation.js'
   import { SUPPORTS } from '@/modules/support.js'
   import { click } from '@/modules/click.js'
-  import { IPC } from '@/modules/bridge.js'
+  import { COMMON } from '@/modules/bridge.js'
   import { writable } from 'simple-store-svelte'
   import { Eraser } from 'lucide-svelte'
   import { toast } from 'svelte-sonner'
@@ -74,6 +74,17 @@
   function removeFont() {
     settings.font = null
     selectedFont = ''
+  }
+
+  function setPlayerPath() {
+    COMMON.pickFile('Select video player executable').then(({ path, cancelled = false }) => {
+      if (cancelled) {
+        toast.warning('No Path Selected', {
+          description: 'The video player executable was not changed as the action was cancelled',
+          duration: 5_000
+        })
+      } else settings.playerPath = path
+    })
   }
 
   onMount(() => {
@@ -262,7 +273,7 @@
   <SettingCard title='External Video Player' description='Executable for an external video player. Make sure the player supports HTTP sources.'>
     <div class='input-group mw-100 w-400 mw-full'>
       <div class='input-group-prepend'>
-        <button type='button' use:click={() => IPC.emit('player')} class='btn btn-primary input-group-append d-flex align-items-center justify-content-center'><span>Select Executable</span></button>
+        <button type='button' use:click={setPlayerPath} class='btn btn-primary input-group-append d-flex align-items-center justify-content-center'><span>Select Executable</span></button>
       </div>
       <input type='url' class='form-control bg-dark text-truncate mw-100' readonly value={settings.playerPath} placeholder='Choose an executable…' />
       <div class='input-group-prepend'>

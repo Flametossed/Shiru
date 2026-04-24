@@ -10,7 +10,7 @@
   import { settings } from '@/modules/settings.js'
   import { page, modal } from '@/modules/navigation.js'
   import { createDeferred, uniqueStore } from '@/modules/util.js'
-  import { IPC, COMMON } from '@/modules/bridge.js'
+  import { COMMON } from '@/modules/bridge.js'
   import { toast } from 'svelte-sonner'
   import semver from 'semver'
 
@@ -47,17 +47,17 @@
     }
   }
 
-  if (!SUPPORTS.isAndroid) {
-    IPC.on('update-available', () => {
-      if (updateState.value !== 'ready') updateState.value = 'downloading'
-    })
-  }
-  IPC.on(SUPPORTS.isAndroid ? 'update-available' : 'update-downloaded', (version) => {
+  COMMON.onUpdateAvailable((version) => {
+    if (!SUPPORTS.isAndroid && updateState.value !== 'ready') updateState.value = 'downloading'
+    if (SUPPORTS.isAndroid) updateReady(version)
+  })
+  COMMON.onUpdateDownloaded((version) => updateReady(version))
+  function updateReady(version) {
     if (updateState.value !== 'ignored' && latestVersion === version && updateVersion.value !== version && (!document.fullscreenElement || page.value !== page.PLAYER)) {
       updateVersion.set(version)
       updateState.value = 'ready'
       if (settings.value.systemNotify || SUPPORTS.isAndroid) {
-        IPC.emit('notification', {
+        COMMON.notify({
           title: 'Update Available!',
           message: `An update to v${version}${semver.prerelease(version) ? ' (Nightly)' : ''} ${SUPPORTS.isAndroid ? 'is available for download and installation' : 'has been downloaded and is ready for installation'}.`,
           button: [{ text: 'Update Now', activation: 'shiru://update/' }, { text: `What's New`, activation: 'shiru://changelog/' }],
@@ -68,12 +68,12 @@
         })
       }
     }
-  })
+  }
 
   const updateProgress = writable(0)
-  IPC.on('update-progress', progress => updateProgress.set(progress))
-  setTimeout(() => IPC.emit('update', updateChannel.value), 2_500).unref?.()
-  setInterval(() => IPC.emit('update', updateChannel.value), 300_000).unref?.()
+  COMMON.onUpdateProgress((progress) => updateProgress.set(progress))
+  setTimeout(() => COMMON.checkForUpdates(updateChannel.value), 2_500).unref?.()
+  setInterval(() => COMMON.checkForUpdates(updateChannel.value), 300_000).unref?.()
 </script>
 <script>
   $: $updateState === 'ready' && modal.open(modal.UPDATE_PROMPT)
@@ -107,10 +107,10 @@
         id, duration: 15_000, description: SUPPORTS.isAndroid ? 'Update was not installed. The process was cancelled or an error occurred.' : 'Something went wrong during the update process!'
       })
     })
-    IPC.emit('quit-and-install')
+    COMMON.quitAndInstall()
   }
 
-  IPC.on('update-aborted', (aborted) => {
+  COMMON.onUpdateAborted((aborted) => {
     if (!updating) return
     updating = false
     $updateProgress = 0

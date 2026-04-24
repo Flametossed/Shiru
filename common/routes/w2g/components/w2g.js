@@ -1,5 +1,3 @@
-import { EventEmitter } from 'events'
-
 import P2PT from 'p2pt'
 
 import Event, { EventTypes } from '@/routes/w2g/components/events.js'
@@ -14,7 +12,22 @@ const debug = Debug('ui:w2g')
  * @typedef {Record<string, {user: import('@/modules/al.d.ts').Viewer | {id: string }, peer?: import('p2pt').Peer<any>}>} PeerList
  */
 
-export class W2GClient extends EventEmitter {
+export class W2GClient extends EventTarget {
+
+  #listeners = []
+
+  addEventListener(type, listener, options) {
+    this.#listeners.push({ type, listener, options })
+    super.addEventListener(type, listener, options)
+  }
+
+  removeAllListeners() {
+    for (const { type, listener, options } of this.#listeners) {
+      super.removeEventListener(type, listener, options)
+    }
+    this.#listeners = []
+  }
+
   static #announce = [
     atob('d3NzOi8vdHJhY2tlci5vcGVud2VidG9ycmVudC5jb20='),
     atob('d3NzOi8vdHJhY2tlci53ZWJ0b3JyZW50LmRldg=='),
@@ -191,13 +204,13 @@ export class W2GClient extends EventEmitter {
         if (data.payload?.index == null) break
         if (this.index !== data.payload.index) {
           this.index = data.payload.index
-          this.emit('index', data.payload.index)
+          this.dispatchEvent(new CustomEvent('index', { detail: data.payload.index }))
         }
         break
       }
       case EventTypes.PlayerStateEvent: {
         if (data.payload?.time == null) break
-        if (this._playerStateChanged(data.payload)) this.emit('player', data.payload)
+        if (this._playerStateChanged(data.payload)) this.dispatchEvent(new CustomEvent('player', { detail: data.payload }))
         break
       }
       case EventTypes.MessageEvent:{

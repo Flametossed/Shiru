@@ -51,7 +51,7 @@ export default class TorrentClient extends WebTorrent {
     this.torrentCache = new Cache(this.torrentPath)
     ipc.send('torrentRequest')
     this._ready = new Promise(resolve => {
-      ipc.on('port', ({ ports }) => {
+      ipc.on('torrent:port', ({ ports }) => {
         if (this.destroyed) return
         this.message = ports[0].postMessage.bind(ports[0])
         ports[0].onmessage = ({ data }) => {

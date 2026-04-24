@@ -4,10 +4,10 @@ import { IntentUri } from 'capacitor-intent-uri'
 import { Filesystem } from '@capacitor/filesystem'
 import { keyboardVisible } from '../main/util.js'
 import { FileManager } from '../main/plugin.js'
+import { ipcWire } from '../main/ipc.js'
 import { SystemBars, SystemBarsStyle, SystemBarType } from '@capacitor/core'
 import { ForegroundService, Importance, ServiceType } from '@capawesome-team/capacitor-android-foreground-service'
 import { indexedDB as fakeIndexedDB } from 'fake-indexeddb'
-import EventEmitter from 'events'
 
 if (typeof localStorage === 'undefined') {
   const data = {}
@@ -36,7 +36,6 @@ HTMLVideoElement.prototype.requestPictureInPicture = function () {
   return Promise.resolve({})
 }
 
-export const IPC = new EventEmitter()
 const STREAMING_FG_ID = 1001
 ForegroundService.createNotificationChannel({
   id: 'external-playback',
@@ -45,17 +44,59 @@ ForegroundService.createNotificationChannel({
   importance: Importance.Min
 })
 
-window.IPC = IPC
+window.torrent = {
+  reload: () => ipcWire.send('torrent:reload'),
+  onCrash: (callback) => {}, // Currently not used for Capacitor...
+  onRequest: (callback) => ipcWire.on('torrent:onRequest', (event, opts) => callback(opts)),
+  portRequest: (settings) => ipcWire.invoke('torrent:portRequest', settings)
+}
 window.common = {
   getAppVersion: async () => (await Capacitor.getInfo())?.version,
   getPlatformInfo: () => ({
     platform: globalThis.cordova?.platformId,
     arch: navigator.platform?.split(' ')?.[1]
   }),
+  getDeviceInfo: async () => ipcWire.invoke('common:getDeviceInfo'),
+  exportLog: async () => ipcWire.invoke('common:exportLog'),
+  resetLog: async () => ipcWire.invoke('common:resetLog'),
+  notify: (opts) => ipcWire.send('common:notify', opts),
+  windowReady: () => ipcWire.send('common:windowReady'),
   openURI: async (uri) => Browser.open({ url: uri }),
-  linkAccount: async (uri) => Browser.open({ url: uri })
+  pickFile: async (title) => '', // Currently not used for Capacitor...
+  pickFolder: async (title) => ipcWire.invoke('common:pickFolder'),
+  linkAccount: async (uri) => {
+    Browser.open({ url: uri })
+    return null // no token
+  },
+  handleProtocol: (data) => ipcWire.send('common:handleProtocol', data),
+  setUpdateChannel: (channel) => ipcWire.send('common:setUpdateChannel', channel),
+  checkForUpdates: (channel) => ipcWire.send('common:checkForUpdates', channel),
+  onUpdateAvailable: (callback) => ipcWire.on('common:onUpdateAvailable', (event, updateVersion) => callback(updateVersion)),
+  onUpdateDownloaded: (callback) => {}, // Currently not used in updating for Capacitor...
+  onUpdateProgress: (callback) => ipcWire.on('common:onUpdateProgress', (event, progress) => callback(progress)),
+  onUpdateAborted: (callback) => ipcWire.on('common:onUpdateAborted', (event, aborted) => callback(aborted)),
+  quitAndInstall: () => ipcWire.send('common:quitAndInstall'),
+  onLobbyInvite: (callback) => ipcWire.on('common:onLobbyInvite', (event, link) => callback(link)),
+  onRequestPage: (callback) => ipcWire.on('common:onRequestPage', (event, page) => callback(page)),
+  onRequestModal: (callback) => ipcWire.on('common:onRequestModal', (event, modal, opts) => callback(modal, opts)),
+  onProviderToken: (callback) => ipcWire.on('common:onProviderToken', (event, provider, opts) => callback(provider, opts)),
+  onRequestPlay: (callback) => ipcWire.on('common:onRequestPlay', (event, opts) => callback(opts))
 }
 window.android = {
+  /**
+   * Sends the app to the background.
+   *
+   * Any type of force exit of the app causes WebView to crash (e.g. #exitApp), this is a WebView bug!
+   * The next time the user tries to open the app, it will forcibly close requiring them to open it again...
+   * We prefer to use #minimizeApp instead as it is a safe paused state.
+   */
+  minimize: () => Capacitor.minimizeApp(),
+  /**
+   * Listens for system back button presses.
+   *
+   * @param {(event: any) => void} callback
+   */
+  onBackButton: (callback) => Capacitor.addListener('backButton', callback),
   /** Hides the status bar if the keyboard is not visible. */
   hideStatusBar: () => {
     if (!keyboardVisible) SystemBars.hide({ bar: SystemBarType.StatusBar })

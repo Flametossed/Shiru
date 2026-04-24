@@ -116,12 +116,12 @@ export default class Subtitles {
       this.addSingleSubtitleFile(new File([detail.data], detail.name))
     }
 
-    client.on('tracks', this.handleTracks)
-    client.on('subtitle', this.handleSubtitle)
-    client.on('file', this.handleFile)
-    client.on('subtitleFile', this.handleSubtitleFile)
-    clipboard.on('text', this.handleClipboardText)
-    clipboard.on('files', this.handleClipboardFiles)
+    client.addEventListener('tracks', this.handleTracks)
+    client.addEventListener('subtitle', this.handleSubtitle)
+    client.addEventListener('file', this.handleFile)
+    client.addEventListener('subtitleFile', this.handleSubtitleFile)
+    clipboard.addEventListener('text', this.handleClipboardText)
+    clipboard.addEventListener('files', this.handleClipboardFiles)
   }
 
   async addSingleSubtitleFile (file) {
@@ -297,12 +297,12 @@ export default class Subtitles {
   }
 
   destroy () {
-    client.off('tracks', this.handleTracks)
-    client.off('subtitle', this.handleSubtitle)
-    client.off('file', this.handleFile)
-    client.off('files', this.handleClipboardFiles)
-    client.off('text', this.handleClipboardText)
-    client.off('subtitleFile', this.handleSubtitleFile)
+    client.removeEventListener('tracks', this.handleTracks)
+    client.removeEventListener('subtitle', this.handleSubtitle)
+    client.removeEventListener('file', this.handleFile)
+    client.removeEventListener('files', this.handleClipboardFiles)
+    client.removeEventListener('text', this.handleClipboardText)
+    client.removeEventListener('subtitleFile', this.handleSubtitleFile)
     this.stream?.destroy()
     this.parser?.destroy()
     this.renderer?.destroy()

@@ -3,7 +3,7 @@
   import { SUPPORTS } from '@/modules/support.js'
   import { capitalize, debounce } from '@/modules/util.js'
   import { toast } from 'svelte-sonner'
-  import { IPC, ANDROID, COMMON, ELECTRON } from '@/modules/bridge.js'
+  import { ANDROID, COMMON, ELECTRON } from '@/modules/bridge.js'
   import Debug from 'debug'
   const debug = Debug('ui:settings-view')
 
@@ -50,7 +50,6 @@
 
 <script>
   import { Tabs, TabLabel, Tab } from '@/components/tabs/Tabination.js'
-  import { onDestroy } from 'svelte'
   import PlayerTab from '@/routes/settings/tabs/PlayerTab.svelte'
   import ClientTab from '@/routes/settings/tabs/ClientTab.svelte'
   import InterfaceTab from '@/routes/settings/tabs/InterfaceTab.svelte'
@@ -108,23 +107,8 @@
       sidebar: true
     }
   }
-  function pathListener (data) {
-    if (SUPPORTS.isAndroid) requestFileAccess(data, () => $settings.torrentPathNew = data)
-    else $settings.torrentPathNew = data
-  }
-
-  function playerListener (data) {
-    $settings.playerPath = data
-  }
 
   $: debounceRPC($settings.enableRPC)
-
-  IPC.on('path', pathListener)
-  IPC.on('player', playerListener)
-  onDestroy(() => {
-    IPC.off('path', pathListener)
-    IPC.off('player', playerListener)
-  })
 </script>
 
 <Tabs>
@@ -158,7 +142,7 @@
       <Tab>
         <div class='root h-full w-full overflow-y-md-auto p-20 pt-5'>
           <div class='page pb-100'>
-            <ClientTab bind:settings={$settings} />
+            <ClientTab bind:settings={$settings} {requestFileAccess} />
           </div>
         </div>
       </Tab>
