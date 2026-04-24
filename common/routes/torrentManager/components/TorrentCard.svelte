@@ -6,12 +6,12 @@
 <script>
   import { fastPrettyBytes } from '@/modules/util.js'
   import { add, stage, unload, untrack, complete, reannounce } from '@/modules/torrent.js'
-  import { click } from '@/modules/click.js'
+  import { click } from '@/modules/lib/click.js'
   import { eta, createListener } from '@/modules/util.js'
   import { mediaCache } from '@/modules/cache.js'
-  import { anilistClient } from '@/modules/anilist.js'
+  import { anilistClient } from '@/modules/providers/anilist/anilist.js'
   import AnimeResolver from '@/modules/anime/animeresolver.js'
-  import { copyToClipboard } from '@/modules/clipboard.js'
+  import { copyToClipboard } from '@/modules/lib/clipboard.js'
   import { getId } from '@/modules/anime/animehash.js'
   import { modal } from '@/modules/navigation.js'
   export let data

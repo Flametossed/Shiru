@@ -1,11 +1,11 @@
 <script>
   import SmartImage from '@/components/visual/SmartImage.svelte'
-  import Helper from '@/modules/helper.js'
+  import Helper from '@/modules/providers/helper.js'
   import { onMount, onDestroy } from 'svelte'
   import { writable } from 'simple-store-svelte'
   import { since, capitalize, fadeIn, fadeOut } from '@/modules/util.js'
-  import { click, hover, focus } from '@/modules/click.js'
-  import { copyToClipboard } from '@/modules/clipboard.js'
+  import { click, hover, focus } from '@/modules/lib/click.js'
+  import { copyToClipboard } from '@/modules/lib/clipboard.js'
   import { COMMON } from '@/modules/bridge.js'
   import WPC from '@/modules/wpc.js'
 

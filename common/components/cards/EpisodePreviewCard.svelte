@@ -7,11 +7,11 @@
 <script>
   import { statusColorMap, formatMap } from '@/modules/anime/anime.js'
   import { episodesList } from '@/modules/episodes.js'
-  import { click } from '@/modules/click.js'
+  import { click } from '@/modules/lib/click.js'
   import { getHash } from '@/modules/anime/animehash.js'
   import { since, fadeIn, fadeOut, isValidNumber } from '@/modules/util.js'
   import { liveAnimeEpisodeProgress } from '@/modules/anime/animeprogress.js'
-  import { anilistClient } from '@/modules/anilist.js'
+  import { anilistClient } from '@/modules/providers/anilist/anilist.js'
   import { settings } from '@/modules/settings.js'
   import { mediaCache } from '@/modules/cache.js'
   import { modal } from '@/modules/navigation.js'
@@ -20,7 +20,7 @@
   export let prompt
   export let element
   export let zeroEpisode = false
-  /** @type {import('@/modules/al.d.ts').Media | null} */
+  /** @type {import('@/modules/providers/anilist/al.d.ts').Media | null} */
   const media = data.media && mediaCache.value[data.media.id]
   const episodeRange = episodesList.handleArray(data?.episode, data?.parseObject?.file_name)
   const lastEpisode = (data?.episodeRange || data?.parseObject?.episodeRange)?.last || episodeRange?.last || (isValidNumber(data?.episode) && (data?.episode + (zeroEpisode ? 1 : 0))) || (media?.episodes === 1 && media?.episodes)

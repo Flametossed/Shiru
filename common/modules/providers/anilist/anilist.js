@@ -8,9 +8,9 @@ import { isSubbedProgress, getMediaMaxEp } from '@/modules/anime/anime.js'
 import { getRandomInt, sleep, debounce, uniqueStore } from '@/modules/util.js'
 import { printError, status } from '@/modules/networking.js'
 import { cache, caches, mediaCache } from '@/modules/cache.js'
-import { MutationQueue } from '@/modules/mutationqueue.js'
-import { malClient } from '@/modules/myanimelist.js'
-import Helper from '@/modules/helper.js'
+import { MutationQueue } from '@/modules/providers/lib/mutationqueue.js'
+import { malClient } from '@/modules/providers/myanimelist/myanimelist.js'
+import Helper from '@/modules/providers/helper.js'
 import Debug from 'debug'
 const debug = Debug('ui:anilist')
 const query = Debug('ui:alquery')

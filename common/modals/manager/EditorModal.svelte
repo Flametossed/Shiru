@@ -2,7 +2,7 @@
   import { writable } from 'simple-store-svelte'
   import SoftModal from '@/components/modals/SoftModal.svelte'
   import SearchPage from '@/routes/search/SearchPage.svelte'
-  import { click } from '@/modules/click.js'
+  import { click } from '@/modules/lib/click.js'
   import { setHash } from '@/modules/anime/animehash.js'
   import { modal } from '@/modules/navigation.js'
   import { X } from 'lucide-svelte'

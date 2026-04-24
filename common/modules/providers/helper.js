@@ -1,6 +1,6 @@
 import { alToken, malToken, settings, sync, isAuthorized } from '@/modules/settings.js'
-import { anilistClient } from '@/modules/anilist.js'
-import { malClient } from '@/modules/myanimelist.js'
+import { anilistClient } from '@/modules/providers/anilist/anilist.js'
+import { malClient } from '@/modules/providers/myanimelist/myanimelist.js'
 import { malDubs } from '@/modules/anime/animedubs.js'
 import { profiles } from '@/modules/settings.js'
 import { cache, mediaCache, mapStatus } from '@/modules/cache.js'

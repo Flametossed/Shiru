@@ -10,7 +10,7 @@
   import ErrorCard from '@/components/cards/ErrorCard.svelte'
   import { page } from '@/modules/navigation.js'
   import { search } from '@/modules/sections.js'
-  import { click, dragScroll } from '@/modules/click.js'
+  import { click, dragScroll } from '@/modules/lib/click.js'
   import { SUPPORTS } from '@/modules/support.js'
   import { settings } from '@/modules/settings.js'
   import { onDestroy, afterUpdate } from 'svelte'

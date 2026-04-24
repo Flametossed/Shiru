@@ -3,7 +3,7 @@
   import SettingCard from '@/routes/settings/components/SettingCard.svelte'
   import { playPage } from '@/modules/navigation.js'
   import { SUPPORTS } from '@/modules/support.js'
-  import { click } from '@/modules/click.js'
+  import { click } from '@/modules/lib/click.js'
   import { COMMON } from '@/modules/bridge.js'
   import { writable } from 'simple-store-svelte'
   import { Eraser } from 'lucide-svelte'

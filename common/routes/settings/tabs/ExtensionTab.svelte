@@ -1,5 +1,5 @@
 <script>
-  import { click } from '@/modules/click.js'
+  import { click } from '@/modules/lib/click.js'
   import SettingCard from '@/routes/settings/components/SettingCard.svelte'
   import ConfirmButton from '@/components/inputs/ConfirmButton.svelte'
   import { stringToHex, capitalize, toFlags } from '@/modules/util.js'

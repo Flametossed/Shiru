@@ -2,11 +2,11 @@
   import SectionsManager from '@/modules/sections.js'
   import SearchPage from '@/routes/search/SearchPage.svelte'
   import { writable } from 'simple-store-svelte'
-  import { anilistClient } from '@/modules/anilist.js'
+  import { anilistClient } from '@/modules/providers/anilist/anilist.js'
   import { nextAiring } from '@/modules/anime/anime.js'
   import { animeSchedule } from '@/modules/anime/animeschedule.js'
   import { cache, caches } from '@/modules/cache.js'
-  import Helper from '@/modules/helper.js'
+  import Helper from '@/modules/providers/helper.js'
 
   const key = writable({})
   const search = writable(cache.getEntry(caches.HISTORY, 'lastSchedule') || { scheduleList: true, format: ['TV'], format_not: [], genre: [], genre_not: [], tag: [], tag_not: [], status: [], status_not: [] })

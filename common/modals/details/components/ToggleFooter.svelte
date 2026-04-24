@@ -1,5 +1,5 @@
 <script>
-  import { click } from '@/modules/click.js'
+  import { click } from '@/modules/lib/click.js'
   import { ChevronUp, ChevronDown } from 'lucide-svelte'
   export let size = 0
   export let rowSize = 4

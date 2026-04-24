@@ -1,5 +1,5 @@
 <script>
-  import { click } from '@/modules/click.js'
+  import { click } from '@/modules/lib/click.js'
   import { COMMON } from '@/modules/bridge.js'
   import { ExternalLink } from 'lucide-svelte'
 

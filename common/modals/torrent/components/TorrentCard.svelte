@@ -1,10 +1,10 @@
 <script context='module'>
   import TorrentButton from '@/components/TorrentButton.svelte'
   import SmartImage from '@/components/visual/SmartImage.svelte'
-  import { click } from '@/modules/click.js'
+  import { click } from '@/modules/lib/click.js'
   import { fastPrettyBytes, since, matchPhrase, createListener } from '@/modules/util.js'
   import { getEpisodeMetadataForMedia, getKitsuMappings } from '@/modules/anime/anime.js'
-  import { copyToClipboard } from '@/modules/clipboard.js'
+  import { copyToClipboard } from '@/modules/lib/clipboard.js'
   import { malDubs } from '@/modules/anime/animedubs.js'
   import { Database, BadgeCheck, HardDrive, FileQuestion, AlertCircle, TriangleAlert } from 'lucide-svelte'
 
@@ -337,7 +337,7 @@
   /** @type {Result & { parseObject: AnitomyResult }} */
   export let result
 
-  /** @type {import('@/modules/al.d.ts').Media} */
+  /** @type {import('@/modules/providers/anilist/al.d.ts').Media} */
   export let media
 
   export let episode

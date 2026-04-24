@@ -1,7 +1,7 @@
 <script>
   import { Building2, Earth, Adult, FolderKanban, Languages, CalendarRange, MonitorPlay, Type } from 'lucide-svelte'
   import { getKitsuMappings } from '@/modules/anime/anime.js'
-  import { seasons } from '@/modules/anilist.js'
+  import { seasons } from '@/modules/providers/anilist/anilist.js'
 
   export let media = null
   export let alt = null

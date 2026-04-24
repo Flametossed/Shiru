@@ -4,7 +4,7 @@
   import { COMMON, ELECTRON } from '@/modules/bridge.js'
   import { settings } from '@/modules/settings.js'
   import { modal } from '@/modules/navigation.js'
-  import { click } from '@/modules/click.js'
+  import { click } from '@/modules/lib/click.js'
 </script>
 <script>
   function minimizeTray() {

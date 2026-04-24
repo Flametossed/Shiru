@@ -1,5 +1,5 @@
 <script context='module'>
-  import { click } from '@/modules/click.js'
+  import { click } from '@/modules/lib/click.js'
   import { cache, caches } from '@/modules/cache.js'
   import { SUPPORTS } from '@/modules/support.js'
   import { COMMON, ELECTRON } from '@/modules/bridge.js'
@@ -65,7 +65,7 @@
   import ConfirmButton from '@/components/inputs/ConfirmButton.svelte'
   import { modal } from '@/modules/navigation.js'
   import WPC from '@/modules/wpc.js'
-  import { copyToClipboard } from '@/modules/clipboard.js'
+  import { copyToClipboard } from '@/modules/lib/clipboard.js'
   import semver from 'semver'
   import Debug from 'debug'
   const debugStore = persisted('debug', '', { serializer: { parse: e => e, stringify: e => e }})

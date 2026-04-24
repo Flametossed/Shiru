@@ -13,9 +13,9 @@
 <script>
   import { statusColorMap } from '@/modules/anime/anime.js'
   import { episodesList } from '@/modules/episodes.js'
-  import { hoverClick } from '@/modules/click.js'
+  import { hoverClick } from '@/modules/lib/click.js'
   import { liveAnimeEpisodeProgress } from '@/modules/anime/animeprogress.js'
-  import { anilistClient } from '@/modules/anilist.js'
+  import { anilistClient } from '@/modules/providers/anilist/anilist.js'
   import { settings } from '@/modules/settings.js'
   import { mediaCache } from '@/modules/cache.js'
   import { checkForZero } from '@/components/MediaHandler.svelte'
@@ -29,7 +29,7 @@
   let prompt = writable(false)
   let clicked = writable(false)
 
-  /** @type {import('@/modules/al.d.ts').Media | null} */
+  /** @type {import('@/modules/providers/anilist/al.d.ts').Media | null} */
   let media
   $: if (data.media && !media) {
     media = mediaCache.value[data.media.id]

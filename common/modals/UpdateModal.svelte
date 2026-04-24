@@ -1,5 +1,5 @@
 <script context='module'>
-  import { click } from '@/modules/click.js'
+  import { click } from '@/modules/lib/click.js'
   import { writable } from 'simple-store-svelte'
   import { version } from '@/routes/settings/SettingsPage.svelte'
   import { TriangleAlert, ExternalLink, Flame, Sparkles, Info } from 'lucide-svelte'

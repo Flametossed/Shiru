@@ -5,8 +5,8 @@ import { malToken, refreshMalToken, settings } from '@/modules/settings.js'
 import { mediaCache } from '@/modules/cache.js'
 import { sleep, uniqueStore } from '@/modules/util.js'
 import { printError, status } from '@/modules/networking.js'
-import { MutationQueue } from '@/modules/mutationqueue.js'
-import Helper from '@/modules/helper.js'
+import { MutationQueue } from '@/modules/providers/lib/mutationqueue.js'
+import Helper from '@/modules/providers/helper.js'
 import Debug from 'debug'
 const debug = Debug('ui:myanimelist')
 
@@ -100,7 +100,7 @@ class MALClient {
   /**
    * @param {Record<string, any>} query
    * @param {Record<string, any>} body
-   * @returns {Promise<import('./mal').Query<any>>}
+   * @returns {Promise<import('../myanimelist/mal.d.ts').Query<any>>}
    */
   malRequest (query, body = {}) {
     /** @type {RequestInit} */
@@ -122,7 +122,7 @@ class MALClient {
   /**
    * @param {Record<string, any>} query
    * @param {Record<string, any>} options
-   * @returns {Promise<import('./mal').Query<any>>}
+   * @returns {Promise<import('../myanimelist/mal.d.ts').Query<any>>}
    */
   handleRequest = this.limiter.wrap(async (query, options) => {
     await this.rateLimitPromise
@@ -203,7 +203,7 @@ class MALClient {
     return res
   }
 
-  /** @returns {Promise<import('./mal').Query<{ MediaList: import('./mal').MediaList }>>} */
+  /** @returns {Promise<import('../myanimelist/mal.d.ts').Query<{ MediaList: import('../myanimelist/mal.d.ts').MediaList }>>} */
   async getUserLists (variables) {
     debug('Getting user lists')
     const limit = 1_000 // max possible you can fetch
@@ -257,7 +257,7 @@ class MALClient {
     return { data: { MediaList: allMediaList } }
   }
 
-  /** @returns {Promise<import('./mal').Query<{ Viewer: import('./mal').Viewer }>>} */
+  /** @returns {Promise<import('../myanimelist/mal.d.ts').Query<{ Viewer: import('../myanimelist/mal.d.ts').Viewer }>>} */
   async viewer (token) {
     debug('Getting viewer')
     const query = {

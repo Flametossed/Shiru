@@ -8,7 +8,7 @@
     import { onDestroy, afterUpdate } from 'svelte'
     import { Mic, MicOff, Captions, Adult, ClockFading } from 'lucide-svelte'
 
-    /** @type {import('@/modules/al.d.ts').Media} */
+    /** @type {import('@/modules/providers/anilist/al.d.ts').Media} */
     export let media = null
     export let data = null
 

@@ -3,7 +3,7 @@
     import { settings } from '@/modules/settings.js'
     import { stage, loadedTorrent, stagingTorrents, seedingTorrents, completedTorrents } from '@/modules/torrent.js'
     import { getHash } from '@/modules/anime/animehash.js'
-    import { click } from '@/modules/click.js'
+    import { click } from '@/modules/lib/click.js'
 
     export function playActive(hash, search, magnet, prompt = true) {
         const autoFile = settings.value.rssAutofile

@@ -31,7 +31,7 @@ module.exports = [
         'node-fetch': false,
         ws: false,
         wrtc: false,
-        debug: resolve(__dirname, '../common/modules/debug.js'),
+        debug: resolve(__dirname, '../common/modules/lib/debug.js'),
         'webrtc-polyfill': resolve('../node_modules/webrtc-polyfill/browser.js'),
         'http-tracker': resolve('../node_modules/bittorrent-tracker/lib/client/http-tracker.js')
       }

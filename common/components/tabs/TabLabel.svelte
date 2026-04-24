@@ -1,7 +1,7 @@
 <script>
   import { getContext } from 'svelte'
   import { TABS } from '@/components/tabs/Tabs.svelte'
-  import { click } from '@/modules/click.js'
+  import { click } from '@/modules/lib/click.js'
 
   const tab = {}
   export let name = ''

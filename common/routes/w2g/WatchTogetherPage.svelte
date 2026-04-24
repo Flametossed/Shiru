@@ -1,5 +1,5 @@
 <script context='module'>
-  import { copyToClipboard } from '@/modules/clipboard.js'
+  import { copyToClipboard } from '@/modules/lib/clipboard.js'
   import { writable } from 'simple-store-svelte'
   import { status } from '@/modules/networking.js'
   import { SUPPORTS } from '@/modules/support.js'
@@ -43,7 +43,7 @@
   import Lobby from '@/routes/w2g/components/Lobby.svelte'
   import { Plus, UserPlus } from 'lucide-svelte'
   import { W2GClient } from '@/routes/w2g/components/w2g.js'
-  import { click } from '@/modules/click.js'
+  import { click } from '@/modules/lib/click.js'
 
   let joinText
 

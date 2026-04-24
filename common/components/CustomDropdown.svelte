@@ -1,6 +1,6 @@
 <script>
     import { writable } from 'simple-store-svelte'
-    import { click } from '@/modules/click.js'
+    import { click } from '@/modules/lib/click.js'
     import { createListener } from '@/modules/util.js'
 
     export let id

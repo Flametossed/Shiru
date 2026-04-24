@@ -1,6 +1,6 @@
 <script>
   import { onMount } from 'svelte'
-  import { click } from '@/modules/click.js'
+  import { click } from '@/modules/lib/click.js'
   import { SUPPORTS } from '@/modules/support.js'
   import { page, modal } from '@/modules/navigation.js'
 

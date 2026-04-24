@@ -1,14 +1,14 @@
 <script>
   import { onMount, onDestroy } from 'svelte'
   import { airingAt, getAiringInfo, formatMap, getKitsuMappings, getMediaMaxEp, statusColorMap } from '@/modules/anime/anime.js'
-  import { click } from '@/modules/click.js'
+  import { click } from '@/modules/lib/click.js'
   import SmartImage from '@/components/visual/SmartImage.svelte'
   import AudioLabel from '@/components/AudioLabel.svelte'
-  import { anilistClient, seasons } from '@/modules/anilist.js'
+  import { anilistClient, seasons } from '@/modules/providers/anilist/anilist.js'
   import { mediaCache } from '@/modules/cache.js'
   import { modal } from '@/modules/navigation.js'
 
-  /** @type {import('@/modules/al.d.ts').Media} */
+  /** @type {import('@/modules/providers/anilist/al.d.ts').Media} */
   export let data
   export let variables = null
   let _variables = variables

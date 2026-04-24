@@ -99,7 +99,7 @@
 <script>
   import { marked } from 'marked'
   import DOMPurify from 'dompurify'
-  import { click } from '@/modules/click.js'
+  import { click } from '@/modules/lib/click.js'
   export let body = ''
 
   /**

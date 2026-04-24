@@ -1,7 +1,7 @@
 import P2PT from 'p2pt'
 
 import Event, { EventTypes } from '@/routes/w2g/components/events.js'
-import Helper from '@/modules/helper.js'
+import Helper from '@/modules/providers/helper.js'
 import { add } from '@/modules/torrent.js'
 import { generateRandomHexCode } from '@/modules/util.js'
 import { writable } from 'simple-store-svelte'
@@ -9,7 +9,7 @@ import Debug from 'debug'
 const debug = Debug('ui:w2g')
 
 /**
- * @typedef {Record<string, {user: import('@/modules/al.d.ts').Viewer | {id: string }, peer?: import('p2pt').Peer<any>}>} PeerList
+ * @typedef {Record<string, {user: import('@/modules/providers/anilist/al.d.ts').Viewer | {id: string }, peer?: import('p2pt').Peer<any>}>} PeerList
  */
 
 export class W2GClient extends EventTarget {
@@ -46,7 +46,7 @@ export class W2GClient extends EventTarget {
   isHost = false
   #p2pt
   code
-  /** @type {import('simple-store-svelte').Writable<{message: string, user: import('@/modules/al.d.ts').Viewer | {id: string }, type: 'incoming' | 'outgoing', date: Date}[]>} */
+  /** @type {import('simple-store-svelte').Writable<{message: string, user: import('@/modules/providers/anilist/al.d.ts').Viewer | {id: string }, type: 'incoming' | 'outgoing', date: Date}[]>} */
   messages = writable([])
 
   self = Helper.getUser() || { id: generateRandomHexCode(16) }

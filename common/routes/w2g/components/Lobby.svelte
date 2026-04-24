@@ -1,5 +1,5 @@
 <script>
-  import { click } from '@/modules/click.js'
+  import { click } from '@/modules/lib/click.js'
   import User from '@/routes/w2g/components/User.svelte'
   import Message from '@/routes/w2g/components/Message.svelte'
   import { SendHorizontal, DoorOpen, UserPlus } from 'lucide-svelte'
@@ -17,7 +17,7 @@
   $: messages = $state?.messages
 
   /**
-   * @param {{ message: string, user: import('@/modules/al.d.ts').Viewer | {id: string }, type: 'incoming' | 'outgoing', date: Date }[]} messages
+   * @param {{ message: string, user: import('@/modules/providers/anilist/al.d.ts').Viewer | {id: string }, type: 'incoming' | 'outgoing', date: Date }[]} messages
    */
   function groupMessages (messages) {
     if (!messages?.length) return []

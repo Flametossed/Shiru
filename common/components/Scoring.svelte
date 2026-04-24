@@ -1,18 +1,18 @@
 <script>
-  import { anilistClient } from '@/modules/anilist.js'
+  import { anilistClient } from '@/modules/providers/anilist/anilist.js'
   import { profiles, settings, sync } from '@/modules/settings.js'
   import { getMediaMaxEp } from '@/modules/anime/anime.js'
   import { codes, createListener } from '@/modules/util.js'
   import { SUPPORTS } from '@/modules/support.js'
-  import { click } from '@/modules/click.js'
+  import { click } from '@/modules/lib/click.js'
   import { writable } from 'simple-store-svelte'
   import { toast } from 'svelte-sonner'
   import { X, Bookmark, PencilLine } from 'lucide-svelte'
-  import Helper from '@/modules/helper.js'
+  import Helper from '@/modules/providers/helper.js'
   import Debug from 'debug'
   const debug = Debug('ui:scoring')
 
-  /** @type {import('@/modules/al.d.ts').Media} */
+  /** @type {import('@/modules/providers/anilist/al.d.ts').Media} */
   export let media
   export let viewAnime = false
   export let previewAnime = false

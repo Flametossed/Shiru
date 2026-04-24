@@ -1,5 +1,5 @@
 <script>
-  import { click } from '@/modules/click.js'
+  import { click } from '@/modules/lib/click.js'
   import { debounce, defaults } from '@/modules/util.js'
   import { COMMON } from '@/modules/bridge.js'
   import { toast } from 'svelte-sonner'

@@ -1,7 +1,7 @@
 <script>
   import { Check, X } from 'lucide-svelte'
   import { onDestroy } from 'svelte'
-  import { click } from '@/modules/click.js'
+  import { click } from '@/modules/lib/click.js'
 
   let _click = () => {}
   export { _click as click }

@@ -1,15 +1,15 @@
 <script>
   import { formatMap, playMedia } from '@/modules/anime/anime.js'
-  import { anilistClient } from '@/modules/anilist.js'
+  import { anilistClient } from '@/modules/providers/anilist/anilist.js'
   import { settings } from '@/modules/settings.js'
   import { mediaCache } from '@/modules/cache.js'
   import { SUPPORTS } from '@/modules/support.js'
-  import { click, drag } from '@/modules/click.js'
+  import { click, drag } from '@/modules/lib/click.js'
   import SmartImage from '@/components/visual/SmartImage.svelte'
   import AudioLabel from '@/components/AudioLabel.svelte'
   import Scoring from '@/components/Scoring.svelte'
   import { COMMON } from '@/modules/bridge.js'
-  import Helper from '@/modules/helper.js'
+  import Helper from '@/modules/providers/helper.js'
   import { Play, Heart } from 'lucide-svelte'
   import { modal } from '@/modules/navigation.js'
 

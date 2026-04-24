@@ -8,7 +8,7 @@ import { SUPPORTS } from '@/modules/support.js'
 import { spawn } from 'node:child_process'
 import Metadata from '@client/lib/metadata.js'
 import Cache from '@client/lib/torrentcache.js'
-import Debug from 'debug'
+import Debug from '@/modules/lib/debug'
 const debug = Debug('torrent:worker')
 
 // HACK: this is https only, but electron doesn't run in https, weird.

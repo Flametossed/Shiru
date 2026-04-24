@@ -1,13 +1,13 @@
 <script context='module'>
     import { mediaCache } from '@/modules/cache.js'
-    import { click, hoverExit, blurExit } from '@/modules/click.js'
+    import { click, hoverExit, blurExit } from '@/modules/lib/click.js'
     import { SquarePen, SquareCheckBig, Play } from 'lucide-svelte'
     import { SUPPORTS } from '@/modules/support.js'
     import { createListener, isValidNumber } from '@/modules/util.js'
     import { setHash } from '@/modules/anime/animehash.js'
-    import { anilistClient } from '@/modules/anilist.js'
+    import { anilistClient } from '@/modules/providers/anilist/anilist.js'
     import { modal } from '@/modules/navigation.js'
-    import Helper from '@/modules/helper.js'
+    import Helper from '@/modules/providers/helper.js'
     import Debug from 'debug'
     const debug = Debug('ui:file-editor')
     const { reactive, init } = createListener(['verify-btn', 'edit-btn', 'cnt-button', 'episode-input', 'f-safe-area'])

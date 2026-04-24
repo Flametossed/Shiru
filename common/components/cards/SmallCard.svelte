@@ -3,16 +3,16 @@
   import PreviewCard from '@/components/cards/PreviewCard.svelte'
   import { airingAt, getAiringInfo, getKitsuMappings, formatMap, statusColorMap } from '@/modules/anime/anime.js'
   import { createListener } from '@/modules/util.js'
-  import { hoverClick } from '@/modules/click.js'
+  import { hoverClick } from '@/modules/lib/click.js'
   import SmartImage from '@/components/visual/SmartImage.svelte'
   import AudioLabel from '@/components/AudioLabel.svelte'
-  import { anilistClient, currentYear } from '@/modules/anilist.js'
+  import { anilistClient, currentYear } from '@/modules/providers/anilist/anilist.js'
   import { settings } from '@/modules/settings.js'
   import { mediaCache } from '@/modules/cache.js'
   import { modal } from '@/modules/navigation.js'
   import { CalendarDays, Tv, ThumbsUp, ThumbsDown } from 'lucide-svelte'
 
-  /** @type {import('@/modules/al.d.ts').Media} */
+  /** @type {import('@/modules/providers/anilist/al.d.ts').Media} */
   export let data
   export let type = null
   export let variables = null

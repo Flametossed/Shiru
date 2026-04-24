@@ -1,5 +1,5 @@
 <script>
-  import { click } from '@/modules/click.js'
+  import { click } from '@/modules/lib/click.js'
   import { SUPPORTS } from '@/modules/support.js'
   import { sections } from '@/modules/sections.js'
   import { ArrowDownUp, Trash2 } from 'lucide-svelte'

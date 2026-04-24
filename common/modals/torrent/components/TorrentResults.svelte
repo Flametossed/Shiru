@@ -12,14 +12,14 @@
   import { dedupe, getResultsFromExtensions, updatePeerCounts } from '@/modules/extensions/handler.js'
   import { getId, getHash } from '@/modules/anime/animehash.js'
   import AnimeResolver from '@/modules/anime/animeresolver.js'
-  import { anilistClient } from '@/modules/anilist.js'
-  import { click } from '@/modules/click.js'
+  import { anilistClient } from '@/modules/providers/anilist/anilist.js'
+  import { click } from '@/modules/lib/click.js'
   import { toast } from 'svelte-sonner'
   import { X, Search, EllipsisVertical, Timer, Clapperboard, MonitorCog, ArrowDownWideNarrow, ChevronLeft, ChevronUp, ChevronDown, Radio, RefreshCw } from 'lucide-svelte'
   import Debug from 'debug'
   const debug = Debug('ui:torrents')
 
-  /** @typedef {import('@/modules/al.d.ts').Media} Media */
+  /** @typedef {import('@/modules/providers/anilist/al.d.ts').Media} Media */
   /** @typedef {import('anitomyscript').AnitomyResult} AnitomyResult */
   /** @typedef {import('../../../../extensions').TorrentResult} Result */
 

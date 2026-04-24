@@ -1,5 +1,5 @@
 <script context='module'>
-  import { click } from '@/modules/click.js'
+  import { click } from '@/modules/lib/click.js'
   import { Search, X } from 'lucide-svelte'
   import { modal } from '@/modules/navigation.js'
   import SoftModal from '@/components/modals/SoftModal.svelte'

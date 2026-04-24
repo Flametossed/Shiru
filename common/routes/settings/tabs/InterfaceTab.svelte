@@ -1,6 +1,6 @@
 <script>
   import { variables, setStyle, setScale } from '@/modules/themes.js'
-  import { click } from '@/modules/click.js'
+  import { click } from '@/modules/lib/click.js'
   import HomeSections from '@/routes/settings/components/HomeSections.svelte'
   import { ELECTRON } from '@/modules/bridge.js'
   import SettingCard from '@/routes/settings/components/SettingCard.svelte'
@@ -8,7 +8,7 @@
   import { Trash2, RotateCcw } from 'lucide-svelte'
   import { genreList, tagList } from '@/modules/anime/anime.js'
   import CustomDropdown from '@/components/CustomDropdown.svelte'
-  import Helper from '@/modules/helper.js'
+  import Helper from '@/modules/providers/helper.js'
   export let settings
   const listStatus = [['Watching', 'CURRENT'], ['Planning', 'PLANNING'], ['Paused', 'PAUSED'], ['Completed', 'COMPLETED'], ['Dropped', 'DROPPED'], ['Rewatching', 'REPEATING'], ['Not on List', 'NOTONLIST']]
 </script>

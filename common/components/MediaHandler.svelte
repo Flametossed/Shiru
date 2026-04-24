@@ -5,7 +5,7 @@
   import { videoRx, matchPhrase, isValidNumber } from '@/modules/util.js'
   import { tick } from 'svelte'
   import { toast } from 'svelte-sonner'
-  import { anilistClient } from '@/modules/anilist.js'
+  import { anilistClient } from '@/modules/providers/anilist/anilist.js'
   import { mediaCache } from '@/modules/cache.js'
   import { episodesList } from '@/modules/episodes.js'
   import { settings } from '@/modules/settings.js'

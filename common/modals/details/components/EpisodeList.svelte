@@ -41,7 +41,7 @@
 <script>
   import { loadedTorrent, completedTorrents, seedingTorrents, stagingTorrents } from '@/modules/torrent.js'
   import { since, monthDay, matchPhrase, capitalize } from '@/modules/util.js'
-  import { click } from '@/modules/click.js'
+  import { click } from '@/modules/lib/click.js'
   import { onMount, onDestroy } from 'svelte'
   import { episodeByAirDate } from '@/modules/extensions/handler.js'
   import { liveAnimeProgress } from '@/modules/anime/animeprogress.js'

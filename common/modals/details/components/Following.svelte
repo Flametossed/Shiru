@@ -1,9 +1,9 @@
 <script>
-  import { anilistClient } from '@/modules/anilist.js'
+  import { anilistClient } from '@/modules/providers/anilist/anilist.js'
   import User from '@/modals/details/components/User.svelte'
-  import Helper from '@/modules/helper.js'
+  import Helper from '@/modules/providers/helper.js'
 
-  /** @type {import('@/modules/al.d.ts').Media} */
+  /** @type {import('@/modules/providers/anilist/al.d.ts').Media} */
   export let media
   $: following = anilistClient.userID?.viewer?.data?.Viewer && anilistClient.following({ id: media.id })
 </script>

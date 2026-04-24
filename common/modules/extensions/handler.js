@@ -1,7 +1,7 @@
 import { settings } from '@/modules/settings.js'
 import WPC from '@/modules/wpc.js'
 import { sleep, isValidNumber } from '@/modules/util.js'
-import { anilistClient } from '@/modules/anilist.js'
+import { anilistClient } from '@/modules/providers/anilist/anilist.js'
 import { anitomyscript, getAniMappings, getMediaMaxEp } from '@/modules/anime/anime.js'
 import { checkForZero } from '@/components/MediaHandler.svelte'
 import { status } from '@/modules/networking.js'
@@ -27,7 +27,7 @@ if (!isDev) {
 video.remove()
 
 /**
- * @param {{media: import('@/modules/al.js').Media, episode?: number, batch: boolean, movie: boolean, resolution: string}} opts
+ * @param {{media: import('@/modules/providers/anilist/al.d.ts').Media, episode?: number, batch: boolean, movie: boolean, resolution: string}} opts
  * @returns {Promise<Map<string, { name: string, icon?: string, promise: Promise<any> }>>}
  * Returns a Map of extension results keyed by extension id, each containing metadata and a result promise.
  */
@@ -181,7 +181,7 @@ export async function updatePeerCounts(entries, cacheOnly = false) {
   return entries
 }
 
-/** @param {import('@/modules/al.js').Media} media */
+/** @param {import('@/modules/providers/anilist/al.d.ts').Media} media */
 async function ALToAniDB (media) {
   const json = await getAniMappings(media?.id) || {}
   if (json.mappings?.anidb_id) return json
@@ -192,7 +192,7 @@ async function ALToAniDB (media) {
   return getAniMappings(parentID)
 }
 
-/** @param {import('@/modules/al.js').Media} media */
+/** @param {import('@/modules/providers/anilist/al.d.ts').Media} media */
 function getParentForSpecial (media) {
   if (!['SPECIAL', 'OVA', 'ONA'].some(format => media.format === format)) return false
   const animeRelations = media.relations.edges.filter(({ node }) => node.type === 'ANIME')
@@ -206,7 +206,7 @@ function getRelation (list, type) {
 
 // TODO: https://anilist.co/anime/13055/
 /**
- * @param {{media: import('@/modules/al.js').Media, episode: number}} param0
+ * @param {{media: import('@/modules/providers/anilist/al.d.ts').Media, episode: number}} param0
  * @param {{episodes: any, episodeCount: number, specialCount: number}} param1
  **/
 async function ALtoAniDBEpisode ({ media, episode }, { episodes, episodeCount, specialCount }) {
@@ -296,7 +296,7 @@ export function episodeByAirDate (alDate, episodes, episode) {
   })
 }
 
-/** @param {import('@/modules/al.js').Media} media */
+/** @param {import('@/modules/providers/anilist/al.d.ts').Media} media */
 function createTitles (media) {
   // group and de-duplicate
   const groupedTitles = [...new Set(Object.values(media.title).concat(media.synonyms).filter(name => name != null && name.length > 3))]

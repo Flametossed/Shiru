@@ -2,7 +2,7 @@ import _Metadata from 'matroska-metadata'
 import { arr2hex, hex2bin } from 'uint8-util'
 import { fontRx } from '@/modules/util.js'
 import { SUPPORTS } from '@/modules/support.js'
-import Debug from 'debug'
+import Debug from '@/modules/lib/debug'
 const debug = Debug('torrent:parser')
 
 /**

@@ -366,7 +366,7 @@ function createBatchWriter(userID, firstFlushDelay = 10_000, subsequentFlushDela
   }
 }
 
-/** @type {import('simple-store-svelte').Writable<Record<number, import('./al.d.ts').Media>>} */
+/** @type {import('simple-store-svelte').Writable<Record<number, import('./providers/anilist/al.d.ts').Media>>} */
 export let mediaCache
 
 class Cache {
@@ -684,7 +684,7 @@ class Cache {
     const media = isMal ? Object.values(mediaCache.value).find(media => media.idMal === exactId) : mediaCache.value[id]
     if (media) return media
     if (!this.anilistClient) {
-      const { anilistClient } = await import('@/modules/anilist.js')
+      const { anilistClient } = await import('@/modules/providers/anilist/anilist.js')
       this.anilistClient = anilistClient
     }
     if (isMal) return (await this.anilistClient.searchIDSingle({ idMal: exactId })).data.Media // TODO: need to add a requestMediaID in myanimelist.js...

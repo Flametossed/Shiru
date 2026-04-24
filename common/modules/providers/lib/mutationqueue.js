@@ -135,7 +135,7 @@ export class MutationQueue {
    * All executed mutations are applied to the local cache immediately via applyFn, while offline mutations are sent to the API via executeFn with rate limiting.
    * Offline mutations remain in the persisted queue until they succeed, so an app restart mid-flush will retry them on next launch.
    *
-   * @param {import('./al.d.ts').MediaListCollection | import('./mal').MediaList | null} resolvedLists Fresh list data from the API, used for stale-write validation.
+   * @param {import('../anilist/al.d.ts').MediaListCollection | import('../myanimelist/mal.d.ts').MediaList | null} resolvedLists Fresh list data from the API, used for stale-write validation.
    * @param {(mutation: QueuedMutation) => Promise<void>} applyFn Applies a mutation to the local cache.
    * @param {(mutation: QueuedMutation) => Promise<void>} executeFn Sends an offline mutation to the API.
    */
@@ -160,7 +160,7 @@ export class MutationQueue {
    * Failed mutations are left in the queue to be retried on the next flush.
    *
    * @param {QueuedMutation[]} mutations
-   * @param {import('./al.d.ts').MediaListCollection | import('./mal').MediaList | null} resolvedLists
+   * @param {import('../anilist/al.d.ts').MediaListCollection | import('../myanimelist/mal.d.ts').MediaList | null} resolvedLists
    * @param {(mutation: QueuedMutation) => Promise<void>} executeFn
    */
   async #executeRateLimited(mutations, resolvedLists, executeFn) {
@@ -206,7 +206,7 @@ export class MutationQueue {
    * An entry mutation is invalid if the servers progress has already moved past the baseline recorded at queue time, indicating a newer write won.
    *
    * @param {QueuedMutation} mutation
-   * @param {import('./al.d.ts').MediaListCollection | import('./mal').MediaList | null} resolvedLists
+   * @param {import('../anilist/al.d.ts').MediaListCollection | import('../myanimelist/mal.d.ts').MediaList | null} resolvedLists
    * @returns {boolean}
    */
   #validate(mutation, resolvedLists) {
@@ -229,7 +229,7 @@ export class MutationQueue {
   /**
    * Looks up the current watch progress for a media entry from either an AniList or MAL list response.
    *
-   * @param {import('./al.d.ts').MediaListCollection | import('./mal').MediaList | null} lists
+   * @param {import('../anilist/al.d.ts').MediaListCollection | import('../myanimelist/mal.d.ts').MediaList | null} lists
    * @param {number} mediaId
    * @returns {number | null}
    */

@@ -1,6 +1,6 @@
 <script>
   import { settings } from '@/modules/settings.js'
-  import { click } from '@/modules/click.js'
+  import { click } from '@/modules/lib/click.js'
   import { onDestroy, afterUpdate } from 'svelte'
   import ToggleTitle from '@/modals/details/components/ToggleTitle.svelte'
   import ToggleFooter from '@/modals/details/components/ToggleFooter.svelte'

@@ -1,16 +1,16 @@
 <script>
   import { formatMap, getKitsuMappings, getMediaMaxEp, playMedia } from '@/modules/anime/anime.js'
-  import { anilistClient, seasons } from '@/modules/anilist.js'
+  import { anilistClient, seasons } from '@/modules/providers/anilist/anilist.js'
   import { episodesList } from '@/modules/episodes.js'
   import { fadeIn, fadeOut } from '@/modules/util.js'
-  import { click } from '@/modules/click.js'
+  import { click } from '@/modules/lib/click.js'
   import SmartImage from '@/components/visual/SmartImage.svelte'
   import Scoring from '@/components/Scoring.svelte'
-  import Helper from '@/modules/helper.js'
+  import Helper from '@/modules/providers/helper.js'
   import { Heart, Play, VolumeX, Volume2, ThumbsUp, ThumbsDown } from 'lucide-svelte'
   import { ELECTRON } from '@/modules/bridge.js'
 
-  /** @type {import('@/modules/al.d.ts').Media} */
+  /** @type {import('@/modules/providers/anilist/al.d.ts').Media} */
   export let media
   export let element
   export let _variables
@@ -20,7 +20,7 @@
 
   let hide = true
 
-  /** @param {import('@/modules/al.d.ts').Media} media */
+  /** @param {import('@/modules/providers/anilist/al.d.ts').Media} media */
   function getPlayButtonText (media) {
     if (media.mediaListEntry) {
       const { status, progress } = media.mediaListEntry

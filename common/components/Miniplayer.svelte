@@ -29,7 +29,7 @@
   import { page, modal } from '@/modules/navigation.js'
   import { settings } from '@/modules/settings.js'
   import { SUPPORTS } from '@/modules/support.js'
-  import { click } from '@/modules/click.js'
+  import { click } from '@/modules/lib/click.js'
 
   export let playbackPaused = true
   export let active = false

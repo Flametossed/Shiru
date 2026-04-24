@@ -6,9 +6,9 @@ import { COMMON, TORRENT } from '@/modules/bridge.js'
 import Debug from 'debug'
 const debug = Debug('ui:settings')
 
-/** @type {{viewer: import('./al').Query<{Viewer: import('./al').Viewer}>, token: string} | null} */
+/** @type {{viewer: import('./providers/anilist/al.d.ts').Query<{Viewer: import('./providers/anilist/al.d.ts').Viewer}>, token: string} | null} */
 export let alToken = JSON.parse(localStorage.getItem('ALviewer')) || null
-/** @type {{viewer: import('./mal').Query<{Viewer: import('./mal').Viewer}>, token: string, refresh: string, refresh_in: number, reauth: boolean} | null} */
+/** @type {{viewer: import('./providers/myanimelist/mal.d.ts').Query<{Viewer: import('./providers/myanimelist/mal.d.ts').Viewer}>, token: string, refresh: string, refresh_in: number, reauth: boolean} | null} */
 export let malToken = JSON.parse(localStorage.getItem('MALviewer')) || null
 
 /**
@@ -118,7 +118,7 @@ COMMON.onProviderToken((provider, opts) => {
   else debug(`onProviderToken: unknown provider ${provider}`)
 })
 async function handleToken (token) {
-  const { anilistClient } = await import('./anilist.js')
+  const { anilistClient } = await import('./providers/anilist/anilist.js')
   const viewer = await anilistClient.viewer({token})
   if (!viewer.data?.Viewer) {
     toast.error('Failed to sign in with AniList. Please try again.', {description: JSON.stringify(viewer)})
@@ -129,7 +129,7 @@ async function handleToken (token) {
 }
 
 async function handleMalToken (code, state) {
-  const { clientID, malClient } = await import('./myanimelist.js')
+  const { clientID, malClient } = await import('./providers/myanimelist/myanimelist.js')
   if (!state || !code) {
     toast.error('Failed to sign in with MyAnimeList. Please try again.')
     debug(`Failed to get the state and code from MyAnimeList.`)
@@ -163,7 +163,7 @@ async function handleMalToken (code, state) {
 }
 
 export async function refreshMalToken (token) {
-  const { clientID } = await import('./myanimelist.js')
+  const { clientID } = await import('./providers/myanimelist/myanimelist.js')
   const currentProfile = malToken?.token === token
   const refresh = currentProfile ? malToken.refresh : profiles.value.find(profile => profile.token === token)?.refresh
   debug(`Attempting to refresh authorization token ${token} with the refresh token ${refresh}`)
@@ -195,7 +195,7 @@ export async function refreshMalToken (token) {
     return
   }
   const oauth = await response.json()
-  const { malClient } = await import('./myanimelist.js')
+  const { malClient } = await import('./providers/myanimelist/myanimelist.js')
   const viewer = await malClient.viewer(oauth.access_token)
   const refresh_in = Math.floor((Date.now() + 14 * 24 * 60 * 60 * 1000) / 1000)
   if (malToken?.token === token) {

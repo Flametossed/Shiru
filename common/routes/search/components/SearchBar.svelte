@@ -11,13 +11,13 @@
 
 <script>
   import { traceAnime, genreIcons, genreList, tagList } from '@/modules/anime/anime.js'
-  import { currentYear } from '@/modules/anilist.js'
+  import { currentYear } from '@/modules/providers/anilist/anilist.js'
   import { page } from '@/modules/navigation.js'
   import { settings } from '@/modules/settings.js'
   import { SUPPORTS } from '@/modules/support.js'
-  import { click } from '@/modules/click.js'
+  import { click } from '@/modules/lib/click.js'
   import { toast } from 'svelte-sonner'
-  import Helper from '@/modules/helper.js'
+  import Helper from '@/modules/providers/helper.js'
   import CustomDropdown from '@/components/CustomDropdown.svelte'
   import { BookUser, Type, Leaf, CalendarRange, MonitorPlay, MonitorUp, MonitorX, Tv, ArrowDownWideNarrow, Filter, FilterX, X, Tags, Hash, SlidersHorizontal, EyeOff, Hourglass, Mic, ImageUp, Search, Grid3X3, Grid2X2 } from 'lucide-svelte'
 

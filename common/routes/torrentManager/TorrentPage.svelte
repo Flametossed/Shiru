@@ -1,6 +1,6 @@
 <script context='module'>
   import { writable } from 'simple-store-svelte'
-  import { click } from '@/modules/click.js'
+  import { click } from '@/modules/lib/click.js'
   import WPC from '@/modules/wpc.js'
   import { matchPhrase } from '@/modules/util.js'
   import { settings } from '@/modules/settings.js'
