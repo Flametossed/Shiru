@@ -521,7 +521,10 @@ class AnilistClient {
       }`
     const res = await this.alRequest(query, variables)
     const listEntry = res?.data?.SaveMediaListEntry
-    if (!variables.token && !this.mutationQueue.enqueue('entry', variables.id, variables, listEntry, progressBefore)) await this.updateListEntry(variables.id, listEntry)
+    if (!variables.token) {
+      this.mutationQueue.enqueue('entry', variables.id, variables, listEntry, progressBefore)
+      await this.updateListEntry(variables.id, listEntry)
+    }
     //TODO: need to implement "else" for anilist syncing functionality. #updateListEntry
     return res
   }
@@ -543,7 +546,10 @@ class AnilistClient {
         }
       }`
     const res = await this.alRequest(query, variables)
-    if (!variables.token && !this.mutationQueue.enqueue('delete', variables.idAni, variables, null)) await this.deleteListEntry(variables.idAni)
+    if (!variables.token) {
+      this.mutationQueue.enqueue('delete', variables.idAni, variables, null)
+      await this.deleteListEntry(variables.idAni)
+    }
     //TODO: need to implement "else" for anilist syncing functionality. #deleteListEntry
     return res
   }
