@@ -641,6 +641,7 @@ export const defaults = {
   playerSeek: 2,
   playerSkip: false,
   playerTitleTop: true,
+  playerCoverVideo: false,
   playerChapterSkip: 'embedded',
   configTrackers: false,
   trackers: [

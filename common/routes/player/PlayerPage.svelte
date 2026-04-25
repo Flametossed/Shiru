@@ -760,7 +760,12 @@
       }
     }
   }
-  let fitWidth = false
+  let fitWidth = settings.value.playerCoverVideo ?? false
+  function toggleFitWidth() {
+    fitWidth = !fitWidth
+    settings.value.playerCoverVideo = fitWidth
+    return fitWidth
+  }
   let showKeybinds = false
   loadWithDefaults({
     KeyX: {
@@ -858,7 +863,7 @@
       desc: 'Skip Intro/90s'
     },
     KeyW: {
-      fn: () => !viewAnime && (fitWidth = !fitWidth),
+      fn: () => !viewAnime && toggleFitWidth(),
       id: 'fit_width',
       icon: Proportions,
       type: 'icon',
@@ -1911,12 +1916,27 @@
       <input type='file' class='d-none' id='search-subtitle' accept='.srt,.vtt,.ass,.ssa,.sub,.txt' on:input|preventDefault|stopPropagation={handleFile} bind:this={fileInput}/>
       <div class='dropdown dropleft with-arrow' use:click={() => { showOptions.set(!$showOptions) }}>
         <span class='icon text-white ctrl d-flex align-items-center h-full' title='More'><EllipsisVertical size='2.5rem' strokeWidth={2.5} /></span>
-        <div class='position-absolute hm-40 text-capitalize text-nowrap bg-dark rounded dr-arrow' style='margin-top: {launchedExternal ? -14 : externalPlayback ? -10.3 : SUPPORTS.isAndroid || $settings.playerPath ? -21 : -17.5}rem !important; margin-left: {launchedExternal ? -11.1 : externalPlayback ? -9.8 : -11.4}rem !important; transition: opacity 0.1s ease-in;' class:hidden={!$showOptions}>
-          <div role='button' aria-label='Add External Subtitles' class='pointer d-none align-items-center justify-content-center font-size-16 bd-highlight py-5 px-10 rounded-top option' class:d-flex={!externalPlayback} title='Add External Subtitles' use:click={() => { fileInput.click(); showOptions.set(false) }}>
-            <FilePlus2 size='2rem' strokeWidth={2.5} /> <div class='ml-10'>Add Subtitles</div>
+        <div class='position-absolute hm-40 text-capitalize text-nowrap bg-dark rounded dr-arrow' style='margin-top: {launchedExternal ? -13 : externalPlayback ? -9.3 : SUPPORTS.isAndroid || $settings.playerPath ? -24 : -20.5}rem !important; margin-left: {launchedExternal ? -11.1 : externalPlayback ? -9.7 : -14.3}rem !important; transition: opacity 0.1s ease-in;' class:hidden={!$showOptions}>
+
+          <!-- Fit Width Toggle -->
+          <div role='button' aria-label='Toggle Video Fit Mode' class='pointer d-none align-items-center justify-content-center font-size-16 bd-highlight py-5 px-10 rounded-top option' class:d-flex={!externalPlayback} title='Toggle between best fit and fill width' use:click={() => { toggleFitWidth(); showOptions.set(false) }}>
+            <Proportions size='2rem' strokeWidth={2.5} />
+            <div class='ml-10'>Toggle Video Cover</div>
           </div>
-          <div class='dropdown dropleft with-arrow pointer bg-dark option font-size-16 bd-highlight' class:d-none={externalPlayback}>
-            <div role='button' class='d-flex align-items-center justify-content-center py-5 px-10' aria-label='Change the Source of the Video Chapters' title='Change the Source of the Video Chapters' use:click={toggleDropdown}><Milestone size='2rem' strokeWidth={2.5}  /><span class='ml-10'>Chapter Source</span></div>
+
+          <!-- Add Subtitles -->
+          <div role='button' aria-label='Add External Subtitles' class='pointer d-none align-items-center justify-content-center font-size-16 bd-highlight py-5 px-10 option' class:d-flex={!externalPlayback} title='Add External Subtitles' use:click={() => { fileInput.click(); showOptions.set(false) }}>
+            <FilePlus2 size='2rem' strokeWidth={2.5} />
+            <div class='ml-10'>Add Subtitles</div>
+          </div>
+
+          <!-- Chapter Source -->
+          <div class='dropdown dropleft with-arrow pointer bg-dark option font-size-16 bd-highlight w-full' class:d-none={externalPlayback}>
+            <div role='button' class='d-flex align-items-center justify-content-center py-5 px-10' aria-label='Change the Source of the Video Chapters' title='Change the Source of the Video Chapters' use:click={toggleDropdown}>
+              <Milestone size='2rem' strokeWidth={2.5} />
+              <span class='ml-10'>Chapter Source</span>
+            </div>
+
             <div class='dropdown-menu dropdown-menu-right text-capitalize text-nowrap rounded'>
               <div class='custom-radio overflow-hidden pt-5 pl-5'>
                 <input name='chapter-embed-set' type='radio' id='chapter-embed-radio' tabindex='-1' value='embedded' checked={$settings.playerChapterSkip === 'embedded'} />
@@ -1926,12 +1946,19 @@
               </div>
             </div>
           </div>
+
+          <!-- External Player -->
           <div role='button' aria-label='Play the Current Video in an External Player' class='pointer d-none align-items-center justify-content-center font-size-16 bd-highlight py-5 px-10 option' class:d-flex={(!externalPlayback || launchedExternal) && (SUPPORTS.isAndroid || $settings.playerPath)} title='Play the Current Video in an External Player' use:click={() => { setCurrent(current, true); showOptions.set(false) }}>
-            <SquareArrowOutUpRight size='2rem' strokeWidth={2.5} /> <div class='ml-10'>External Player</div>
+            <SquareArrowOutUpRight size='2rem' strokeWidth={2.5} />
+            <div class='ml-10'>External Player</div>
           </div>
+
+          <!-- File Manager -->
           <div role='button' aria-label='Modify Existing Files or Change to a New File' class='pointer d-flex align-items-center justify-content-center font-size-16 bd-highlight py-5 px-10 rounded-bottom option' class:rounded-top={externalPlayback && !launchedExternal} title='Modify Existing Files or Change to a New File' use:click={() => { resolvePrompt = false; modal.toggle(modal.FILE_MANAGER); showOptions.set(false) }}>
-            <SquarePen size='2rem' strokeWidth={2.5} /> <div class='ml-10'>File Manager</div>
+            <SquarePen size='2rem' strokeWidth={2.5} />
+            <div class='ml-10'>File Manager</div>
           </div>
+
         </div>
       </div>
       <span class='icon text-white ctrl mr-5 d-flex align-items-center keybinds' title='Keybinds [`]' use:click={() => (showKeybinds = true)}>
