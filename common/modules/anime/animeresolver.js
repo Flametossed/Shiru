@@ -1,7 +1,8 @@
-import { anilistClient } from '@/modules/providers/anilist/anilist.js'
-import { cache } from '@/modules/cache.js'
+import { anilistClient, getDistanceFromTitle } from '@/modules/providers/anilist/anilist.js'
+import { cache, mediaCache } from '@/modules/cache.js'
 import { anitomyscript, hasZeroEpisode } from '@/modules/anime/anime.js'
 import { chunks, matchKeys, isValidNumber } from '@/modules/util.js'
+import { status } from '@/modules/networking.js'
 //import levenshtein from 'js-levenshtein'
 import Debug from 'debug'
 const debug = Debug('ui:animeresolver')
@@ -132,8 +133,9 @@ export default new class AnimeResolver {
   /**
    * resolve anime name based on file name and store it
    * @param {import('anitomyscript').AnitomyResult[]} parseObjects
+   * @param retry
    */
-  async findAnimesByTitle (parseObjects) {
+  async findAnimesByTitle (parseObjects, retry = false) {
     if (!parseObjects.length) return
     const titleObjects = parseObjects.flatMap(obj => {
       const key = this.getCacheKeyForTitle(obj)
@@ -153,32 +155,52 @@ export default new class AnimeResolver {
     })
     debug(`Finding ${titleObjects?.length} titles: ${titleObjects?.map(obj => obj.title).join(', ')}`)
 
-    const missingTitles = titleObjects
+    let missingTitles = titleObjects
+    // Handle resolving titles during AniList API outage and while offline.
     // Works pretty well but has edge cases that cause it to choose incorrect media, primarily issues with sequel series like Shield Hero.
-    // const missingTitles = []
-    // for (const titleObj of titleObjects) {
-    //   let foundInCache = false
-    //   const candidates = []
-    //   for (const media of Object.values(mediaCache.value)) {
-    //     const scoredMedia = getDistanceFromTitle(media, titleObj.title)
-    //     if (scoredMedia?.lavenshtein != null) candidates.push(scoredMedia)
-    //   }
-    //   candidates.sort((a, b) => a.lavenshtein - b.lavenshtein)
-    //   for (const media of candidates.slice(0, 25)) {
-    //     if (!this.animeNameCache?.[titleObj.key] && this.isVerified(media, { anime_title: titleObj.title, anime_year: titleObj.year }, ['title.userPreferred', 'title.english', 'title.romaji', 'title.native', 'synonyms'], titleObj.title.length > 15 ? 0.15 : titleObj.title.length > 9 ? 0.1 : 0.05)) {
-    //       this.animeNameCache[titleObj.key] = media
-    //       debug(`Cache hit: ${titleObj.title} -> ${media?.id}: ${media?.title?.userPreferred}`)
-    //       foundInCache = true
-    //       break
-    //     }
-    //   }
-    //   if (!this.animeNameCache?.[titleObj.key] && !foundInCache) missingTitles.push(titleObj)
-    // }
+    // TODO: Improve accuracy so we can utilize this while online.
+    if (status.value.match(/offline/i)) {
+      debug('Detected that AniList API is down or network is offline, attempting to resolve titles from cache.')
+      missingTitles = []
+      for (const titleObj of titleObjects) {
+        let foundInCache = false
+        const candidates = []
+        for (const media of Object.values(mediaCache.value)) {
+          const scoredMedia = getDistanceFromTitle(media, titleObj.title)
+          if (scoredMedia?.lavenshtein != null) candidates.push(scoredMedia)
+        }
+        candidates.sort((a, b) => a.lavenshtein - b.lavenshtein)
+        for (const media of candidates.slice(0, 25)) {
+          if (!this.animeNameCache?.[titleObj.key] && this.isVerified(media, { anime_title: titleObj.title, anime_year: titleObj.year }, ['title.userPreferred', 'title.english', 'title.romaji', 'title.native', 'synonyms'], titleObj.title.length > 15 ? 0.15 : titleObj.title.length > 9 ? 0.1 : 0.05)) {
+            this.animeNameCache[titleObj.key] = media
+            debug(`Cache hit: ${titleObj.title} -> ${media?.id}: ${media?.title?.userPreferred}`)
+            foundInCache = true
+            break
+          }
+        }
+        if (!this.animeNameCache?.[titleObj.key] && !foundInCache) missingTitles.push(titleObj)
+      }
+    }
 
     if (missingTitles?.length > 0) debug(`Missing ${missingTitles?.length} titles as they were not found in the media cache, titles: ${missingTitles?.map(obj => obj.title).join(', ')}`)
     for (const chunk of chunks(missingTitles, 55)) {
       // single title has a complexity of 8.1, al limits complexity to 500, so this can be at most 62, undercut it to ~~60~~ 55, al pagination is 50, but at most we'll do 30 titles since isAdult duplicates each title
-      const search = await anilistClient.alSearchCompound(chunk)
+      let search
+      try {
+        search = await anilistClient.alSearchCompound(chunk)
+      } catch (error) {
+        if (status.value.match(/offline/i)) {
+          if (!retry) {
+            debug('Failed to compound search, AniList API is down or network is offline... retrying!')
+            return this.findAnimesByTitle(parseObjects, true)
+          } else {
+            debug('Detected second attempt to compound search and AniList API is down or network is offline... assuming we are missing some series from the cache, these will now be skipped!')
+            return
+          }
+        }
+        debug('Failed to compound search and the network is online.')
+        throw error
+      }
       if (!search || search?.errors) return
       for (const [key, media] of search) {
         if (!this.animeNameCache[key]) {
