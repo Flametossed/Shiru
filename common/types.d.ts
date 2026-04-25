@@ -24,7 +24,7 @@ declare global {
     }
     common: {
       getAppVersion: () => Promise<string>
-      getPlatformInfo: () => { platform: string; arch: string; session: string }
+      getPlatformInfo: () => { platform: string; arch: string; session: string; development: boolean }
       getDeviceInfo: () => Promise<any>
       exportLog: () => Promise<any>
       resetLog: () => Promise<any>

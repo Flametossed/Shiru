@@ -2,7 +2,7 @@ import { App as Capacitor } from '@capacitor/app'
 import { Browser } from '@capacitor/browser'
 import { IntentUri } from 'capacitor-intent-uri'
 import { Filesystem } from '@capacitor/filesystem'
-import { keyboardVisible } from '../main/util.js'
+import { development, keyboardVisible} from '../main/util.js'
 import { FileManager } from '../main/plugin.js'
 import { ipcWire } from '../main/ipc.js'
 import { SystemBars, SystemBarsStyle, SystemBarType } from '@capacitor/core'
@@ -54,7 +54,8 @@ window.common = {
   getAppVersion: async () => (await Capacitor.getInfo())?.version,
   getPlatformInfo: () => ({
     platform: globalThis.cordova?.platformId,
-    arch: navigator.platform?.split(' ')?.[1]
+    arch: navigator.platform?.split(' ')?.[1],
+    development
   }),
   getDeviceInfo: async () => ipcWire.invoke('common:getDeviceInfo'),
   exportLog: async () => ipcWire.invoke('common:exportLog'),

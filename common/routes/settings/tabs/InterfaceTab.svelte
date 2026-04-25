@@ -54,6 +54,12 @@
     </div>
   </SettingCard>
 {/if}
+<SettingCard title='Watch Together Button' description='Enables the Watch Together page and functionality. This is currently experimental so it may behave unexpectedly.'>
+  <div class='custom-switch fit-content'>
+    <input type='checkbox' id='w2g' bind:checked={settings.w2g} />
+    <label for='w2g'>{settings.w2g ? 'On' : 'Off'}</label>
+  </div>
+</SettingCard>
 <SettingCard title='Expandable Sidebar' description='Enables the sidebar to expand revealing detailed text for the navigation buttons.'>
   <div class='custom-switch fit-content'>
     <input type='checkbox' id='disable-sidebar' bind:checked={settings.expandingSidebar} />

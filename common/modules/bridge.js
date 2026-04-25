@@ -10,7 +10,7 @@ const torrentDefaults = {
 }
 const commonDefaults = {
   getAppVersion: noopAsyncString,
-  getPlatformInfo: () => ({ platform: '', arch: '', session: '' }),
+  getPlatformInfo: () => ({ platform: '', arch: '', session: '', development: false }),
   getDeviceInfo: noopAsyncVoid,
   exportLog: noopAsyncVoid,
   resetLog: noopAsyncVoid,

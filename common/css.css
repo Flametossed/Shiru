@@ -736,6 +736,12 @@ body {
   -webkit-backdrop-filter: blur(16px) saturate(160%);
 }
 
+.alert {
+  border: 0;
+  border-left: .8rem solid;
+  border-radius: .3rem;
+}
+
 .anime-details {
     opacity: 0.5;
     z-index: 0;

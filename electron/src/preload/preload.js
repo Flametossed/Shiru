@@ -20,7 +20,8 @@ contextBridge.exposeInMainWorld('common', {
   getPlatformInfo: () => ({
     platform: process.platform,
     arch: process.arch,
-    session: process.env.XDG_SESSION_TYPE || ''
+    session: process.env.XDG_SESSION_TYPE || '',
+    development: process.env.NODE_ENV?.trim() === 'development'
   }),
   getDeviceInfo: () => ipcRenderer.invoke('common:getDeviceInfo'),
   exportLog: () => ipcRenderer.invoke('common:exportLog'),

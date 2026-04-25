@@ -6,6 +6,7 @@
   import { page } from '@/modules/navigation.js'
   import { COMMON } from '@/modules/bridge.js'
   import { loadedTorrent } from '@/modules/torrent.js'
+  import { settings } from '@/modules/settings.js'
   import { toast } from 'svelte-sonner'
   import WPC from '@/modules/wpc.js'
   import Debug from 'debug'
@@ -55,8 +56,10 @@
   w2gEmitter.addEventListener('index', ({ detail }) => state.value?.mediaIndexChanged(detail))
 
   COMMON.onLobbyInvite((link) => {
-    joinLobby(link)
-    page.navigateTo(page.WATCH_TOGETHER)
+    if (settings.value.w2g || COMMON.getPlatformInfo().development) {
+      joinLobby(link)
+      page.navigateTo(page.WATCH_TOGETHER)
+    }
   })
 
   function invite () {
@@ -69,6 +72,7 @@
   import { Plus, UserPlus } from 'lucide-svelte'
   import { W2GClient } from '@/routes/w2g/components/w2g.js'
   import { click } from '@/modules/lib/click.js'
+  import { TriangleAlert } from 'lucide-svelte'
 
   let joinText
 
@@ -87,6 +91,10 @@
 
 <div class='d-flex h-full align-items-center flex-column px-md-20 overflow-y-auto' class:pt-safe-area={!$status.match(/offline/i)}>
   {#if !$state}
+    <div class='alert bg-warning border-warning-dim text-warning-very-dim p-10 pl-15 mb-5 d-flex mt-10'>
+      <TriangleAlert size='1.8rem' />
+      <span class='ml-10'>Watch Together is currently in an <u>experimental</u> state and may behave unexpectedly.</span>
+    </div>
     <div class='font-scale-50 font-weight-bold pt-20 mt-20 root'>Watch Together</div>
     <div class='d-flex flex-row flex-wrap justify-content-center align-items-center h-auto mb-20 pb-20 root position-relative w-full' class:h-full={!SUPPORTS.isAndroid}>
       <div class='card d-flex flex-column align-items-center w-300 h-300 justify-content-end'>

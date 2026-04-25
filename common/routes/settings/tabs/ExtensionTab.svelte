@@ -351,11 +351,6 @@
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
   }
-  .alert {
-    border: 0;
-    border-left: .8rem solid;
-    border-radius: .3rem;
-  }
   .extension-disabled {
     opacity: .4;
   }

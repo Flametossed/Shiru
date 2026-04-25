@@ -628,6 +628,7 @@ export const defaults = {
   expandingSidebar: false,
   torrentPathNew: undefined,
   donate: true,
+  w2g: false,
   font: undefined,
   angle: 'default',
   sourcesNew: {},

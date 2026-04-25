@@ -3,7 +3,7 @@
   import { COMMON } from '@/modules/bridge.js'
   import { ExternalLink } from 'lucide-svelte'
 
-  /** @type {import("d:/Webdevelopment/shiru/common/modules/al").Viewer | {}} */
+  /** @type {import('@/modules/providers/anilist/al.d.ts').Viewer | import('@/modules/providers/myanimelist/mal.d.ts').Viewer | {}} */
   export let user = {}
 </script>
 
