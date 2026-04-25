@@ -1,7 +1,7 @@
 import { toast } from 'svelte-sonner'
 import { writable } from 'simple-store-svelte'
 import { settings } from '@/modules/settings.js'
-import { codes, getRandomInt } from '@/modules/util.js'
+import { codes, throttle, getRandomInt } from '@/modules/util.js'
 import Debug from 'debug'
 const debug = Debug('ui:networking')
 
@@ -16,6 +16,19 @@ export async function printError(title, description, error) {
     })
   }
 }
+
+// Intercepts all AniList fetch requests and returns a 403 outage response.
+// Uncomment the block below to simulate an AniList outage locally.
+// const aniFetchTest = window.fetch
+// window.fetch = async (url, ...args) => {
+//   if (typeof url === 'string' && url.includes('anilist')) return new Response(
+//     JSON.stringify({
+//       errors: [{ message: 'The AniList API has been temporarily disabled due to severe stability issues. Please check the announcements channel in the official AniList Discord for more information.', status: 403 }] }),
+//     { status: 403, headers: { 'Content-Type': 'application/json' }
+//     }
+//   )
+//   return aniFetchTest(url, ...args)
+// }
 
 const fetch = window.fetch
 window.fetch = async (...args) => {
@@ -41,7 +54,7 @@ function isAnilistError(error) {
 
 export const isOffline = newOutageChecker({
   key: 'Network',
-  ping: (timeout = 2000) => pingWith({
+  ping: (timeout = 2_000) => pingWith({
     url: 'https://cp.cloudflare.com/generate_204?cacheBust=' + Date.now(),
     options: {
       method: 'HEAD',
@@ -59,7 +72,7 @@ export const isOffline = newOutageChecker({
 
 export const isAnilistDown = newOutageChecker({
   key: 'Anilist API',
-  ping: (timeout = 2000) => pingWith({
+  ping: (timeout = 2_000) => pingWith({
     url: 'https://graphql.anilist.co',
     options: {
       method: 'POST',
@@ -92,7 +105,7 @@ export const isAnilistDown = newOutageChecker({
   }
 })
 
-async function pingWith({ url, options, timeout = 2000, validate }) {
+async function pingWith({ url, options, timeout = 2_000, validate }) {
   if (!navigator.onLine) return false
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeout)
@@ -111,60 +124,75 @@ async function pingWith({ url, options, timeout = 2000, validate }) {
 function newOutageChecker({ key, ping, detect, offlineEvent, onlineEvent, retryRange = [3, 5], outageToast }) {
   let monitor
   let promise
-  return async function check(error) {
-    if (!promise && !monitor) {
-      promise = (async () => {
-        if (status.value === offlineEvent) return true
-        debug(`Detected error during fetch(), checking for ${key} outage...`)
-        if (!detect(error)) return false
-        debug(`Verified suspicious error, navigator.onLine=${navigator.onLine}, verifying with ${key} ping...`)
-        const result = await ping()
-        if (!result) {
-          debug(`${key} confirmed offline, starting up periodic checks...`)
-          status.value = offlineEvent
-          window.dispatchEvent(new CustomEvent(offlineEvent))
-          if (outageToast) {
-            toast.error(outageToast.title, {
-              description: `${outageToast.description ? outageToast.description + '\n' : ''}${error.status || 429} - ${error.message || codes[error.status || 429]}`,
-              duration: outageToast.duration ?? 45_000
-            })
-          }
-          if (!monitor) {
-            monitor = (() => {
-              let stop = false
-              async function checkLoop() {
-                if (stop) return
-                const result = await ping(status.value === offlineEvent ? 500 : 2000)
-                if (result && status.value === offlineEvent) {
-                  status.value = 'online'
-                  window.dispatchEvent(new CustomEvent(onlineEvent))
-                  debug(`Detected that the ${key} connection restored!`)
-                  stop = true
-                  monitor = null
-                } else if (!result) {
-                  debug(`${key} still offline...`)
-                }
-                if (!stop) {
-                  const [min, max] = retryRange
-                  setTimeout(checkLoop, getRandomInt(min, max) * 1000)
-                }
-              }
-              checkLoop()
-              return () => (stop = true)
-            })()
-          }
-          return true
-        } else {
-          if (status.value === offlineEvent) {
-            status.value = 'online'
-            window.dispatchEvent(new CustomEvent(onlineEvent))
-          }
-          debug(`${key} ping succeeded, online.`)
-          return false
-        }
-      })()
-      promise.finally(() => (promise = null))
+  let resolvePromise
+
+  const throttledCheck = throttle(async (error) => {
+    if (status.value === offlineEvent) {
+      resolvePromise?.(true)
+      return
     }
+    debug(`Detected error during fetch(), checking for ${key} outage...`)
+    if (!detect(error)) {
+      resolvePromise?.(false)
+      return
+    }
+    debug(`Verified suspicious error, navigator.onLine=${navigator.onLine}, verifying with ${key} ping...`)
+    const result = await ping()
+    if (!result) {
+      debug(`${key} confirmed offline, starting up periodic checks...`)
+      status.value = offlineEvent
+      window.dispatchEvent(new CustomEvent(offlineEvent))
+      if (outageToast) {
+        toast.error(outageToast.title, {
+          description: `${outageToast.description ? outageToast.description + '\n' : ''}${error.status || 429} - ${error.message || codes[error.status || 429]}`,
+          duration: outageToast.duration ?? 45_000
+        })
+      }
+      if (!monitor) {
+        monitor = (() => {
+          let stop = false
+          async function checkLoop() {
+            if (stop) return
+            const result = await ping(status.value === offlineEvent ? 500 : 2_000)
+            if (result && status.value === offlineEvent) {
+              status.value = 'online'
+              window.dispatchEvent(new CustomEvent(onlineEvent))
+              debug(`Detected that the ${key} connection restored!`)
+              stop = true
+              monitor = null
+            } else if (!result) {
+              debug(`${key} still offline...`)
+            }
+            if (!stop) {
+              const [min, max] = retryRange
+              setTimeout(checkLoop, getRandomInt(min, max) * 1_000)
+            }
+          }
+          checkLoop()
+          return () => (stop = true)
+        })()
+      }
+      resolvePromise?.(true)
+    } else {
+      if (status.value === offlineEvent) {
+        status.value = 'online'
+        window.dispatchEvent(new CustomEvent(onlineEvent))
+      }
+      debug(`${key} ping succeeded, online.`)
+      resolvePromise?.(false)
+    }
+  }, 5_000)
+
+  return async function check(error) {
+    if (status.value === offlineEvent) return true
+    if (!promise) {
+      promise = new Promise(resolve => { resolvePromise = resolve })
+      promise.finally(() => {
+        promise = null
+        resolvePromise = null
+      })
+    }
+    throttledCheck(error)
     return (await promise) || (status.value === offlineEvent)
   }
 }

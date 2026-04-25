@@ -424,7 +424,6 @@ export function throttle (fn, time) {
       fn(...args)
       wait = true
       setTimeout(() => {
-        fn(...args)
         wait = false
       }, time).unref?.()
     }
