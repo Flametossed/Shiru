@@ -49,6 +49,8 @@ class MALClient {
 
   rateLimitPromise = null
 
+  #listPromise = Promise.resolve()
+
   /** @type {import('simple-store-svelte').Writable<ReturnType<MALClient['getUserLists']>>} */
   userLists = writable()
 
@@ -208,8 +210,9 @@ class MALClient {
   }
 
   /** @returns {Promise<import('../myanimelist/mal.d.ts').Query<{ MediaList: import('../myanimelist/mal.d.ts').MediaList }>>} */
-  async getUserLists (variables) {
+  async getUserLists (variables, skipList = false) {
     debug('Getting user lists')
+    if (!skipList) await this.#listPromise
     const limit = 1_000 // max possible you can fetch
     let offset = 0
     let allMediaList = []
@@ -325,11 +328,15 @@ class MALClient {
       this.mutationQueue.enqueue('entry', variables.idMal, variables, null, this.mutationQueue.getProgressBefore(variables.idMal) ?? variables.episode ?? null, false)
       return entryData
     }
-    const res = await this.malRequest(query, updateData)
-    setTimeout(async () => {
-      if (!variables.token) this.userLists.value = Promise.resolve(await this.getUserLists({ sort: 'list_updated_at' })) // awaits before setting the value as it is super jarring to have stuff constantly re-rendering when it's not needed.
-    }).unref?.()
-    return res ? entryData : res
+    const result = this.#listPromise.then(async () => {
+      const res = await this.malRequest(query, updateData)
+      setTimeout(async () => {
+        if (!variables.token) this.userLists.value = Promise.resolve(await this.getUserLists({ sort: 'list_updated_at' }, true)) // awaits before setting the value as it is super jarring to have stuff constantly re-rendering when it's not needed.
+      }).unref?.()
+      return res ? entryData : res
+    })
+    this.#listPromise = result.catch(() => {})
+    return await result
   }
 
   async delete (variables) {
@@ -347,11 +354,15 @@ class MALClient {
       token: variables.token,
       refresh_in: variables.refresh_in
     }
-    const res = await this.malRequest(query)
-    setTimeout(async () => {
-      if (!variables.token) this.userLists.value = Promise.resolve(await this.getUserLists({ sort: 'list_updated_at' })) // awaits before setting the value as it is super jarring to have stuff constantly re-rendering when it's not needed.
-    }).unref?.()
-    return res
+    const result = this.#listPromise.then(async () => {
+      const res = await this.malRequest(query)
+      setTimeout(async () => {
+        if (!variables.token) this.userLists.value = Promise.resolve(await this.getUserLists({ sort: 'list_updated_at' }, true)) // awaits before setting the value as it is super jarring to have stuff constantly re-rendering when it's not needed.
+      }).unref?.()
+      return res
+    })
+    this.#listPromise = result.catch(() => {})
+    return await result
   }
 
   /**

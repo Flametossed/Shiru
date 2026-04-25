@@ -164,6 +164,8 @@ class AnilistClient {
 
   rateLimitPromise = null
 
+  #listPromise = Promise.resolve()
+
   /** @type {import('simple-store-svelte').Writable<ReturnType<AnilistClient['getUserLists']>>} */
   userLists = writable()
 
@@ -353,7 +355,7 @@ class AnilistClient {
   /** @returns {Promise<import('./al.d.ts').PagedQuery<{ notifications: { id: number, type: string, createdAt: number, episode: number, media: import('./al.d.ts').Media}[] }>>} */
   getNotifications(variables = {}) {
     debug('Getting notifications')
-    const cachedEntry = cache.cachedEntry(caches.NOTIFICATIONS, JSON.stringify(variables), ignoreExpiry || status.value.match(/offline/i))
+    const cachedEntry = cache.cachedEntry(caches.NOTIFICATIONS, JSON.stringify(variables), status.value.match(/offline/i))
     if (cachedEntry) return cachedEntry
     const query = /* js */`
     query($page: Int, $perPage: Int) {
@@ -405,6 +407,7 @@ class AnilistClient {
   /** @returns {Promise<import('./al.d.ts').Query<{ MediaListCollection: import('./al.d.ts').MediaListCollection }>>} */
   async getUserLists(variables = {}, ignoreExpiry = false, ignoreCache = false) {
     debug('Getting user lists')
+    await this.#listPromise
     variables.id = variables.userID || this.userID?.viewer?.data?.Viewer?.id
     const userSort = variables.sort || 'UPDATED_TIME_DESC'
     if (!variables.sort || Helper.isUserSort(variables)) variables.sort = 'UPDATED_TIME_DESC'
@@ -555,38 +558,46 @@ class AnilistClient {
   }
 
   async updateListEntry(mediaId, listEntry) {
-    const lists = (await this.userLists.value).data.MediaListCollection.lists?.map(list => { return { ...list, entries: list.entries.filter(entry => entry.media.id !== mediaId) } })
-    let targetList = lists.find(list => list.status === listEntry?.status)
-    if (!targetList) {
-      targetList = { status: listEntry?.status, entries: [] }
-      lists.push(targetList)
-    }
-    await cache.updateMedia([{ ...(await cache.requestMedia(mediaId)), mediaListEntry: listEntry }])
-    targetList.entries.unshift({ media: await cache.requestMedia(mediaId) })
-    const res = Promise.resolve({
-      data: {
-        MediaListCollection: {
-          lists: lists
-        }
+    const result = this.#listPromise.then(async () => {
+      const lists = (await this.userLists.value).data.MediaListCollection.lists?.map(list => ({ ...list, entries: list.entries.filter(entry => entry.media.id !== mediaId) }))
+      let targetList = lists.find(list => list.status === listEntry?.status)
+      if (!targetList) {
+        targetList = { status: listEntry?.status, entries: [] }
+        lists.push(targetList)
       }
+      await cache.updateMedia([{ ...(await cache.requestMedia(mediaId)), mediaListEntry: listEntry }])
+      targetList.entries.unshift({ media: await cache.requestMedia(mediaId) })
+      const res = Promise.resolve({
+        data: {
+          MediaListCollection: {
+            lists: lists
+          }
+        }
+      })
+      cache.cacheEntry(caches.USER_LISTS, JSON.stringify({ sort: 'UPDATED_TIME_DESC', id: this.userID?.viewer?.data?.Viewer?.id }), { sort: 'UPDATED_TIME_DESC', id: this.userID?.viewer?.data?.Viewer?.id }, res, (await cache.cachedEntry(caches.USER_LISTS, JSON.stringify({ sort: 'UPDATED_TIME_DESC', id: this.userID?.viewer?.data?.Viewer?.id })))?.expiry || (Date.now() + 14 * 60 * 1_000))
+      this.userLists.value = res
     })
-    cache.cacheEntry(caches.USER_LISTS, JSON.stringify({ sort: 'UPDATED_TIME_DESC', id: this.userID?.viewer?.data?.Viewer?.id }), { sort: 'UPDATED_TIME_DESC', id: this.userID?.viewer?.data?.Viewer?.id }, res, (await cache.cachedEntry(caches.USER_LISTS, JSON.stringify({ sort: 'UPDATED_TIME_DESC', id: this.userID?.viewer?.data?.Viewer?.id })))?.expiry || (Date.now() + 14 * 60 * 1_000))
-    this.userLists.value = res
+    this.#listPromise = result.catch(() => {})
+    return await result
   }
 
   async deleteListEntry(mediaId) {
-    await cache.updateMedia([{ ...(await cache.requestMedia(mediaId)), mediaListEntry: null }])
-    const res = Promise.resolve({
-      data: {
-        MediaListCollection: {
-          lists: (await this.userLists.value)?.data?.MediaListCollection?.lists?.map(list => {
-            return {...list, entries: list.entries.filter(entry => entry.media.id !== mediaId)}
-          })
+    const result = this.#listPromise.then(async () => {
+      await cache.updateMedia([{ ...(await cache.requestMedia(mediaId)), mediaListEntry: null }])
+      const res = Promise.resolve({
+        data: {
+          MediaListCollection: {
+            lists: (await this.userLists.value)?.data?.MediaListCollection?.lists?.map(list => {
+              return {...list, entries: list.entries.filter(entry => entry.media.id !== mediaId)}
+            })
+          }
         }
-      }
+      })
+      cache.cacheEntry(caches.USER_LISTS, JSON.stringify({ sort: 'UPDATED_TIME_DESC', id: this.userID?.viewer?.data?.Viewer?.id }), { sort: 'UPDATED_TIME_DESC', id: this.userID?.viewer?.data?.Viewer?.id }, res, (await cache.cachedEntry(caches.USER_LISTS, JSON.stringify({ sort: 'UPDATED_TIME_DESC', id: this.userID?.viewer?.data?.Viewer?.id })))?.expiry || (Date.now() + 14 * 60 * 1_000))
+      this.userLists.value = res
     })
-    cache.cacheEntry(caches.USER_LISTS, JSON.stringify({ sort: 'UPDATED_TIME_DESC', id: this.userID?.viewer?.data?.Viewer?.id }), { sort: 'UPDATED_TIME_DESC', id: this.userID?.viewer?.data?.Viewer?.id }, res, (await cache.cachedEntry(caches.USER_LISTS, JSON.stringify({ sort: 'UPDATED_TIME_DESC', id: this.userID?.viewer?.data?.Viewer?.id })))?.expiry || (Date.now() + 14 * 60 * 1_000))
-    this.userLists.value = res
+    this.#listPromise = result.catch(() => {})
+    return await result
   }
 
   /**
