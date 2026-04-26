@@ -295,7 +295,7 @@
                 <div class='unreleased-overlay position-absolute top-0 left-0 right-0 h-full pointer-events-none rounded-2' class:d-none={!unreleased}/>
                 {#if image}
                   <div class='d-flex'>
-                    <div class='overflow-hidden'>
+                    <div class='overflow-hidden w-full'>
                       <SmartImage class='img-cover {!SUPPORTS.isAndroid ? `h-150` : `h-165`} w-full w-sm-265 {isSpoiler && [`minimal`, `moderate`, `strict`, `hermit`].includes($settings.spoilers) ? `img-spoiler` : ``}' images={[image, './404_episode.png']}/>
                     </div>
                     {#if resolvedHash}

@@ -108,7 +108,7 @@
     <label for='prefer-dubs'>{settings.preferDubs ? 'On' : 'Off'}</label>
   </div>
 </SettingCard>
-<SettingCard title='Spoiler Control' description={'Control how much episode and series information is hidden to avoid spoilers. Each level includes everything from the level below it, and only applies to anime matching your configured spoiler status.\n\nMinimal hides episode images. Moderate additionally hides episode descriptions and review counts. Strict additionally hides episode titles, anime synopsis, and ratings. Hermit additionally hides episode durations.'}>
+<SettingCard title='Spoiler Control' description={'Control how much episode and series information is hidden to avoid spoilers. Each level includes everything from the level below it, and only applies to anime matching your configured spoiler status.\n\nMinimal hides episode images. Moderate additionally hides episode descriptions, review counts, and tags considered media spoilers. Strict additionally hides episode titles, anime synopsis, ratings, and tags considered general spoilers. Hermit additionally hides episode durations.'}>
   <select class='form-control bg-dark w-150 mw-full text-truncate' bind:value={settings.spoilers} on:change={(event) => { if (event.target.value === 'off') settings.spoilerStatus = [] }}>
     <option value='off' selected>Off</option>
     <option value='minimal'>Minimal</option>

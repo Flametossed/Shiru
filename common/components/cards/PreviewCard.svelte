@@ -18,7 +18,7 @@
   export let type = null
 
   $: maxEp = getMediaMaxEp(media)
-  $: hasSpoiler = media?.mediaListEntry?.status && $settings.spoilerStatus.includes(media.mediaListEntry.status)
+  $: hasSpoiler = media?.mediaListEntry?.status && $settings.spoilerStatus.includes(media.mediaListEntry.status ?? 'NOTONLIST')
 
   let hide = true
 
