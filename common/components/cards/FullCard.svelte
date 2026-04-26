@@ -5,6 +5,7 @@
   import SmartImage from '@/components/visual/SmartImage.svelte'
   import AudioLabel from '@/components/AudioLabel.svelte'
   import { anilistClient, seasons } from '@/modules/providers/anilist/anilist.js'
+  import { settings } from '@/modules/settings.js'
   import { mediaCache } from '@/modules/cache.js'
   import { modal } from '@/modules/navigation.js'
 
@@ -17,6 +18,7 @@
   $: if (data && !media) media = mediaCache.value[data?.id]
   mediaCache.subscribe((value) => { if (value && (JSON.stringify(value[media?.id]) !== JSON.stringify(media))) media = value[media?.id] })
   $: maxEp = getMediaMaxEp(media)
+  $: hasSpoiler = $settings.spoilerStatus.includes(media?.mediaListEntry?.status ?? 'NOTONLIST')
 
   function viewMedia () {
     if (_variables?.fileEdit) _variables.fileEdit(media)
@@ -61,7 +63,7 @@
                 <span class='badge pl-5 pr-5'>
                   {['CURRENT', 'REPEATING', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry?.progress ? media.mediaListEntry.progress + ' / ' : ''}{maxEp && maxEp !== 0 && !(media.mediaListEntry?.progress > maxEp) ? maxEp : '?'} Episodes
                 </span>
-            {:else if media.duration}
+            {:else if media.duration && (!hasSpoiler || !['hermit'].includes($settings.spoilers))}
                 <span class='badge pl-5 pr-5'>
                   {media.duration + ' Minutes'}
                 </span>
@@ -87,8 +89,10 @@
               {/if}
             {/await}
             {#if media.averageScore}
-              <span class='badge pl-5 pr-5'>{media.averageScore + '%'} Rating</span>
-              {#if media.stats?.scoreDistribution}
+              {#if (!hasSpoiler || !['strict', 'hermit'].includes($settings.spoilers))}
+                <span class='badge pl-5 pr-5'>{media.averageScore + '%'} Rating</span>
+              {/if}
+              {#if media.stats?.scoreDistribution && (!hasSpoiler || !['moderate', 'strict', 'hermit'].includes($settings.spoilers))}
                 <span class='badge pl-5 pr-5'>{anilistClient.reviews(media)} Reviews</span>
               {/if}
             {/if}
@@ -103,7 +107,7 @@
           {/if}
         </div>
         {#if media.description}
-          <div class='overflow-y-auto ml-15 pr-15 pb-5 bg-very-dark card-desc pre-wrap'>
+          <div class='overflow-y-auto ml-15 pr-15 pb-5 bg-very-dark card-desc pre-wrap' class:text-spoiler={hasSpoiler && ['strict', 'hermit'].includes($settings.spoilers)}>
             {media.description.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()}
           </div>
         {/if}

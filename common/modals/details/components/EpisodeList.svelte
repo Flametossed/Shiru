@@ -59,6 +59,8 @@
 
   export let watched = false
 
+  export let hasSpoiler = false
+
   export let episodeCount
 
   export let userProgress = 0
@@ -281,10 +283,11 @@
           {#if media?.status === 'FINISHED' || (episodeOrder ? (index === 0 || ((currentEpisodes[index - 1]?.airdate && (new Date(currentEpisodes[index - 1].airdate).getTime() <= new Date().getTime())) || (media?.status !== 'NOT_YET_RELEASED' && airdate && currentEpisodes[index - 1]?.airdate && (currentEpisodes[index - 1]?.airdate === airdate)) || (nextDubAiring?.airdate && new Date(nextDubAiring.airdate).getTime() === new Date(dubAiring.airdate).getTime()))) : (index === currentEpisodes.length - 1 || (currentEpisodes[index + 1]?.airdate && (new Date(currentEpisodes[index + 1]?.airdate).getTime() <= new Date().getTime())) || (currentEpisodes[index + 1]?.airdate && currentEpisodes[index + 1]?.airdate === airdate) || (nextDubAiring?.airdate && new Date(nextDubAiring.airdate).getTime() === new Date(dubAiring.airdate).getTime())))}
             {@const unreleased = media?.status !== 'FINISHED' && ((airdate && new Date(airdate).getTime() > new Date()) || (!airdate && (episode > 1 || media?.status === 'NOT_YET_RELEASED')))}
             {@const completed = !watched && userProgress >= (episode + (zeroEpisode ? 1 : 0))}
+            {@const isSpoiler = hasSpoiler && !completed}
             {@const target = userProgress + 1 === (episode + (zeroEpisode ? 1 : 0))}
             {@const hasFiller = filler?.filler || filler?.recap}
             {@const progress = !watched && ($animeProgress?.[episode] ?? 0)}
-            {@const resolvedTitle = episodeList.filter((ep) => ep.episode < episode).some((ep) => matchPhrase(ep.title, title, 0.1, true)) ? null : title}
+            {@const resolvedTitle = (isSpoiler && ['strict', 'hermit'].includes($settings.spoilers)) || episodeList.filter((ep) => ep.episode < episode).some((ep) => matchPhrase(ep.title, title, 0.1, true)) ? null : title}
             {@const largeCard = image}
             {@const resolvedHash = ($completedTorrents || $seedingTorrents || $stagingTorrents || $loadedTorrent) && getHash(media?.id, { episode, client: true, batchGuess: true }, false, true)}
             <div class='w-full content-visibility-auto scale my-20' class:load-in={!loadScroll} class:opacity-half={completed} class:scale-target={target} class:px-20={!target} class:px-10={target} class:h-150={!SUPPORTS.isAndroid && largeCard} class:h-165={SUPPORTS.isAndroid && largeCard}>
@@ -292,7 +295,9 @@
                 <div class='unreleased-overlay position-absolute top-0 left-0 right-0 h-full pointer-events-none rounded-2' class:d-none={!unreleased}/>
                 {#if image}
                   <div class='d-flex'>
-                    <SmartImage class='img-cover {!SUPPORTS.isAndroid ? `h-150` : `h-165`} w-full w-sm-265' images={[image, './404_episode.png']}/>
+                    <div class='overflow-hidden'>
+                      <SmartImage class='img-cover {!SUPPORTS.isAndroid ? `h-150` : `h-165`} w-full w-sm-265 {isSpoiler && [`minimal`, `moderate`, `strict`, `hermit`].includes($settings.spoilers) ? `img-spoiler` : ``}' images={[image, './404_episode.png']}/>
+                    </div>
                     {#if resolvedHash}
                       <div class='position-relative torrent-button-container'>
                         <div class='position-absolute top-0 right-0 text-danger icon-padding icon-shadow'>
@@ -323,7 +328,7 @@
                       {#if resolvedTitle && !new RegExp(`(?<![\\d.])${episode}(?![\\d.])`).test(resolvedTitle) && media?.episodes !== 1}{episode}. {/if}{resolvedTitle || 'Episode ' + episode}
                     </div>
                     {#if length}
-                      <div class='ml-auto pl-5'>
+                      <div class='ml-auto pl-5' class:text-spoiler={isSpoiler && ['hermit'].includes($settings.spoilers)}>
                         {length}m
                       </div>
                     {/if}
@@ -337,7 +342,7 @@
                       <div class='progress-bar' style='width: {progress}%'/>
                     </div>
                   {/if}
-                  <div class='font-size-12 overflow-hidden {(!completed && !progress) || !dubAiring ? `line-3 line-sm-4` : `line-2 line-sm-3`}' class:mb-10={!largeCard} class:summary={unreleased} class:font-weight-bold={unreleased}>
+                  <div class='font-size-12 overflow-hidden {(!completed && !progress) || !dubAiring ? `line-3 line-sm-4` : `line-2 line-sm-3`}' class:text-spoiler={!unreleased && isSpoiler && ['moderate', 'strict', 'hermit'].includes($settings.spoilers)} class:mb-10={!largeCard} class:summary={unreleased} class:font-weight-bold={unreleased}>
                     {summary?.replace(/\s*\(?source:\s*[\s\S]+?\)?$/i, '') || ''}
                   </div>
                   <div class='font-size-12 mt-auto' class:mb-5={dubAiring} class:mb-10={!dubAiring}>

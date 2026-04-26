@@ -8,6 +8,7 @@
   import Scoring from '@/components/Scoring.svelte'
   import Helper from '@/modules/providers/helper.js'
   import { Heart, Play, VolumeX, Volume2, ThumbsUp, ThumbsDown } from 'lucide-svelte'
+  import { settings } from '@/modules/settings.js'
   import { ELECTRON } from '@/modules/bridge.js'
 
   /** @type {import('@/modules/providers/anilist/al.d.ts').Media} */
@@ -17,6 +18,7 @@
   export let type = null
 
   $: maxEp = getMediaMaxEp(media)
+  $: hasSpoiler = media?.mediaListEntry?.status && $settings.spoilerStatus.includes(media.mediaListEntry.status)
 
   let hide = true
 
@@ -126,7 +128,7 @@
             {['CURRENT', 'REPEATING', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry?.progress ? media.mediaListEntry.progress + ' / ' : ''}{maxEp && maxEp !== 0 && !(media.mediaListEntry?.progress > maxEp) ? maxEp : '?'}
             Episodes
           </span>
-        {:else if media.duration}
+        {:else if media.duration && (!hasSpoiler || !['hermit'].includes($settings.spoilers))}
           <span class='badge pl-5 pr-5 font-scale-14'>
             {media.duration + ' Minutes'}
           </span>
@@ -152,15 +154,17 @@
           {/if}
         {/await}
         {#if media.averageScore}
-          <span class='badge pl-5 pr-5 font-scale-14'>{media.averageScore + '%'} Rating</span>
-          {#if media.stats?.scoreDistribution && (!type && type !== 0)}
+          {#if (!hasSpoiler || !['strict', 'hermit'].includes($settings.spoilers))}
+            <span class='badge pl-5 pr-5 font-scale-14'>{media.averageScore + '%'} Rating</span>
+          {/if}
+          {#if media.stats?.scoreDistribution && (!type && type !== 0) && (!hasSpoiler || !['moderate', 'strict', 'hermit'].includes($settings.spoilers))}
             <span class='badge pl-5 pr-5 font-scale-14'>{anilistClient.reviews(media)} Reviews</span>
           {/if}
         {/if}
       </div>
     </div>
     {#if media.description}
-      <div class='w-full h-full text-muted description overflow-hidden font-scale-14'>
+      <div class='w-full h-full description overflow-hidden font-scale-14' class:text-muted={!hasSpoiler || !['strict', 'hermit'].includes($settings.spoilers)} class:text-spoiler={hasSpoiler && ['strict', 'hermit'].includes($settings.spoilers)}>
         {media.description?.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()}
       </div>
     {/if}

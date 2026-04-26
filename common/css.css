@@ -463,6 +463,15 @@ a[href]:active, button:not([disabled], .not-reactive):active:not([data-sonner-to
   filter: blur(.6rem) saturate(1.5);
 }
 
+.img-spoiler {
+  filter: blur(1rem) brightness(0.65) saturate(0.4) !important;
+}
+.text-spoiler {
+  color: transparent !important;
+  text-shadow: 0 0 0.6rem hsla(var(--white-color-hsl), 0.4) !important;
+  user-select: none !important;
+}
+
 .z--1 {
   z-index: -1 !important;
 }

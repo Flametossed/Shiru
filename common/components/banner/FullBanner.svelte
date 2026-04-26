@@ -17,6 +17,7 @@
 
   let currentStatic = mediaList[0]
   $: current = mediaList[0]
+  $: hasSpoiler = $settings.spoilerStatus.includes(currentStatic?.mediaListEntry?.status ?? 'NOTONLIST')
   mediaCache.subscribe((value) => { if (current?.id && value && value[current?.id]?.id && (JSON.stringify(value[current?.id]) !== JSON.stringify(current))) { current = value[current?.id]; currentStatic = current } })
 
   function toggleFavourite () {
@@ -76,7 +77,7 @@
           {currentStatic.episodes} Episodes
         {/if}
       </span>
-    {:else if currentStatic.duration}
+    {:else if currentStatic.duration && (!hasSpoiler || !['hermit'].includes($settings.spoilers))}
       <span class='text-nowrap d-flex align-items-center'>
         {currentStatic.duration + ' Minutes'}
       </span>
@@ -98,7 +99,7 @@
     {/if}
   </div>
   <div class='h-100'>
-    <div class='text-muted line-4 overflow-hidden w-600 mw-full default-cursor'>
+    <div class='line-4 overflow-hidden w-600 mw-full default-cursor' class:text-muted={!hasSpoiler || !['strict', 'hermit'].includes($settings.spoilers)} class:text-spoiler={hasSpoiler && ['strict', 'hermit'].includes($settings.spoilers)}>
       {currentStatic.description?.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim() || ''}
     </div>
   </div>

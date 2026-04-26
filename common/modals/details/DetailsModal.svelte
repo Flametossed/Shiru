@@ -43,6 +43,7 @@
   mediaCache.subscribe((value) => { if (value && (JSON.stringify(value[media?.id]) !== JSON.stringify(media))) media = value[media?.id] })
   $: episodeOrder = !!staticMedia
   $: watched = media?.mediaListEntry?.status === 'COMPLETED'
+  $: hasSpoiler = $settings.spoilerStatus.includes(media?.mediaListEntry?.status ?? 'NOTONLIST')
   $: userProgress =  ['CURRENT', 'REPEATING', 'PAUSED', 'DROPPED'].includes(media?.mediaListEntry?.status) && media?.mediaListEntry?.progress
   $: missingIds = staticMedia && []
   $: recommendations = staticMedia && anilistClient.recommendations({ id: staticMedia.id })
@@ -216,7 +217,7 @@
               <div class='pl-sm-20 ml-sm-20'>
                 <h1 class='font-weight-very-bold text-white select-all mb-0 font-scale-40'>{anilistClient.title(staticMedia)}</h1>
                 <div class='d-flex flex-row font-size-18 flex-wrap mt-5'>
-                  {#if staticMedia.averageScore}
+                  {#if staticMedia.averageScore && (!hasSpoiler || !['strict', 'hermit'].includes($settings.spoilers))}
                     <div class='d-flex flex-row mt-10' title='{staticMedia.averageScore / 10} by {anilistClient.reviews(staticMedia)} reviews'>
                       <TrendingUp class='mx-10' size='2.2rem' />
                       <span class='mr-20'>
@@ -248,7 +249,7 @@
                       </span>
                     </div>
                   {/if}
-                  {#if staticMedia.averageScore && staticMedia.stats?.scoreDistribution}
+                  {#if staticMedia.averageScore && staticMedia.stats?.scoreDistribution && (!hasSpoiler || !['moderate', 'strict', 'hermit'].includes($settings.spoilers))}
                     <div class='d-flex flex-row mt-10'>
                       <Users class='mx-10' size='2.2rem' />
                       <span class='mr-20' title='{staticMedia.averageScore / 10} by {anilistClient.reviews(staticMedia)} reviews'>
@@ -290,9 +291,11 @@
             <Details media={staticMedia} alt={recommendations} />
             <div bind:this={scrollTags} class='m-0 px-20 pb-0 pt-10 d-flex flex-row text-nowrap overflow-x-scroll text-capitalize align-items-start'>
               {#each staticMedia.tags as tag}
-                <div class='bg-dark-light px-20 py-10 mr-10 rounded text-nowrap d-flex align-items-center'>
-                  <Hash class='mr-5' size='1.8rem' /><span class='font-weight-bolder select-all'>{tag.name}</span><span class='font-weight-light'>: {tag.rank}%</span>
-                </div>
+                {#if !(hasSpoiler && ((tag.isGeneralSpoiler && ['strict', 'hermit'].includes($settings.spoilers)) || (tag.isMediaSpoiler && ['moderate', 'strict', 'hermit'].includes($settings.spoilers))))}
+                  <div class='bg-dark-light px-20 py-10 mr-10 rounded text-nowrap d-flex align-items-center'>
+                    <Hash class='mr-5' size='1.8rem' /><span class='font-weight-bolder select-all'>{tag.name}</span><span class='font-weight-light'>: {tag.rank}%</span>
+                  </div>
+                {/if}
               {/each}
             </div>
             <div bind:this={scrollGenres} class='m-0 px-20 pb-0 pt-10 d-flex flex-row text-nowrap overflow-x-scroll text-capitalize align-items-start'>
@@ -306,7 +309,7 @@
                 <div class='font-size-18 font-weight-semi-bold px-20 text-white'>Synopsis</div>
                 <hr class='w-full' />
               </div>
-              <div class='font-size-16 pt-20 select-all'>
+              <div class='font-size-16 pt-20 select-all' class:text-spoiler={hasSpoiler && ['strict', 'hermit'].includes($settings.spoilers)}>
                 {@html sanitize(staticMedia.description)}
               </div>
             {/if}
@@ -319,7 +322,7 @@
               </div>
             {/if}
             <div class='col-lg-5 col-12 d-lg-none flex-column mt-20'>
-              <EpisodeList bind:episodeList={episodeList} mobileList={true} media={staticMedia} {episodeOrder} bind:userProgress bind:watched episodeCount={getMediaMaxEp(media)} {play} class='h-600' />
+              <EpisodeList bind:episodeList={episodeList} mobileList={true} media={staticMedia} {episodeOrder} bind:userProgress bind:watched bind:hasSpoiler episodeCount={getMediaMaxEp(media)} {play} class='h-600' />
             </div>
             <div class='d-lg-block'>
               <ToggleList list={ staticMedia.relations?.edges?.filter(({ node, relationType }) => relationType !== 'CHARACTER' && node.type === 'ANIME' && node.format !== 'MUSIC' && !(settings.value.adult === 'none' && node.isAdult) && !(settings.value.adult !== 'hentai' && node.genres?.includes('Hentai')) && !missingIds.includes(node.id)).sort((a, b) => (a.node.seasonYear || Infinity) - (b.node.seasonYear || Infinity)) } promise={searchIDS} let:item let:promise title='Relations'>
@@ -360,7 +363,7 @@
           <button class='close order pointer z-30 bg-dark-light position-absolute' class:d-none={!episodeList?.length} data-toggle='tooltip' data-placement='top' data-target-breakpoint='md' data-title='Reverse Episodes' use:click={()=> {episodeOrder = !episodeOrder}}>
             <svelte:component this={episodeOrder ? ArrowDown01 : ArrowUp10} size='2rem' />
           </button>
-          <EpisodeList bind:episodeLoad={episodeLoad} media={staticMedia} {episodeOrder} bind:userProgress bind:watched episodeCount={getMediaMaxEp(media)} {play} />
+          <EpisodeList bind:episodeLoad={episodeLoad} media={staticMedia} {episodeOrder} bind:userProgress bind:watched bind:hasSpoiler episodeCount={getMediaMaxEp(media)} {play} />
         </div>
       </div>
     {/if}

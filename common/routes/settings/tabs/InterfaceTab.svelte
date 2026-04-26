@@ -108,6 +108,35 @@
     <label for='prefer-dubs'>{settings.preferDubs ? 'On' : 'Off'}</label>
   </div>
 </SettingCard>
+<SettingCard title='Spoiler Control' description={'Control how much episode and series information is hidden to avoid spoilers. Each level includes everything from the level below it, and only applies to anime matching your configured spoiler status.\n\nMinimal hides episode images. Moderate additionally hides episode descriptions and review counts. Strict additionally hides episode titles, anime synopsis, and ratings. Hermit additionally hides episode durations.'}>
+  <select class='form-control bg-dark w-150 mw-full text-truncate' bind:value={settings.spoilers} on:change={(event) => { if (event.target.value === 'off') settings.spoilerStatus = [] }}>
+    <option value='off' selected>Off</option>
+    <option value='minimal'>Minimal</option>
+    <option value='moderate'>Moderate</option>
+    <option value='strict'>Strict</option>
+    <option value='hermit'>Hermit</option>
+  </select>
+</SettingCard>
+{#if settings.spoilers !== 'off'}
+  <SettingCard title='Spoiler Status' description={'Define which list status types should have spoiler control active. Spoilers will only be hidden for anime matching a selected status. For example, adding "Watching" means only currently watching series will have spoilers hidden, while everything else will show normally.'}>
+    <div>
+      {#each settings.spoilerStatus as status, i}
+        <div class='input-group mb-10 w-210 mw-full'>
+          <select id='spoiler-status-{i}' class='w-100 form-control mw-full bg-dark text-truncate' bind:value={settings.spoilerStatus[i]}>
+            <option disabled value=''>Select a status</option>
+            {#each listStatus.filter(option => option[1] !== 'COMPLETED').filter(option => !settings.spoilerStatus.includes(option[1]) || status === option[1]) as option}
+              <option value='{option[1]}'>{option[0]}</option>
+            {/each}
+          </select>
+          <div class='input-group-append'>
+            <button type='button' use:click={() => { settings.spoilerStatus.splice(i, 1); settings.spoilerStatus = settings.spoilerStatus }} class='btn btn-danger btn-square input-group-append px-5 d-flex align-items-center'><Trash2 size='1.8rem' /></button>
+          </div>
+        </div>
+      {/each}
+      <button type='button' disabled={listStatus.filter(option => option[1] !== 'COMPLETED').every(option => settings.spoilerStatus.includes(option[1]))} use:click={() => { settings.spoilerStatus = [...settings.spoilerStatus, ''] }} class='btn btn-primary mb-10 d-flex align-items-center justify-content-center'><span>Add Status</span></button>
+    </div>
+  </SettingCard>
+{/if}
 <SettingCard title='Adult Content' description={'Adult enables searching for adult (18+) rated anime, typically series with nudity. Hentai enables searching straight up Hentai. This includes adding the Hentai home feed, Hentai genre, and Hentai related tags for search queries.'}>
   <select class='form-control bg-dark w-100 mw-full text-truncate' bind:value={settings.adult}>
     <option value='none' selected>None</option>
