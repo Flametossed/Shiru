@@ -217,7 +217,7 @@
           </select>
         </div>
         <div class='input-group'>
-          <CustomDropdown id={`year-input`} class='radius-left-0' bind:form options={Array.from({ length: currentYear - 1940 + 2 }, (_, i) => currentYear + 1 - i)} bind:value={search.year} arrayValue={false} bind:disabled={search.disableSearch}/>
+          <CustomDropdown id={`year-input`} class='radius-left-0' bind:form options={Array.from({ length: currentYear - 1940 + 2 }, (_, i) => currentYear + 1 - i)} bind:value={search.year} arrayValue={false} displaySize={40} bind:disabled={search.disableSearch}/>
         </div>
       </div>
     </div>
