@@ -344,7 +344,7 @@ class ExtensionManager {
             sourcesNew[key] = { ...extension, trusted: !!extension.id.match(new RegExp(atob('bnlhYQ=='), 'i')) || !!extension.id.match(new RegExp(atob('c3VrZWJlaQ=='), 'i')) }
             if (!extensionsNew[key]) {
               const defaults = Object.fromEntries((extension.settings || []).map(setting => [setting.key, setting.default ?? null]))
-              extensionsNew[key] = { enabled: true, settings: defaults }
+              extensionsNew[key] = { enabled: false, settings: defaults }
             }
           })
           return { ...value, sourcesNew, extensionsNew }
