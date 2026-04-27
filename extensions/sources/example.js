@@ -29,6 +29,17 @@ export default new class DummySource extends AbstractSource {
   url = 'https://www.google.com'
 
   /**
+   * Stored settings injected automatically by the extension manager before validate() is called and when settings are changed.
+   * Values are keyed by their field key as declared in the manifests settings array.
+   *
+   * @type {Record<string, any>}
+   * @example
+   * this.settings.strictMatching // true | false
+   * this.settings.subsLanguage // 'en' | 'ja' | 'fr'
+   */
+  settings = {}
+
+  /**
    * Generates dummy torrent results based on query parameters
    * @param {string} searchType Type of search (single, batch, movie)
    * @param {Object} query Query object with titles, resolution, episode, etc.
@@ -60,9 +71,7 @@ export default new class DummySource extends AbstractSource {
       return Math.max(0.1, min + Math.random() * (max - min))
     }
     const episodeInfo = getEpisodeInfo()
-
-    /** @returns {import('./').TorrentResult[]} Array of torrent results matching the query parameters. */
-    return [
+    const results = [
       {
         title: `[QuickSubs] ${baseTitle}${searchType === 'movie' ? '' : ` - ${episodeInfo}`} (${res}p)`,
         link: 'magnet:?xt=urn:btih:' + 'A'.repeat(40) + '&dn=dummy_torrent_1',
@@ -112,6 +121,7 @@ export default new class DummySource extends AbstractSource {
         date: new Date(baseDate.getTime() - 20_000_000)
       }
     ]
+    return (this.settings?.strictMatching ?? false) ? results.filter(result => result.accuracy === 'high') : results
   }
 
   /** @type {import('./').SearchFunction} */

@@ -290,6 +290,12 @@
 .wm-250 {
   max-width: 25rem;
 }
+.wm-300 {
+  max-width: 30rem;
+}
+.wm-350 {
+  max-width: 35rem;
+}
 .wm-600 {
   max-width: 60rem;
 }
@@ -777,6 +783,9 @@ body {
 .gap-5 {
   gap: 0.5rem;
 }
+.gap-10 {
+  gap: 1rem !important;
+}
 
 .btn:disabled {
   opacity: 0.3 !important;
@@ -959,6 +968,10 @@ img[src=''], img[src=' '] {
   .option:hover {
     border: .1rem solid var(--highlight-color) !important;
   }
+}
+
+.bt-10 {
+  border-top: .10rem var(--border-color-sp) solid !important;
 }
 
 .pre-wrap {

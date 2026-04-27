@@ -27,7 +27,7 @@ export default class AbstractSource {
   }
 
   /**
-   * Validates the source url.
+   * Validates the source url. If you require user configuration for settings, you should validate this.settings here.
    * @type {() => Promise<boolean>}
    */
   validate () {

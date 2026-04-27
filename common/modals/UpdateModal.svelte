@@ -212,9 +212,6 @@
       background-color: var(--gray-color-light) !important;
     }
   }
-  .gap-10 {
-    gap: 1rem;
-  }
   .update-button::before {
     content: '';
     position: absolute;

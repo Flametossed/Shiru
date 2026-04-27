@@ -2,17 +2,21 @@
   import { click } from '@/modules/lib/click.js'
   import SettingCard from '@/routes/settings/components/SettingCard.svelte'
   import ConfirmButton from '@/components/inputs/ConfirmButton.svelte'
-  import { stringToHex, capitalize, toFlags } from '@/modules/util.js'
+  import { stringToHex, capitalize, toFlags, debounce } from '@/modules/util.js'
   import { extensionManager } from '@/modules/extensions/manager.js'
   import { status } from '@/modules/networking.js'
+  import { slide } from 'svelte/transition'
   import { marked } from 'marked'
   import DOMPurify from 'dompurify'
-  import { TriangleAlert, CircleAlert, Github, Folder, FileQuestion, Trash2, CircleX, ChevronDown, ChevronUp, SquarePlus, Adult } from 'lucide-svelte'
+  import { TriangleAlert, CircleAlert, Github, Folder, FileQuestion, Trash2, CircleX, ChevronDown, ChevronUp, SquarePlus, Adult, Settings } from 'lucide-svelte'
   export let settings
+
+  const updateExtensionSettings = debounce((key) => extensionManager.updateExtensionSettings(key), 500)
   const npmIcon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcBAMAAACAI8KnAAAALVBMVEXLAADKAADMERHVSkrURkb////eeXnghITfgIDstrbFAADJAADhiorPJCTVSUliGH6+AAAAUklEQVR4AWMgETAKQoEAmKvsAgVGYEnTUCgIFmBgYmAQgOtiAHERACdXSNkBmevi/AGZyxrwAU3v4OJ+gLACGP7DA8dZgOGeixEi6ECUAIlhDgBoOA7wXH0RDQAAAABJRU5ErkJggg=='
 
   $: mainTab = true
   $: viewSources = false
+  $: viewSettings = {}
   $: pendingSource = false
   $: failedSource = null
   $: availableSources = settings.extensionSources
@@ -57,6 +61,23 @@
     if (pendingSource) return
     pendingSource = true
     extensionManager.validateExtension(key).then(() => pendingSource = false)
+  }
+
+  function getSettingValue(key, settingKey, defaultValue) {
+    return settings.extensionsNew[key]?.settings?.[settingKey] ?? defaultValue ?? ''
+  }
+
+  function setSettingValue(key, setKey, value) {
+    if (!settings.extensionsNew[key]) return
+    if (!settings.extensionsNew[key].settings) settings.extensionsNew[key].settings = {}
+    settings.extensionsNew[key].settings[setKey] = value
+    settings.extensionsNew = settings.extensionsNew
+    updateExtensionSettings(key)
+  }
+
+  function toggleSettings(key) {
+    viewSettings[key] = !viewSettings[key]
+    viewSettings = viewSettings
   }
 </script>
 
@@ -149,7 +170,7 @@
 <h4 class='mb-10 font-weight-bold'>Extension Settings</h4>
 <div class='d-flex bg-dark-light rounded-3 p-4 mw-300 mb-20'>
   <button type='button' class='btn w-150 rounded-3 shadow-none border-0 overflow-hidden text-truncate font-scale-16' class:bg-primary={mainTab} class:bg-transparent={!mainTab} use:click={()=> { mainTab = true }}>Extensions</button>
-  <button type='button' class='btn w-150 rounded-3 shadow-none border-0 overflow-hidden text-truncate font-scale-16' class:bg-primary={!mainTab} class:bg-transparent={mainTab} use:click={()=> { mainTab = false }}>Sources</button>
+  <button type='button' class='btn w-150 rounded-3 shadow-none border-0 overflow-hidden text-truncate font-scale-16' class:bg-primary={!mainTab} class:bg-transparent={mainTab} use:click={()=> { mainTab = false; viewSettings = {} }}>Sources</button>
 </div>
 {#if mainTab}
   <div class='wm-1200 w-full'>
@@ -193,6 +214,9 @@
                       {(extension?.name || extension?.id).slice(0, 16)}{extension?.name?.length > 16 ? '...' : ''}
                     </div>
                     <div class='d-flex ml-auto pl-10 align-items-center gap-10 h-20'>
+                      {#if extension?.settings?.length}
+                        <button type='button' class='btn d-flex align-items-center justify-content-center bg-transparent shadow-none border-0 p-0 h-20' class:text-primary={viewSettings[key]} data-toggle='tooltip' data-placement='top' data-title='Configure Extension Settings' use:click={() => toggleSettings(key)}><Settings size='2rem'/></button>
+                      {/if}
                       {#if extension?.deprecated}
                         <div class='d-flex align-items-center' data-toggle='tooltip' data-placement='top' data-title='This extension is deprecated and no longer maintained' style='color: var(--warning-color)'><CircleAlert size='2rem'/></div>
                       {/if}
@@ -200,6 +224,7 @@
                         <div class='custom-switch fit-content'>
                           <input type='checkbox' id={`extension-${key}`} bind:checked={settings.extensionsNew[key].enabled}
                             on:change={event => {
+                              viewSettings = {}
                               if (event.target.checked) extensionManager.enableExtension(key)
                               else extensionManager.disableExtension(key)
                             }}
@@ -224,6 +249,61 @@
                 {#if extension?.nsfw} <div class='d-flex align-items-center' title='Query results include adult content'><Adult class='ml-10 mt-10' size='2.2rem' /></div>{/if}
                 {#each extension?.regions || [] as region}<span class='ml-10 font-twemoji font-size-28 h-31' title='Location: {region}'>{toFlags(region)}</span>{/each}
               </div>
+              {#if extension?.settings?.length && viewSettings[key]}
+                <div transition:slide={{ duration: 250, axis: 'y' }}>
+                  <div class='pt-15'>
+                    <div class='bt-10 pt-15 mx-5'>
+                      {#each extension.settings as field, index}
+                        {@const fieldKey = field.key.slice(0, 100)}
+                        {@const fieldDefault = field.default ? field.default.slice(0, 100) : field.default}
+                        <div class='d-flex flex-column flex-md-row align-items-md-center justify-content-between' class:mb-15={index < extension.settings.length - 1}>
+                          <div class='mr-md-80 mb-5 mb-md-0'>
+                            <label class='font-weight-semi-bold font-scale-16 mb-0' for='ext-setting-{key}-{fieldKey}'>
+                              {parseSafeMarkdown(field.label.slice(0, 35) + (field.label.length > 35 ? '...' : ''))}
+                              {#if field.required}<span class='text-danger ml-5'>*</span>{/if}
+                            </label>
+                            {#if field.description}
+                              <div class='text-muted font-scale-14'>
+                                {parseSafeMarkdown(field.description.slice(0, 300) + (field.description.length > 300 ? '...' : ''))}
+                              </div>
+                            {/if}
+                          </div>
+                          {#if field.type === 'text'}
+                            <input
+                                id='ext-setting-{key}-{fieldKey}'
+                                type={field.secret ? 'password' : 'text'}
+                                class='form-control bg-dark mw-0 wm-350'
+                                placeholder={field.placeholder ? field.placeholder.slice(0, 120) + (field.placeholder.length > 120 ? '...' : '') : ''}
+                                value={getSettingValue(key, fieldKey, fieldDefault)}
+                                required={field.required && !getSettingValue(key, fieldKey, fieldDefault)}
+                                on:input={event => setSettingValue(key, fieldKey, event.target.value)}
+                            />
+                          {:else if field.type === 'toggle'}
+                            <div class='custom-switch fit-content'>
+                              <input
+                                  type='checkbox'
+                                  id='ext-setting-{key}-{fieldKey}'
+                                  checked={getSettingValue(key, fieldKey, fieldDefault ?? false)}
+                                  on:change={event => setSettingValue(key, fieldKey, event.target.checked)}
+                              />
+                              <label for='ext-setting-{key}-{fieldKey}'>{getSettingValue(key, fieldKey, fieldDefault ?? false) ? 'On' : 'Off'}</label>
+                            </div>
+                          {:else if field.type === 'dropdown'}
+                            <select
+                                id='ext-setting-{key}-{fieldKey}'
+                                class='form-control bg-dark text-truncate w-auto wm-300 align-self-start'
+                                on:change={event => setSettingValue(key, fieldKey, event.target.value)}>
+                              {#each field.options as option}
+                                <option value={option.value.slice(0, 100)} selected={getSettingValue(key, fieldKey, fieldDefault) === option.value}>{option.label.slice(0, 50)}</option>
+                              {/each}
+                            </select>
+                          {/if}
+                        </div>
+                      {/each}
+                    </div>
+                  </div>
+                </div>
+              {/if}
             </div>
           {/if}
         {/each}

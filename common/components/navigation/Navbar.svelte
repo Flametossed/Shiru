@@ -81,7 +81,4 @@
     color: var(--fill-button-color);
     text-shadow: 0 0 1rem var(--fill-button-color);
   }
-  .bt-10 {
-    border-top: .10rem var(--border-color-sp) solid !important;
-  }
 </style>

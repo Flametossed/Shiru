@@ -26,7 +26,7 @@ class Worker {
    * Load and validate the source from code
    * @param {string} id
    * @param {object} module
-   * @param {{bypassCORS: boolean}} opts
+   * @param {{settings: Record<string, any>, bypassCORS: boolean}} opts
    * @returns {Promise<{ validated: true } | { error: string } | { stub: boolean, error: string }>}
    */
   async initialize(id, module, opts) {
@@ -40,6 +40,7 @@ class Worker {
         source = (await import(/* webpackIgnore: true */ blobUrl)).default
       }
       source.anitomyscript = (await import('anitomyscript')).default
+      if (opts.settings) source.settings = opts.settings
       this.id = id
       this.source = source
 
@@ -57,6 +58,16 @@ class Worker {
     } catch (err) {
       return { stub: isStubModule(module), error: err.message }
     }
+  }
+
+  /**
+   * Updates the settings on the active source instance.
+   * Called by the extension manager when the user changes an extension setting.
+   * @param {Record<string, any>} settings The settings object to apply.
+   * @returns {Promise<void>}
+   */
+  async updateSettings(settings = {}) {
+    this.source.settings = settings
   }
 
   /**

@@ -247,6 +247,7 @@ class ExtensionManager {
       this.inactiveWorkers[key].terminate()
       delete this.inactiveWorkers[key]
     }
+    debug(`Disabled extension ${key}`)
   }
 
   /**
@@ -258,7 +259,22 @@ class ExtensionManager {
     if (this.activeWorkers[key] || this.loadingExtensions.has(key)) return
     const extension = settings.value.sourcesNew[key]
     if (!extension) return
+    debug(`Enabling extension ${key}`)
     await this.loadExtensions({ [key]: extension }, false)
+  }
+
+  /**
+   * Update settings of an active extension worker.
+   * @param {string} key The extension key.
+   * @returns {Promise<void>}
+   */
+  async updateExtensionSettings(key) {
+    const worker = this.activeWorkers[key]
+    if (!worker || this.loadingExtensions.has(key)) return
+    const extension = settings.value.extensionsNew[key]
+    if (!extension) return
+    debug(`Updating settings for extension ${key}`)
+    worker.updateSettings(extension.settings ?? {})
   }
 
   /**
@@ -326,7 +342,10 @@ class ExtensionManager {
           config.forEach(extension => {
             const key = (extension.locale || (extension.update + '/')) + extension.id
             sourcesNew[key] = { ...extension, trusted: !!extension.id.match(new RegExp(atob('bnlhYQ=='), 'i')) || !!extension.id.match(new RegExp(atob('c3VrZWJlaQ=='), 'i')) }
-            if (!extensionsNew[key]) extensionsNew[key] = { enabled: true }
+            if (!extensionsNew[key]) {
+              const defaults = Object.fromEntries((extension.settings || []).map(setting => [setting.key, setting.default ?? null]))
+              extensionsNew[key] = { enabled: true, settings: defaults }
+            }
           })
           return { ...value, sourcesNew, extensionsNew }
         })
@@ -412,7 +431,7 @@ class ExtensionManager {
             try {
               /** @type {comlink.Remote<import('@/modules/extensions/worker.js').Worker>} */
               const remoteWorker = await wrap(worker)
-              const initialize = await remoteWorker.initialize(key, modules[key], { bypassCORS: SUPPORTS.isAndroid && extension.trusted})
+              const initialize = await remoteWorker.initialize(key, modules[key], { settings: settings.value.extensionsNew[key]?.settings ?? {}, bypassCORS: SUPPORTS.isAndroid && extension.trusted })
               if (!initialize.validated && initialize.stub) {
                 await this.getExtensionCode(key, remoteWorker)
                 if (this.activeWorkers[key]) return
@@ -569,7 +588,16 @@ class ExtensionManager {
    * @returns {boolean} True if valid, false otherwise.
    */
   validateConfig(config) {
-    return config && typeof config === 'object' && ['id', 'name', 'version', 'main', 'update'].every(prop => prop in config)
+    if (!config || typeof config !== 'object') return false
+    if (!['id', 'name', 'version', 'main', 'update'].every(prop => prop in config)) return false
+    if (Array.isArray(config.settings)) {
+      return config.settings.every(setting => {
+        if (!setting.key || !setting.label || !setting.type) return false
+        if (!['text', 'toggle', 'dropdown'].includes(setting.type)) return false
+        return !(setting.type === 'dropdown' && (!Array.isArray(setting.options) || !setting.options.length))
+      })
+    }
+    return true
   }
 }
 
