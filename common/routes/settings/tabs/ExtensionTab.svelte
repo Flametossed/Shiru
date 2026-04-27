@@ -71,13 +71,13 @@
     if (!settings.extensionsNew[key]) return
     if (!settings.extensionsNew[key].settings) settings.extensionsNew[key].settings = {}
     settings.extensionsNew[key].settings[setKey] = value
-    settings.extensionsNew = settings.extensionsNew
     updateExtensionSettings(key)
   }
 
   function toggleSettings(key) {
-    viewSettings[key] = !viewSettings[key]
-    viewSettings = viewSettings
+    const visible = viewSettings[key]
+    viewSettings = {}
+    if (!visible) viewSettings[key] = true
   }
 </script>
 

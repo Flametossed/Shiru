@@ -26,7 +26,7 @@ export default new class DummySource extends AbstractSource {
    * @example 'https://feed.example.org/json'
    * @example 'https://dummy.example.com/api'
    */
-  url = 'https://www.google.com'
+  url = 'https://cp.cloudflare.com/generate_204'
 
   /**
    * Stored settings injected automatically by the extension manager before validate() is called and when settings are changed.

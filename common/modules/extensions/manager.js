@@ -314,7 +314,7 @@ class ExtensionManager {
     const promise = (async () => {
       const config = await getManifest(url)
       if (!config) {
-        await printError('Failed to load source', `${url}: ${status.value !== 'offline' ? 'the source is not valid.' : 'no network connection!'}`, { message: `Failed to load source: ${url} ${status.value !== 'offline' ? 'the source is not valid.' : 'no network connection!'} ${JSON.stringify(config)}`})
+        await printError('Failed to load source', '', { message: `Failed to load source: ${url} ${status.value !== 'offline' ? 'the source is not valid.' : 'no network connection!'}`})
         this.pending.delete(url)
         return `Failed to load extension(s) from the provided source '${url}': ${status.value !== 'offline' ? 'the source is not valid.' : 'no network connection!'}`
       }
@@ -331,7 +331,7 @@ class ExtensionManager {
       } else { // extension manifests
         for (const extension of config) {
           if (!this.validateConfig(extension)) {
-            await printError('Invalid extension format', `Invalid extension config: ${url}`, { message: `Invalid extension config: ${url} ${JSON.stringify(extension)}` })
+            await printError('Invalid extension format', '', { message: `Invalid extension config: ${url}` })
             this.pending.delete(url)
             return `Failed to load extension(s) from '${url}': invalid extension format.`
           }
@@ -594,7 +594,11 @@ class ExtensionManager {
       return config.settings.every(setting => {
         if (!setting.key || !setting.label || !setting.type) return false
         if (!['text', 'toggle', 'dropdown'].includes(setting.type)) return false
-        return !(setting.type === 'dropdown' && (!Array.isArray(setting.options) || !setting.options.length))
+        if (setting.type === 'dropdown') {
+          if (!Array.isArray(setting.options) || !setting.options.length) return false
+          return setting.options.every(option => option.label && option.value)
+        }
+        return true
       })
     }
     return true

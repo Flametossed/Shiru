@@ -11,7 +11,7 @@ export async function printError(title, description, error) {
   trace(`Error: ${error.status || 429} - ${error.message || codes[error.status || 429]}`)
   if (settings.value.toasts.includes('All') || settings.value.toasts.includes('Errors')) {
     toast.error(title, {
-      description: `${description}\n${error.status || 429} - ${error.message || codes[error.status || 429]}`,
+      description: `${description ? description + '\n' : ''}${error.status || 429} - ${error.message || codes[error.status || 429]}`,
       duration: 10_000
     })
   }

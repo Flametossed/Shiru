@@ -40,7 +40,7 @@ class Worker {
         source = (await import(/* webpackIgnore: true */ blobUrl)).default
       }
       source.anitomyscript = (await import('anitomyscript')).default
-      if (opts.settings) source.settings = opts.settings
+      if (Object.keys(opts.settings ?? {}).length) source.settings = opts.settings
       this.id = id
       this.source = source
 
