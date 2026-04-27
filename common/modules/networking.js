@@ -192,7 +192,8 @@ function newOutageChecker({ key, ping, detect, offlineEvent, onlineEvent, retryR
         resolvePromise = null
       })
     }
-    throttledCheck(error)
+    const wasThrottled = !throttledCheck(error)
+    if (wasThrottled) resolvePromise(false)
     return (await promise) || (status.value === offlineEvent)
   }
 }
