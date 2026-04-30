@@ -322,13 +322,17 @@ function createTitles (media) {
   return titles
 }
 
+const ACCURACY = { high: 2, medium: 1, low: 0 }
+
 /** @param {Result[]} entries */
 export function dedupe (entries) {
   /** @type {Record<string, Result>} */
   const deduped = {}
   for (const entry of entries) {
     if (deduped[entry.hash] && !deduped[entry.hash]?.source?.managed) {
-      const dupe = deduped[entry.hash]
+      const entryAccuracy = ACCURACY[entry.accuracy] ?? -1
+      const dupeAccuracy = ACCURACY[deduped[entry.hash].accuracy] ?? -1
+      const dupe = entryAccuracy > dupeAccuracy ? entry : deduped[entry.hash]
       dupe.title = AnimeResolver.cleanFileName(entry.title)
       dupe.link = entry.link
       dupe.id ??= entry.id
@@ -339,6 +343,7 @@ export function dedupe (entries) {
       dupe.size ||= entry.size
       dupe.date ||= entry.date
       dupe.type ??= entry.type
+      deduped[entry.hash] = dupe
     } else {
       entry.title = AnimeResolver.cleanFileName(entry.title)
       entry.seeders = entry.seeders && entry.seeders < 30_000 ? entry.seeders : 0
