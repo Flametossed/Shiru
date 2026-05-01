@@ -23,6 +23,8 @@
   let canScroll = true
   /** @type {HTMLElement} The scrollable container element */
   let container = null
+  /** @type {HTMLElement} The key container element */
+  let keyContainer = null
   /** @type {ResizeObserver} Observes container size changes to update row markers */
   let observer = null
   /** @type {MutationObserver} Observes card additions to update row markers */
@@ -36,9 +38,10 @@
 
   /** Recalculates and applies first-in-row / last-in-row classes to all loaded cards */
   function updateRowMarkers() {
-    if (!container) return
+    if (!container || !keyContainer) return
     const cards = container.querySelectorAll('.small-card, .large-card, .episode-card')
     const containerRect = container.getBoundingClientRect()
+    const isGrid = getComputedStyle(keyContainer).display === 'grid'
     let currentRow = []
     let prevTop = null
     cards.forEach(card => card.classList.remove('first-in-row', 'last-in-row'))
@@ -53,7 +56,7 @@
         currentRow.push(card)
       } else currentRow.push(card)
       prevTop = top
-      if (index === cards.length - 1 && currentRow.length > 0) currentRow[currentRow.length - 1].classList.add('last-in-row')
+      if (index === cards.length - 1 && currentRow.length > 0 && !(isGrid && currentRow.length === 1)) currentRow[currentRow.length - 1].classList.add('last-in-row')
     })
   }
   /**
@@ -146,7 +149,7 @@
 
 <div bind:this={container} class='bg-dark h-full w-full overflow-y-scroll d-flex flex-wrap flex-row root overflow-x-hidden justify-content-center align-content-start' class:mt-safe-area={!$search.fileEdit && !$status.match(/offline/i)} class:bg-very-dark={$search.fileEdit} on:scroll={handleScroll} on:resize={resizeRows}>
   <SearchBar bind:search={$search} clearNow={$clearNow} on:input={update} />
-  <div class='w-full d-grid d-md-flex flex-wrap flex-row px-20 px-md-40 justify-content-center align-content-start pt-10'>
+  <div bind:this={keyContainer} class='w-full d-grid d-md-flex flex-wrap flex-row px-20 px-md-40 justify-content-center align-content-start pt-10'>
     {#key $key}
       {#each $items as card}
         <Card {card} variables={{...$search}} />
