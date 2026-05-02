@@ -1,6 +1,6 @@
 <script>
   import { nowPlaying as media } from '@/components/MediaHandler.svelte'
-  import { hasUnreadNotifications } from '@/modals/NotificationsModal.svelte'
+  import { unreadCount } from '@/modules/notification/manager.js'
   import { updateState } from '@/modals/UpdateModal.svelte'
   import { settings } from '@/modules/settings.js'
   import { SUPPORTS } from '@/modules/support.js'
@@ -107,7 +107,7 @@
       </SidebarLink>
     {/if}
     <SidebarLink click={() => { modal.toggle(modal.NOTIFICATIONS) }} icon='bell' text='Notifications' css='{!$settings.donate && $updateState !== `downloading` && $updateState !== `ready` && $updateState !== `ignored` && !SUPPORTS.isAndroid ? `mt-md-h-auto` : ``}' _modal={modal.NOTIFICATIONS} let:active let:hovering>
-      {#if $hasUnreadNotifications && $hasUnreadNotifications > 0}
+      {#if $unreadCount && $unreadCount > 0}
         <BellDot size={btnSize} class='flex-shrink-0 p-5 m-5 rounded fill-1 notify' strokeWidth='2.5' color='currentColor' style='--fill-button-color: {hovering ? `var(--gray-color-very-dim)` : `var(--notify-color)`}' />
       {:else}
         <Bell size={btnSize} class='flex-shrink-0 p-5 m-5 rounded' strokeWidth='2.5' color={active ? 'currentColor' : 'var(--gray-color-very-dim)'} />

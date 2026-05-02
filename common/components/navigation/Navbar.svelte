@@ -1,7 +1,7 @@
 <script>
   import { page, modal, playPage } from '@/modules/navigation.js'
   import { nowPlaying as media } from '@/components/MediaHandler.svelte'
-  import { hasUnreadNotifications } from '@/modals/NotificationsModal.svelte'
+  import { unreadCount } from '@/modules/notification/manager.js'
   import { settings } from '@/modules/settings.js'
   import { COMMON } from '@/modules/bridge.js'
   import NavbarLink from '@/components/navigation/NavbarLink.svelte'
@@ -56,7 +56,7 @@
       <Download size='3.6rem' class='flex-shrink-0 p-5 m-5 rounded' strokeWidth='2.5' color={active ? 'currentColor' : 'var(--gray-color-very-dim)'} />
     </NavbarLink>
     <NavbarLink click={() => { modal.toggle(modal.NOTIFICATIONS) }} icon='bell' text='Notifications' _modal={modal.NOTIFICATIONS} let:active let:hovering>
-      {#if $hasUnreadNotifications &&  $hasUnreadNotifications > 0}
+      {#if $unreadCount && $unreadCount > 0}
         <BellDot size='3.6rem' class='flex-shrink-0 p-5 m-5 rounded fill-1 notify' strokeWidth='2.5' color='currentColor' style='--fill-button-color: {hovering ? `var(--gray-color-very-dim)` : `var(--notify-color)`}'/>
       {:else}
         <Bell size='3.6rem' class='flex-shrink-0 p-5 m-5 rounded' strokeWidth='2.5' color={$modal[modal.NOTIFICATIONS] ? 'currentColor' : 'var(--gray-color-very-dim)'}/>

@@ -1083,6 +1083,9 @@ img[src=''], img[src=' '] {
   border-bottom-right-radius: 0 !important;
 }
 
+.rounded-5 {
+  border-radius: .5rem;
+}
 .rounded-10 {
   border-radius: 1rem !important;
 }

@@ -24,7 +24,7 @@
   import Menubar from '@/components/Menubar.svelte'
   import UpdateModal from '@/modals/UpdateModal.svelte'
   import Profiles from '@/components/Profiles.svelte'
-  import NotificationsModal from '@/modals/NotificationsModal.svelte'
+  import NotificationModal from '@/modals/notification/NotificationModal.svelte'
   import MinimizeModal from '@/modals/MinimizeModal.svelte'
   import Navbar from '@/components/navigation/Navbar.svelte'
   import Status from '@/components/Status.svelte'
@@ -73,7 +73,7 @@
     <Toaster visibleToasts={2} position='top-right' theme='dark' richColors duration={10_000} closeButton toastOptions={{class: `${$page === page.SETTINGS ? 'mt-70 mt-lg-0' : ''} ${isFullscreen && (!$modal || !modal.length) ? 'd-none' : ''}`}} />
     <DetailsModal />
     <TorrentModal />
-    <NotificationsModal />
+    <NotificationModal />
     <Profiles />
     <Router bind:statusTransition={$statusTransition} />
   </div>

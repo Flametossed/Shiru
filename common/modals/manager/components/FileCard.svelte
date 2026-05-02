@@ -217,9 +217,6 @@
         width: 6rem !important;
         height: 8rem !important;
     }
-    .rounded-5 {
-        border-radius: .5rem;
-    }
     .prompt {
         margin-left: -.9rem !important;
         width: 100.6% !important;
