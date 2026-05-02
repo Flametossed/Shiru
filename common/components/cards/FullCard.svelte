@@ -25,24 +25,35 @@
     else modal.open(modal.ANIME_DETAILS, media)
   }
 
+  let baseWidth
+  let imageWidth
+  let observer = null
+  $: scale = Math.max(imageWidth && baseWidth ? Math.min(imageWidth / baseWidth, .9) : .9, .75)
+
   let airingInterval
   let _airingAt = null
   $: airingInfo = getAiringInfo(_airingAt)
   onMount(() => {
+    baseWidth = 17 * parseFloat(getComputedStyle(document.documentElement).fontSize)
     _airingAt = media && _variables?.scheduleList && airingAt(media, _variables)
     if (_variables?.scheduleList) airingInterval = setInterval(() => airingInfo = getAiringInfo(_airingAt), 60_000)
+    observer = new ResizeObserver(() => baseWidth = 17 * parseFloat(getComputedStyle(document.documentElement).fontSize))
+    observer.observe(document.documentElement)
   })
-  onDestroy(() => clearTimeout(airingInterval))
+  onDestroy(() => {
+    observer?.disconnect()
+    clearTimeout(airingInterval)
+  })
 </script>
 
 <div class='d-flex px-md-20 px-sm-10 px-5 py-10 position-relative justify-content-center full-card-ct' use:click={viewMedia}>
-  <div class='card load-in m-0 p-0 pointer full-card rounded overflow-hidden' class:airing={airingInfo?.episode.match(/out for/i)} style:--color={media.coverImage.color || 'var(--tertiary-color)'}>
+  <div class='card load-in m-0 p-0 pointer full-card rounded' class:airing={airingInfo?.episode.match(/out for/i)} style:--color={media.coverImage.color || 'var(--tertiary-color)'}>
     <div class='row h-full'>
-      <div class='img-col d-inline-block position-relative col-3 col-md-4'>
+      <div bind:clientWidth={imageWidth} class='img-col d-inline-block position-relative col-3 col-md-4'>
         <span class='airing-badge rounded-10 font-weight-semi-bold text-light bg-success' class:d-none={!airingInfo?.episode?.match(/out for/i)}>AIRING</span>
         <SmartImage class='cover-img cover-color w-full h-270' color={media.coverImage.color || 'var(--tertiary-color)'} images={[media.coverImage.extraLarge, media.coverImage?.medium, './404_cover.png']}/>
         {#if !_variables?.scheduleList}
-          <AudioLabel {media} />
+          <AudioLabel {media} style='transform: scaleY(-1) scale({scale}) !important; transform-origin: right !important; width: {100 / scale}% !important; bottom: {.4 * scale}rem !important;' />
         {/if}
       </div>
       <div class='col h-full card-grid'>

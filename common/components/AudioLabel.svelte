@@ -12,6 +12,7 @@
     export let media = null
     export let data = null
 
+    export let style = ''
     export let banner = false
     export let viewAnime = false
     export let episode = false
@@ -78,7 +79,7 @@
 {#if settings.value.cardAudio}
     {#if !banner && !episodeList}
         {@const subEpisodes = String(media.status !== 'NOT_YET_RELEASED' && media.status !== 'CANCELLED' && getMediaMaxEp(media, (media.status !== 'FINISHED')) || dubEpisodes || '')}
-        <div bind:this={audioContainer} class='position-absolute bottom-0 right-0 d-flex flex-row-reverse flex-wrap align-items-end justify-content-start h-20 vertical-flip z-1' class:mb-4={!viewAnime} class:mb--3={viewAnime}>
+        <div bind:this={audioContainer} class='position-absolute bottom-0 right-0 w-full d-flex flex-row-reverse flex-wrap align-items-end justify-content-start h-20 vertical-flip z-1' {style} class:mb-4={!viewAnime && !style} class:mb--3={viewAnime}>
             <div class='audio-label px-10 text-dark rounded-right font-weight-bold d-flex align-items-center vertical-flip h-full bg-septenary slant mrl-1 z-5'>
                 <Captions size='2rem' strokeWidth='1.5' />
                 <span class='d-flex align-items-center line-height-1' class:ml-3={(subEpisodes && subEpisodes.length > 0) || (dubEpisodes && Number(dubEpisodes) > 0)}><div class='line-height-1 mt-2'>{#if subEpisodes && (!dubEpisodes || (Number(subEpisodes) >= Number(dubEpisodes)))}{Number(subEpisodes)}{:else if dubEpisodes && (Number(dubEpisodes) > 0)}{Number(dubEpisodes)}{/if}</div></span>
@@ -144,9 +145,6 @@
      }
      .mrl-2 {
          margin-right: -1.3rem;
-     }
-     .mb-4 {
-         margin-bottom: .38rem;
      }
      .slant {
          clip-path: polygon(15% -1px, 100% 0, 100% 100%, 0% calc(100% + 1px));

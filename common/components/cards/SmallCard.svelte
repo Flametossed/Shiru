@@ -77,20 +77,28 @@
     clearTimeout(blurTimeout)
   }
 
+  let baseWidth
+  let imageWidth
+  let observer = null
+
   let airingInterval
   let _airingAt = null
   $: airingInfo = getAiringInfo(_airingAt)
   onMount(() => {
+    baseWidth = 19 * parseFloat(getComputedStyle(document.documentElement).fontSize)
     container.addEventListener('focusout', handleBlur)
     _airingAt = media && _variables?.scheduleList && airingAt(media, _variables)
     if (_airingAt) {
       airingInterval = setInterval(() => airingInfo = getAiringInfo(_airingAt), 60_000)
       airingInterval.unref?.()
     }
+    observer = new ResizeObserver(() => baseWidth = 19 * parseFloat(getComputedStyle(document.documentElement).fontSize))
+    observer.observe(document.documentElement)
   })
   onDestroy(() => {
     document.removeEventListener('pointerup', handleOutsideClick)
     container?.removeEventListener?.('focusout', handleBlur)
+    observer?.disconnect()
     clearTimeouts()
     clearTimeout(airingInterval)
   })
@@ -98,6 +106,7 @@
   const { reactive, init } = createListener(['btn', 'scoring', 'mute', 'preview-safe-area'])
   $: init(preview)
   $: if (preview) clearTimeout(focusTimeout)
+  $: scale = Math.max(imageWidth && baseWidth ? Math.min(imageWidth / baseWidth, .9) : .9, .75)
 </script>
 
 <div bind:this={container} class='d-flex px-md-20 px-sm-10 px-5 py-20 position-relative small-card-ct' class:not-reactive={!$reactive} use:hoverClick={[viewMedia, setHoverState, viewMedia]} on:focus={handleFocus}>
@@ -113,11 +122,11 @@
         </span>
       </div>
     {/if}
-    <div class='d-inline-block position-relative'>
+    <div bind:clientWidth={imageWidth} class='d-inline-block position-relative'>
       <span class='airing-badge rounded-10 font-weight-semi-bold text-light bg-success' class:d-none={!airingInfo?.episode?.match(/out for/i)}>AIRING</span>
       <SmartImage class='cover-img cover-color cover-ratio w-full rounded' color={media.coverImage.color || 'var(--tertiary-color)'} images={[media.coverImage.extraLarge, media.coverImage?.medium, './404_cover.png']}/>
       {#if !_variables?.scheduleList}
-        <AudioLabel {media} />
+        <AudioLabel {media} style='transform: scaleY(-1) scale({scale}) !important; transform-origin: right !important; width: {100 / scale}% !important; bottom: {.4 * scale}rem !important;' />
       {/if}
     </div>
     {#if type || type === 0}
