@@ -51,7 +51,7 @@ export async function getTorrentResults({ media, episode, batch, movie, resoluti
     episode,
     beforeSeason: mappingsE?.airedBeforeSeasonNumber,
     afterSeason: mappingsE?.airedAfterSeasonNumber,
-    absoluteEpisode: mappingsE?.absoluteEpisodeNumber,
+    absoluteEpisode: mappingsE?.absoluteEpisodeNumber ?? mappingsE?.episodeNumber,
     beforeEpisode: mappingsE?.airedBeforeEpisodeNumber,
     afterEpisode: mappingsE?.airedAfterEpisodeNumber,
     anidbAid,
