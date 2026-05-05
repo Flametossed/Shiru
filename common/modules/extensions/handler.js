@@ -6,6 +6,7 @@ import { anitomyscript, getAniMappings, getMediaMaxEp } from '@/modules/anime/an
 import { checkForZero } from '@/components/MediaHandler.svelte'
 import { status } from '@/modules/networking.js'
 import { extensionManager } from '@/modules/extensions/manager.js'
+import { SUPPORTS } from '@/modules/support.js'
 import AnimeResolver from '@/modules/anime/animeresolver.js'
 import Debug from 'debug'
 const debug = Debug('ui:extensions')
@@ -62,7 +63,8 @@ export async function getTorrentResults({ media, episode, batch, movie, resoluti
     mvdbAid,
     titles: createTitles(media),
     resolution,
-    exclusions: settings.value.enableExternal ? [] : exclusions
+    exclusions: settings.value.enableExternal ? [] : exclusions,
+    isAndroid: SUPPORTS.isAndroid
   }
 
   return queryExtensions('torrent', options, { movie, batch }, async (results) => {

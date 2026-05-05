@@ -345,7 +345,7 @@ class ExtensionManager {
           const extensionsNew = { ...value.extensionsNew }
           config.forEach(extension => {
             const key = (extension.locale || (extension.update + '/')) + extension.id
-            sourcesNew[key] = { ...extension, trusted: !!extension.id.match(new RegExp(atob('bnlhYQ=='), 'i')) || !!extension.id.match(new RegExp(atob('c3VrZWJlaQ=='), 'i')) }
+            sourcesNew[key] = { ...extension, trusted: !!extension.id.match(new RegExp(atob('bnlhYQ=='), 'i')) || !!extension.id.match(new RegExp(atob('c3VrZWJlaQ=='), 'i')) || !!extension.id.match(new RegExp(atob('bmVrb2J0'), 'i')) }
             if (!extensionsNew[key]) {
               const defaults = Object.fromEntries((extension.settings || []).map(setting => [setting.key, setting.default ?? null]))
               extensionsNew[key] = { enabled: false, settings: defaults }
