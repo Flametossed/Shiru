@@ -7,6 +7,7 @@ import { add } from '@/modules/torrent.js'
 import { getEpisodeMetadataForMedia, isSubbedProgress } from '@/modules/anime/anime.js'
 import AnimeResolver from '@/modules/anime/animeresolver.js'
 import { anilistClient } from '@/modules/providers/anilist/anilist.js'
+import { queueNotification } from '@/modules/notification/manager.js'
 import { hasNextPage } from '@/modules/sections.js'
 import { malDubs } from '@/modules/anime/animedubs.js'
 import { episodesList } from '@/modules/episodes.js'
@@ -142,32 +143,30 @@ class RSSMediaManager {
         const highestEp = isValidNumber(episode) ? Number(episode) : Number(episodesList.handleArray(episode, episode)?.last)
         const progress = media?.mediaListEntry?.progress
         const behind = progress < (highestEp - 1)
-        window.dispatchEvent(new CustomEvent('notification-app', {
-          detail: {
-            id: media?.id,
-            title: anilistClient.title(media) || parseObject.anime_title,
-            message: `${media?.format === 'MOVIE' && (media?.episodes ?? 0) <= 1 ? `The Movie` : isValidNumber(highestEp) ? `${media?.episodes === highestEp ? `The wait is over! ` : ``}Episode ${highestEp}` : parseObject?.anime_title?.match(/S(\d{2})/) ? `Season ${parseInt(parseObject.anime_title.match(/S(\d{2})/)[1], 10)}` : `Batch`} (${dubbed ? 'Dub' : 'Sub'}) ${isValidNumber(highestEp) || media?.format === 'MOVIE' ? `is out${media?.format !== 'MOVIE' && media?.episodes === highestEp ? `, this season is now ready to binge` : ``}!` : `is now ready to binge!`}`,
-            icon: media?.coverImage.medium,
-            iconXL: media?.coverImage?.extraLarge,
-            heroImg: media?.bannerImage || (media?.trailer?.id && `https://i.ytimg.com/vi/${media?.trailer?.id}/hqdefault.jpg`),
-            episode: isValidNumber(highestEp) ? highestEp : (parseObject?.anime_title?.match(/S(\d{2})/) ? parseInt(parseObject.anime_title.match(/S(\d{2})/)[1], 10) : highestEp),
-            timestamp: Math.floor(new Date(date).getTime() / 1000),
-            format: media?.format,
-            season: !isValidNumber(highestEp) && parseObject.anime_title.match(/S(\d{2})/),
-            dub: dubbed,
-            click_action: 'TORRENT',
-            hash: hash,
-            magnet: link,
-            button: [
-              { text: `${!progress || progress === 0 ? 'Start Watching' : behind ? 'Continue Watching' : 'Watch Now'}`, activation: `${!progress || progress === 0 || behind ? 'shiru://search/' + media?.id : 'shiru://torrent/' + link}` },
-              { text: 'View Anime', activation: `shiru://anime/${media?.id}` }
-            ],
-            activation: {
-              type: 'protocol',
-              launch: `shiru://anime/${media?.id}`
-            }
+        queueNotification({
+          id: media?.id,
+          title: anilistClient.title(media) || parseObject.anime_title,
+          message: `${media?.format === 'MOVIE' && (media?.episodes ?? 0) <= 1 ? `The Movie` : isValidNumber(highestEp) ? `${media?.episodes === highestEp ? `The wait is over! ` : ``}Episode ${highestEp}` : parseObject?.anime_title?.match(/S(\d{2})/) ? `Season ${parseInt(parseObject.anime_title.match(/S(\d{2})/)[1], 10)}` : `Batch`} (${dubbed ? 'Dub' : 'Sub'}) ${isValidNumber(highestEp) || media?.format === 'MOVIE' ? `is out${media?.format !== 'MOVIE' && media?.episodes === highestEp ? `, this season is now ready to binge` : ``}!` : `is now ready to binge!`}`,
+          icon: media?.coverImage.medium,
+          iconXL: media?.coverImage?.extraLarge,
+          heroImg: media?.bannerImage || (media?.trailer?.id && `https://i.ytimg.com/vi/${media?.trailer?.id}/hqdefault.jpg`),
+          episode: isValidNumber(highestEp) ? highestEp : (parseObject?.anime_title?.match(/S(\d{2})/) ? parseInt(parseObject.anime_title.match(/S(\d{2})/)[1], 10) : highestEp),
+          timestamp: Math.floor(new Date(date).getTime() / 1000),
+          format: media?.format,
+          season: !isValidNumber(highestEp) && parseObject.anime_title.match(/S(\d{2})/),
+          dub: dubbed,
+          click_action: 'TORRENT',
+          hash: hash,
+          magnet: link,
+          button: [
+            { text: `${!progress || progress === 0 ? 'Start Watching' : behind ? 'Continue Watching' : 'Watch Now'}`, activation: `${!progress || progress === 0 || behind ? 'shiru://search/' + media?.id : 'shiru://torrent/' + link}` },
+            { text: 'View Anime', activation: `shiru://anime/${media?.id}` }
+          ],
+          activation: {
+            type: 'protocol',
+            launch: `shiru://anime/${media?.id}`
           }
-        }))
+        })
       }
     }
   }

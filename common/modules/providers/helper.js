@@ -5,6 +5,7 @@ import { malDubs } from '@/modules/anime/animedubs.js'
 import { profiles } from '@/modules/settings.js'
 import { cache, mediaCache, mapStatus } from '@/modules/cache.js'
 import { getMediaMaxEp, hasZeroEpisode } from '@/modules/anime/anime.js'
+import { readNotification } from '@/modules/notification/manager.js'
 import { codes, matchKeys, isValidNumber } from '@/modules/util.js'
 import { toast } from 'svelte-sonner'
 import Debug from 'debug'
@@ -115,13 +116,11 @@ export default class Helper {
       res = await this.getClient().entry(variables)
       if (res?.data?.SaveMediaListEntry) {
         mediaCache.update((currentCache) => ({ ...currentCache, [media.id]: { ...currentCache[media.id], mediaListEntry: res?.data?.SaveMediaListEntry } }))
-        window.dispatchEvent(new CustomEvent('notification-read', {
-          detail: {
-            id: media.id,
-            episode: res?.data?.SaveMediaListEntry?.progress,
-            episodes: media.episodes
-          }
-        }))
+        readNotification({
+          id: media.id,
+          episode: res?.data?.SaveMediaListEntry?.progress,
+          episodes: media.episodes
+        })
       }
     } else {
       if (variables.anilist) {
@@ -210,13 +209,11 @@ export default class Helper {
           res = await malClient.malEntry(cachedMedia, variables)
         }
         if (res?.data?.mediaListEntry || res?.data?.SaveMediaListEntry) {
-          window.dispatchEvent(new CustomEvent('notification-read', {
-            detail: {
-              id: media.id,
-              episode: res?.data?.mediaListEntry?.progress || res?.data?.SaveMediaListEntry?.progress,
-              episodes: cachedMedia.episodes
-            }
-          }))
+          readNotification({
+            id: media.id,
+            episode: res?.data?.mediaListEntry?.progress || res?.data?.SaveMediaListEntry?.progress,
+            episodes: cachedMedia.episodes
+          })
         }
         this.listToast(res, description, false)
 

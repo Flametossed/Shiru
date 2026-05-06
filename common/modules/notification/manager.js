@@ -3,7 +3,6 @@ import { debounce, generateRandomHexCode } from '@/modules/util.js'
 import { cache, caches, mediaCache } from '@/modules/cache.js'
 import { derived, writable } from 'simple-store-svelte'
 import { COMMON, ELECTRON } from '@/modules/bridge.js'
-import { settings } from '@/modules/settings.js'
 
 /** @type {import('simple-store-svelte').Writable<any[]>} */
 export const localNotifications = writable((cache.getEntry(caches.NOTIFICATIONS, 'notifications') || []).map((n) => ({ ...n, uid: n.uid ?? generateRandomHexCode(8) })))
@@ -17,9 +16,9 @@ const debounceMarkRead = debounce(markWatchedAsRead, 2_500)
 mediaCache.subscribe(debounceMarkRead)
 /**
  * Temporary buffer for incoming notifications before processing
- * @type {Array<{ detail: Object, systemNotify: boolean }>}
+ * @type {Object[]}
  */
-const incomingNotifications = []
+const incomingNotifications = cache.getEntry(caches.NOTIFICATIONS, 'incomingNotifications') || []
 /**
  * Debounced persistence and updates unread count.
  * Writes to cache and updates Electron badge count.
@@ -46,17 +45,6 @@ async function markWatchedAsRead() {
 }
 
 /**
- * Queue a notification for batched processing
- *
- * @param {Object} detail Notification payload
- * @param {boolean} [systemNotify=false] Whether to forward to system notifications
- */
-function queueNotification(detail, systemNotify = false) {
-  incomingNotifications.push({ detail, systemNotify })
-  debounceNotify()
-}
-
-/**
  * Processes queued notifications in a single batch.
  * Deduplicates incoming, applies local updates, and dispatches system notifications.
  */
@@ -65,14 +53,33 @@ function processNotifications() {
   const { localNotifications: local, systemNotifications } = splitLocalAndSystem(dedupe(incomingNotifications))
   for (const notification of local) localNotifications.update((n) => upsert(n, notification))
   systemNotifications.forEach((notification, i) => setTimeout(() => COMMON.notify(notification), 5 * (i + 1)).unref?.())
+  cache.setEntry(caches.NOTIFICATIONS, 'incomingNotifications', [])
   incomingNotifications.length = 0
 }
 
-window.addEventListener('notification-app', (event) => queueNotification(event.detail, settings.value.systemNotify && (event.detail.button?.length || event.detail.activation)))
-window.addEventListener('notification-read', (event) => localNotifications.update((n) => markAsRead(n, event.detail)))
-window.addEventListener('notification-reset', () => {
+/**
+ * Mark a notification as read based on media progress
+ *
+ * @param {{ id: number, episode: number, episodes: number }} media
+ */
+export const readNotification = (media) => localNotifications.update((n) => markAsRead(n, media))
+
+/**
+ * Queue a notification for batched processing
+ *
+ * @param {Object} notification Notification payload
+ */
+export function queueNotification(notification) {
+  incomingNotifications.push(notification)
+  cache.setEntry(caches.NOTIFICATIONS, 'incomingNotifications', incomingNotifications)
+  debounceNotify()
+}
+
+/** Clears all local and incoming notifications */
+export function resetNotifications() {
+  cache.resetNotifications()
   localNotifications.set([])
   incomingNotifications.length = 0
-})
+}
 
 ELECTRON.setUnreadCount(unreadCount.value)

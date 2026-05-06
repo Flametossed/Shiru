@@ -1,5 +1,6 @@
 import { isValidNumber, matchPhrase, matchKeys, generateRandomHexCode } from '@/modules/util.js'
 import Helper from '@/modules/providers/helper.js'
+import { settings } from '@/modules/settings.js'
 import { cache } from '@/modules/cache.js'
 
 const SYSTEM_KEYS = ['id', 'title', 'message', 'timestamp', 'icon', 'iconXL', 'heroImg', 'button', 'activation']
@@ -53,9 +54,9 @@ export function filter(notifications, searchText) {
 export function dedupe(notifications) {
   const map = new Map()
   for (const notification of notifications) {
-    const key = `${notification.detail.id}-${notification.detail.episode}-${notification.detail.dub}`
+    const key = `${notification.id}-${notification.episode}-${notification.dub}`
     const existing = map.get(key)
-    if (!existing || (notification.detail.click_action === 'TORRENT' && existing.detail.click_action !== 'TORRENT')) {
+    if (!existing || (notification.click_action === 'TORRENT' && existing.click_action !== 'TORRENT')) {
       map.set(key, notification)
     }
   }
@@ -128,13 +129,13 @@ export function markAsRead(notifications, media) {
 export function splitLocalAndSystem(notifications) {
   const localNotifications = []
   const systemNotifications = []
-  for (const { detail, systemNotify } of notifications) {
-    const { button, activation, ...localDetails } = detail
+  for (const notification of notifications) {
+    const { button, activation, ...localDetails } = notification
     localNotifications.push(localDetails)
-    if (systemNotify) {
+    if (settings.value.systemNotify && (button?.length || activation)) {
       const systemDetails = {}
       for (const key of SYSTEM_KEYS) {
-        if (key in detail) systemDetails[key] = detail[key]
+        if (key in notification) systemDetails[key] = notification[key]
       }
       systemNotifications.push(systemDetails)
     }

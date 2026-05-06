@@ -10,6 +10,7 @@ import { printError, status } from '@/modules/networking.js'
 import { cache, caches, mediaCache } from '@/modules/cache.js'
 import { MutationQueue } from '@/modules/providers/lib/mutationqueue.js'
 import { malClient } from '@/modules/providers/myanimelist/myanimelist.js'
+import { queueNotification } from '@/modules/notification/manager.js'
 import Helper from '@/modules/providers/helper.js'
 import Debug from 'debug'
 const debug = Debug('ui:anilist')
@@ -328,26 +329,24 @@ class AnilistClient {
       debug(`Found ${newNotifications?.length} new notifications`)
       for (const { media, episode, type, createdAt } of newNotifications) {
         if ((settings.value.aniNotify !== 'limited' || type !== 'AIRING') && media.type === 'ANIME' && media.format !== 'MUSIC' && (!settings.value.preferDubs || (media?.status === 'FINISHED' && !['CURRENT', 'REPEATING']?.includes(media?.mediaListEntry?.status)) || !(await malDubs.isDubMedia(media)) || await isSubbedProgress(await cache.requestMedia(media?.id)))) {
-          window.dispatchEvent(new CustomEvent('notification-app', {
-            detail: {
-              id: media?.id,
-              title: media.title.userPreferred,
-              message: type === 'AIRING' ? `${media.format !== 'MOVIE' ? `Episode ${episode}` : `The Movie`} (Sub) is out in Japan, ${media.format !== 'MOVIE' ? `it should be available soon.` : `, if this is a theatrical release it will likely a few months before it is available for streaming.`}` : 'Was recently announced!',
-              icon: media.coverImage.medium,
-              iconXL: media.coverImage.extraLarge,
-              heroImg: media?.bannerImage || (media?.trailer?.id && `https://i.ytimg.com/vi/${media?.trailer?.id}/hqdefault.jpg`),
-              ...(type === 'AIRING' ? { episode: episode } : {}),
-              timestamp: createdAt,
-              format: media?.format,
-              dub: false,
-              click_action: (type === 'AIRING' ? 'PLAY' : 'VIEW'),
-              button: [{ text: 'View Anime', activation: `shiru://anime/${media?.id}` }],
-              activation: {
-                type: 'protocol',
-                launch: `shiru://anime/${media?.id}`
-              }
+          queueNotification({
+            id: media?.id,
+            title: media.title.userPreferred,
+            message: type === 'AIRING' ? `${media.format !== 'MOVIE' ? `Episode ${episode}` : `The Movie`} (Sub) is out in Japan, ${media.format !== 'MOVIE' ? `it should be available soon.` : `, if this is a theatrical release it will likely a few months before it is available for streaming.`}` : 'Was recently announced!',
+            icon: media.coverImage.medium,
+            iconXL: media.coverImage.extraLarge,
+            heroImg: media?.bannerImage || (media?.trailer?.id && `https://i.ytimg.com/vi/${media?.trailer?.id}/hqdefault.jpg`),
+            ...(type === 'AIRING' ? { episode: episode } : {}),
+            timestamp: createdAt,
+            format: media?.format,
+            dub: false,
+            click_action: (type === 'AIRING' ? 'PLAY' : 'VIEW'),
+            button: [{ text: 'View Anime', activation: `shiru://anime/${media?.id}` }],
+            activation: {
+              type: 'protocol',
+              launch: `shiru://anime/${media?.id}`
             }
-          }))
+          })
         }
       }
     }

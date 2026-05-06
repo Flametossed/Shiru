@@ -61,6 +61,7 @@
   import { updateState } from '@/modals/UpdateModal.svelte'
   import { platformMap } from '@/routes/settings/SettingsPage.svelte'
   import SettingCard from '@/routes/settings/components/SettingCard.svelte'
+  import { resetNotifications } from '@/modules/notification/manager.js'
   import ChangelogTab from '@/routes/settings/tabs/ChangelogTab.svelte'
   import ConfirmButton from '@/components/inputs/ConfirmButton.svelte'
   import { modal } from '@/modules/navigation.js'
@@ -153,7 +154,7 @@
   </div>
 </SettingCard>
 <SettingCard title='Reset Notifications' description='Resets all notifications that have been cached, this is not recommended unless you are experiencing issues. This will also reset the last time you have been notified, so expect previous notifications to appear again.'>
-  <ConfirmButton click={() => cache.resetNotifications()} class='btn btn-primary mt-5 d-flex align-items-center justify-content-center' confirmText='Confirm Reset' confirmClass='btn-danger-dim long-button' cancelClass='btn-secondary long-button' actionClass='d-inline-flex d-md-block' dataToggle='tooltip' dataPlacement='top' dataTitle='Resets Your Notifications Within The App'>
+  <ConfirmButton click={resetNotifications} class='btn btn-primary mt-5 d-flex align-items-center justify-content-center' confirmText='Confirm Reset' confirmClass='btn-danger-dim long-button' cancelClass='btn-secondary long-button' actionClass='d-inline-flex d-md-block' dataToggle='tooltip' dataPlacement='top' dataTitle='Resets Your Notifications Within The App'>
     <span class='text-truncate'>Reset Notifications</span>
   </ConfirmButton>
 </SettingCard>

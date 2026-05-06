@@ -5,6 +5,7 @@ import { malDubs } from '@/modules/anime/animedubs.js'
 import { settings } from '@/modules/settings.js'
 import { cache, caches } from '@/modules/cache.js'
 import { getEpisodeMetadataForMedia, isSubbedProgress } from '@/modules/anime/anime.js'
+import { queueNotification } from '@/modules/notification/manager.js'
 import { hasNextPage } from '@/modules/sections.js'
 import { printError } from '@/modules/networking.js'
 import Helper from '@/modules/providers/helper.js'
@@ -115,35 +116,33 @@ class AnimeSchedule {
             const cachedMedia = await cache.requestMedia(media?.id)
             const notify = (cache.getEntry(caches.NOTIFICATIONS, `lastDub`) > 0) && ((!cachedMedia?.mediaListEntry && settings.value.releasesNotify?.includes('NOTONLIST')) || (cachedMedia?.mediaListEntry && settings.value.releasesNotify?.includes(cachedMedia?.mediaListEntry?.status)))
             if (notify && media.format !== 'MUSIC') {
-                window.dispatchEvent(new CustomEvent('notification-app', {
-                    detail: {
-                        id: media?.id,
-                        title: anilistClient.title(media),
-                        message: `Episode ${entry.episodeNumber} has been delayed until ` + (entry?.delayedIndefinitely && !entry.status?.toUpperCase()?.includes('FINISHED') ? 'further notice, production has been suspended' : entry.delayedIndefinitely ? 'further notice, this is determined to be a partial dub so this episode will likely not be dubbed' : (new Date(entry?.delayedUntil).toLocaleString('en-US', {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'short',
-                          day: '2-digit',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          hour12: true
-                        }))) + '!',
-                        icon: media?.coverImage?.medium,
-                        iconXL: media?.coverImage?.extraLarge,
-                        heroImg: media?.bannerImage || (media?.trailer?.id && `https://i.ytimg.com/vi/${media?.trailer?.id}/hqdefault.jpg`),
-                        episode: entry?.episodeNumber,
-                        timestamp: Math.floor(new Date().getTime() / 1000) - 5,
-                        format: media?.format,
-                        delayed: true,
-                        dub: true,
-                        click_action: 'VIEW',
-                        button: [{ text: 'View Anime', activation: `shiru://anime/${media?.id}` }],
-                        activation: {
-                          type: 'protocol',
-                          launch: `shiru://anime/${media?.id}`
-                        }
+                queueNotification({
+                    id: media?.id,
+                    title: anilistClient.title(media),
+                    message: `Episode ${entry.episodeNumber} has been delayed until ` + (entry?.delayedIndefinitely && !entry.status?.toUpperCase()?.includes('FINISHED') ? 'further notice, production has been suspended' : entry.delayedIndefinitely ? 'further notice, this is determined to be a partial dub so this episode will likely not be dubbed' : (new Date(entry?.delayedUntil).toLocaleString('en-US', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'short',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                    }))) + '!',
+                    icon: media?.coverImage?.medium,
+                    iconXL: media?.coverImage?.extraLarge,
+                    heroImg: media?.bannerImage || (media?.trailer?.id && `https://i.ytimg.com/vi/${media?.trailer?.id}/hqdefault.jpg`),
+                    episode: entry?.episodeNumber,
+                    timestamp: Math.floor(new Date().getTime() / 1000) - 5,
+                    format: media?.format,
+                    delayed: true,
+                    dub: true,
+                    click_action: 'VIEW',
+                    button: [{ text: 'View Anime', activation: `shiru://anime/${media?.id}` }],
+                    activation: {
+                        type: 'protocol',
+                        launch: `shiru://anime/${media?.id}`
                     }
-                }))
+                })
             }
             cache.setEntry(caches.NOTIFICATIONS, 'delayedDubs', (current) => [...current, `${media?.id}:${entry.episodeNumber}:${entry.delayedUntil}`])
         }
@@ -176,33 +175,31 @@ class AnimeSchedule {
                     }
                     const notify = (cache.getEntry(caches.NOTIFICATIONS, `last${type}`) > 0) && (settings.value[key] === 'all' || isFollowing())
                     if (notify && media.format !== 'MUSIC') {
-                        window.dispatchEvent(new CustomEvent('notification-app', {
-                            detail: {
-                                id: media?.id,
-                                title: anilistClient.title(media),
-                                message: `${type === 'Dub' ? 'A dub has just been' : 'Was recently'} announced for ` + (new Date(type === 'Dub' ? media?.airingSchedule?.nodes?.[0]?.airingAt : media?.airingSchedule?.nodes?.[0]?.airingAt * 1000).toLocaleString('en-US', {
-                                  weekday: 'long',
-                                  year: 'numeric',
-                                  month: 'short',
-                                  day: '2-digit',
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                  hour12: true
-                                })) + '!',
-                                icon: media?.coverImage?.medium,
-                                iconXL: media?.coverImage?.extraLarge,
-                                heroImg: media?.bannerImage || (media?.trailer?.id && `https://i.ytimg.com/vi/${media?.trailer?.id}/hqdefault.jpg`),
-                                timestamp: Math.floor(new Date().getTime() / 1000) - 5,
-                                format: media?.format,
-                                dub: type === 'Dub',
-                                click_action: 'VIEW',
-                                button: [{ text: 'View Anime', activation: `shiru://anime/${media?.id}` }],
-                                activation: {
-                                  type: 'protocol',
-                                  launch: `shiru://anime/${media?.id}`
-                                }
+                        queueNotification({
+                            id: media?.id,
+                            title: anilistClient.title(media),
+                            message: `${type === 'Dub' ? 'A dub has just been' : 'Was recently'} announced for ` + (new Date(type === 'Dub' ? media?.airingSchedule?.nodes?.[0]?.airingAt : media?.airingSchedule?.nodes?.[0]?.airingAt * 1000).toLocaleString('en-US', {
+                                weekday: 'long',
+                                year: 'numeric',
+                                month: 'short',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: true
+                            })) + '!',
+                            icon: media?.coverImage?.medium,
+                            iconXL: media?.coverImage?.extraLarge,
+                            heroImg: media?.bannerImage || (media?.trailer?.id && `https://i.ytimg.com/vi/${media?.trailer?.id}/hqdefault.jpg`),
+                            timestamp: Math.floor(new Date().getTime() / 1000) - 5,
+                            format: media?.format,
+                            dub: type === 'Dub',
+                            click_action: 'VIEW',
+                            button: [{ text: 'View Anime', activation: `shiru://anime/${media?.id}` }],
+                            activation: {
+                                type: 'protocol',
+                                launch: `shiru://anime/${media?.id}`
                             }
-                        }))
+                        })
                     }
                     cache.setEntry(caches.NOTIFICATIONS, notifyKey, (current) => [...current, media?.id])
                 }
@@ -391,26 +388,24 @@ class AnimeSchedule {
                     const notify = (!media?.mediaListEntry && settings.value.releasesNotify?.includes('NOTONLIST')) || (media?.mediaListEntry && settings.value.releasesNotify?.includes(media?.mediaListEntry?.status))
                     debug(`Attempting to notify for ${media?.id}:${media?.title?.userPreferred}...`)
                     if (notify && (type === 'Dub' || !settings.value.preferDubs || (media?.status === 'FINISHED' && !['CURRENT', 'REPEATING']?.includes(media?.mediaListEntry?.status)) || !(await malDubs.isDubMedia(media)) || await isSubbedProgress(media)) && media.format !== 'MUSIC') {
-                        window.dispatchEvent(new CustomEvent('notification-app', {
-                            detail: {
-                                id: media?.id,
-                                title: anilistClient.title(media),
-                                message: `${media.format !== 'MOVIE' ? `${media?.episodes === media?.episode?.aired ? `The wait is over! ` : ''}Episode ${media?.episode?.aired}` : `The Movie`} (${type}) is out in ${type === 'Dub' ? 'the United States' : 'Japan'}, ${media.format !== 'MOVIE' && media?.episodes === media?.episode?.aired ? `this season should be available to binge soon!` : media.format !== 'MOVIE' ? `it should be available soon.` : `, if this is a theatrical release it will likely a few months before it is available for streaming.`}`,
-                                icon: media?.coverImage?.medium,
-                                iconXL: media?.coverImage?.extraLarge,
-                                heroImg: media?.bannerImage || (media?.trailer?.id && `https://i.ytimg.com/vi/${media?.trailer?.id}/hqdefault.jpg`),
-                                episode: media?.episode?.aired,
-                                timestamp: addedAt,
-                                format: media?.format,
-                                dub: type === 'Dub',
-                                click_action: 'PLAY',
-                                button: [{ text: 'View Anime', activation: `shiru://anime/${media?.id}` }],
-                                activation: {
-                                  type: 'protocol',
-                                  launch: `shiru://anime/${media?.id}`
-                                }
+                        queueNotification({
+                            id: media?.id,
+                            title: anilistClient.title(media),
+                            message: `${media.format !== 'MOVIE' ? `${media?.episodes === media?.episode?.aired ? `The wait is over! ` : ''}Episode ${media?.episode?.aired}` : `The Movie`} (${type}) is out in ${type === 'Dub' ? 'the United States' : 'Japan'}, ${media.format !== 'MOVIE' && media?.episodes === media?.episode?.aired ? `this season should be available to binge soon!` : media.format !== 'MOVIE' ? `it should be available soon.` : `, if this is a theatrical release it will likely a few months before it is available for streaming.`}`,
+                            icon: media?.coverImage?.medium,
+                            iconXL: media?.coverImage?.extraLarge,
+                            heroImg: media?.bannerImage || (media?.trailer?.id && `https://i.ytimg.com/vi/${media?.trailer?.id}/hqdefault.jpg`),
+                            episode: media?.episode?.aired,
+                            timestamp: addedAt,
+                            format: media?.format,
+                            dub: type === 'Dub',
+                            click_action: 'PLAY',
+                            button: [{ text: 'View Anime', activation: `shiru://anime/${media?.id}` }],
+                            activation: {
+                                type: 'protocol',
+                                launch: `shiru://anime/${media?.id}`
                             }
-                        }))
+                        })
                         debug(`Successfully notified for ${media?.id}:${media?.title?.userPreferred}!`)
                     } else {
                         debug(`Failed to notify for ${media?.id}:${media?.title?.userPreferred}:${notify}:${(type === 'Dub' || !settings.value.preferDubs || (media?.status === 'FINISHED' && !['CURRENT', 'REPEATING']?.includes(media?.mediaListEntry?.status)) || !(await malDubs.isDubMedia(media)) || await isSubbedProgress(media))}:${(media.format !== 'MUSIC')}`)

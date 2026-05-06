@@ -749,6 +749,7 @@ export const queryDefaults = {
  * @property {any[]} announcedDubs
  * @property {any[]} announcedSubs
  * @property {any[]} announcedHentais
+ * @property {any[]} incomingNotifications
  * @property {any[]} notifications
  */
 export const notifyDefaults = {
@@ -761,6 +762,7 @@ export const notifyDefaults = {
   announcedDubs: [],
   announcedSubs: [],
   announcedHentais: [],
+  incomingNotifications: [],
   notifications: []
 }
 

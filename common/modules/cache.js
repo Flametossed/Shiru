@@ -580,7 +580,6 @@ class Cache {
    */
   resetNotifications() {
     this.notifications.value = { ...notifyDefaults }
-    window.dispatchEvent(new Event('notification-reset'))
   }
 
   /**
