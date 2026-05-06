@@ -22,6 +22,7 @@
   /** @type {Function} */
   export let onClick = () => {}
 
+  /** @type {boolean} */
   let prompt = false
 
   $: ({ delayed, announcement, repeating, notWatching, behind, completed } = getFlags(notification, media))
@@ -177,8 +178,16 @@
     font-size: 1rem;
   }
 
+  @keyframes slide-in {
+    from {
+      opacity: 0;
+      transform: translateY(1rem);
+    }
+    to { transform: translateY(0) }
+  }
   .notification-item {
     background-color: var(--dark-color-light);
+    animation: slide-in .5s ease forwards;
     border-radius: .75rem;
   }
   .notification-item.read         { opacity: .5; }

@@ -1,6 +1,6 @@
 <script>
-  import { localNotifications, unreadCount } from '@/modules/notification/manager.js'
   import NotificationCard from '@/modals/notification/components/NotificationCard.svelte'
+  import { localNotifications, unreadCount } from '@/modules/notification/manager.js'
   import NotificationCardSk from '@/components/skeletons/NotificationCardSk.svelte'
   import { sort, filter } from '@/modules/notification/util.js'
   import { Search, MailCheck, X } from 'lucide-svelte'
@@ -22,6 +22,15 @@
   $: {
     if (!$modal[modal.NOTIFICATIONS]) onClose()
     else onOpen()
+  }
+
+  // Auto-refresh if close to top of the list and new notifications arrived
+  $: {
+    if (container && container.scrollTop <= 200 && $localNotifications.length > cachedNotificationCount) {
+      notificationCount = NOTIFICATION_PAGE_SIZE
+      cachedNotificationCount = $localNotifications.length
+      currentNotifications = filter($localNotifications, searchText).slice(0, notificationCount)
+    }
   }
 
   /** Re-sorts notifications when the modal closes */
@@ -130,11 +139,16 @@
       {/each}
     {:else}
       {#each currentNotifications as notification, index}
-        {#await cache.requestMedia(notification?.id)}
-          <NotificationCardSk {index}/>
-        {:then media}
+        {@const media = cache.getMedia(notification?.id)}
+        {#if !media?.id}
+          {#await cache.requestMedia(notification?.id)}
+            <NotificationCardSk {index}/>
+          {:then media}
+            <NotificationCard {index} {media} {notification} onClick={handleClick}/>
+          {/await}
+        {:else}
           <NotificationCard {index} {media} {notification} onClick={handleClick}/>
-        {/await}
+        {/if}
       {/each}
     {/if}
   </div>
