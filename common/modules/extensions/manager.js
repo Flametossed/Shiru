@@ -4,7 +4,9 @@ import { getRandomInt, createDeferred } from '@/modules/util.js'
 import { status, printError } from '@/modules/networking.js'
 import { SUPPORTS } from '@/modules/support.js'
 import { toast } from 'svelte-sonner'
+import isPrivateIp from 'private-ip'
 import { wrap } from 'comlink'
+import { parse } from 'tldts'
 import Debug from 'debug'
 const debug = Debug('ui:manager')
 
@@ -208,7 +210,7 @@ class ExtensionManager {
       if (!extension.locale) {
         await cache.cacheEntry(caches.EXTENSIONS, key, { mappings: true }, newCode, Date.now() + getRandomInt(7, 14) * 24 * 60 * 60 * 1_000)
         try {
-          const initialize = await worker.initialize(key, extension.type, newCode, { settings: settings.value.extensionsNew[key]?.settings ?? {},  bypassCORS: SUPPORTS.isAndroid && extension.trusted })
+          const initialize = await worker.initialize(key, extension.type, newCode, { settings: settings.value.extensionsNew[key]?.settings ?? {}, bypassCORS: SUPPORTS.isAndroid })
           if (!initialize.validated) {
             this.inactiveWorkers[key] = worker
             settings.set(settings.value)
@@ -345,7 +347,7 @@ class ExtensionManager {
           const extensionsNew = { ...value.extensionsNew }
           config.forEach(extension => {
             const key = (extension.locale || (extension.update + '/')) + extension.id
-            sourcesNew[key] = { ...extension, trusted: !!extension.id.match(new RegExp(atob('bnlhYQ=='), 'i')) || !!extension.id.match(new RegExp(atob('c3VrZWJlaQ=='), 'i')) || !!extension.id.match(new RegExp(atob('bmVrb2J0'), 'i')) }
+            sourcesNew[key] = extension
             if (!extensionsNew[key]) {
               const defaults = Object.fromEntries((extension.settings || []).map(setting => [setting.key, setting.default ?? null]))
               extensionsNew[key] = { enabled: false, settings: defaults }
@@ -433,11 +435,11 @@ class ExtensionManager {
           try {
             const extension = extensions[key]
             const worker = createWorker(extension)
-            if (SUPPORTS.isAndroid && extension.trusted) worker.onmessage = async (event) => this.portMessage(event, worker) // hacky Android workaround for Access-Control-Allow-Origin error.
+            if (SUPPORTS.isAndroid) worker.onmessage = async (event) => this.portMessage(event, worker) // hacky Android workaround for Access-Control-Allow-Origin error.
             try {
               /** @type {comlink.Remote<import('@/modules/extensions/worker.js').Worker>} */
               const remoteWorker = await wrap(worker)
-              const initialize = await remoteWorker.initialize(key, extension.type, modules[key], { settings: settings.value.extensionsNew[key]?.settings ?? {}, bypassCORS: SUPPORTS.isAndroid && extension.trusted })
+              const initialize = await remoteWorker.initialize(key, extension.type, modules[key], { settings: settings.value.extensionsNew[key]?.settings ?? {}, bypassCORS: SUPPORTS.isAndroid })
               if (!initialize.validated && initialize.stub) {
                 await this.getExtensionCode(key, remoteWorker)
                 if (this.activeWorkers[key]) return
@@ -547,7 +549,7 @@ class ExtensionManager {
           const extensionsNew = { ...value.extensionsNew }
           toUpdate.forEach(({ oldId, latest }) => {
             const newId = (latest.locale || (latest.update + '/')) + latest.id
-            sourcesNew[newId] = { ...latest, trusted: sourcesNew[oldId]?.trusted }
+            sourcesNew[newId] = latest
             if (newId !== oldId) {
               if (extensionsNew[oldId]) {
                 extensionsNew[newId] = extensionsNew[oldId]
@@ -573,6 +575,26 @@ class ExtensionManager {
   }
 
   /**
+   * Checks if a URL points to a private or local network address.
+   * Blocks non-HTTP protocols, private IP ranges, and hostnames without a valid public TLD.
+   *
+   * @param {string} url The URL to check.
+   * @returns {boolean} True if the URL is private or local, false otherwise.
+   */
+  isPrivateOrLocal(url) {
+    try {
+      const { hostname, protocol } = new URL(url)
+      if (protocol !== 'http:' && protocol !== 'https:') return true
+      const cleanHostname = hostname.startsWith('[') ? hostname.slice(1, -1) : hostname
+      if (isPrivateIp(cleanHostname)) return true
+      const { publicSuffix } = parse(cleanHostname)
+      return !publicSuffix
+    } catch {
+      return true
+    }
+  }
+
+  /**
    * Handles proxied network requests from workers (Android CORS workaround).
    *
    * @param {MessageEvent} event Message from the worker.
@@ -580,16 +602,38 @@ class ExtensionManager {
    */
   async portMessage(event, worker) {
     const { type, requestId, url, options } = event.data || {}
-    if (type === 'FETCH') {
-      try {
-        const response = await fetch(url, options)
-        const text = await response.text()
-        let json
-        try { json = JSON.parse(text) } catch { json = {} }
-        worker.postMessage({ type: 'RESULT', requestId, ok: response.ok, status: response.status, text, json })
-      } catch (error) {
-        worker.postMessage({ type: 'RESULT', requestId, error: error.message || 'unknown error' })
+    if (type !== 'FETCH' || !url) return
+    if (this.isPrivateOrLocal(url)) {
+      worker.postMessage({
+        type: 'RESULT',
+        requestId,
+        error: 'Access denied: requests to private or local network addresses are not permitted.'
+      })
+      return
+    }
+
+    try {
+      const response = await fetch(url, {
+        method: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'].includes(options?.method?.toUpperCase()) ? options.method.toUpperCase() : 'GET',
+        headers: options?.headers || {},
+        body: options?.body
+      })
+
+      if (this.isPrivateOrLocal(response.url)) {
+        worker.postMessage({
+          type: 'RESULT',
+          requestId,
+          error: 'Access denied: request was redirected to a private or local network address.'
+        })
+        return
       }
+
+      const text = await response.text()
+      let json
+      try { json = JSON.parse(text) } catch { json = {} }
+      worker.postMessage({ type: 'RESULT', requestId, ok: response.ok, status: response.status, text, json })
+    } catch (error) {
+      worker.postMessage({ type: 'RESULT', requestId, error: error.message || 'unknown error' })
     }
   }
 
