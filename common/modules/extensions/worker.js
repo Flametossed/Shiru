@@ -92,7 +92,7 @@ class Worker {
    * @param {boolean} online
    * @param {{enabled: boolean}} sourceOptions
    */
-  async query (options, types = {}, online, sourceOptions) {
+  async query(options, types = {}, online, sourceOptions) {
     /** @type {Promise<{ results: Result[], errors: string[] }>[]} */
     const promises = []
     if (!sourceOptions?.enabled) return { results: [], errors: [{ message: 'Extension is not enabled.. skipping...' }] }
@@ -104,7 +104,7 @@ class Worker {
       return cached.query
     }
 
-    promises.push(this._querySource(this.source, options, types))
+    if (online) promises.push(this._querySource(this.source, options, types))
     /** @type {Result[]} */
     const results = []
     const errors = []
@@ -112,7 +112,7 @@ class Worker {
       results.push(...res.results)
       errors.push(...res.errors)
     }
-    const noResults = (!online || (!results?.length && !errors?.length)) ? [{ message: 'Source ' + this.id + ' found no results.' }] : null
+    const noResults = (!online || (!results?.length && !errors?.length)) ? [{ message: 'Source ' + this.id + ' found no results.' + (!online ? ' Network is offline.' : '') }] : null
     if (online && !errors?.length) this.cache.set(cacheKey, { query: { results, errors: noResults || errors }, timestamp: Date.now() })
     return { results, errors: noResults || errors }
   }
@@ -123,7 +123,7 @@ class Worker {
    * @param {{ movie: boolean, batch: boolean }} types
    * @returns {Promise<{ results: Result[], errors: string[] }>}
    */
-  async _querySource (source, options, { movie, batch } = {}) {
+  async _querySource(source, options, { movie, batch } = {}) {
     const promises = []
     if (this.type === 'torrent') {
       promises.push(source.single(options))

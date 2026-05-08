@@ -175,7 +175,7 @@ class ExtensionManager {
       delete this.inactiveWorkers[key]
       let validated
       try {
-        validated = await inactiveWorker.validate()
+        validated = status.value !== 'offline' ? await inactiveWorker.validate() : false
       } catch (err) {
         validated = false
       }
@@ -507,7 +507,7 @@ class ExtensionManager {
    */
   async updateExtensions(currentExtensions, extensionSources) {
     const extensionIds = Object.keys(currentExtensions || {})
-    if (!extensionIds?.length) return false
+    if (!extensionIds?.length || status.value === 'offline') return false
     try {
       // Check for source repository updates
       const sourceUrls = Object.keys(extensionSources || {})

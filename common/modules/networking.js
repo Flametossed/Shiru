@@ -5,6 +5,9 @@ import { codes, throttle, getRandomInt } from '@/modules/util.js'
 import Debug from 'debug'
 const trace = Debug('net:networking')
 
+let offlineController = new AbortController()
+const OFFLINE_ABORT_REASON = new DOMException('Failed to fetch: client is offline', 'AbortedOffline')
+
 export const status = writable(navigator.onLine ? 'online' : 'offline')
 export async function printError(title, description, error) {
   if (await isOffline(error) || await isAnilistDown(error)) return
@@ -16,6 +19,14 @@ export async function printError(title, description, error) {
     })
   }
 }
+
+// When we go offline, abort all in-flight requests and reset the controller
+status.subscribe(_status => {
+  if (_status === 'offline') {
+    offlineController.abort(OFFLINE_ABORT_REASON)
+    offlineController = new AbortController()
+  }
+})
 
 // Intercepts all AniList fetch requests and returns a 403 outage response.
 // Uncomment the block below to simulate an AniList outage locally.
@@ -31,16 +42,48 @@ export async function printError(title, description, error) {
 // }
 
 const fetch = window.fetch
+const fetchError = (error) => isOffline(error) || isAnilistDown(error)
 window.fetch = async (...args) => {
+  let [url, options = {}] = args
+
+  // Do not intercept local/wasm/blob fetches, only external URLs
+  const urlString = typeof url === 'string' ? url : url?.url ?? ''
+  const isExternal = (() => {
+    try {
+      const { hostname } = new URL(urlString)
+      return hostname !== 'localhost' && hostname !== '127.0.0.1' && hostname !== location.hostname
+    } catch {
+      return false
+    }
+  })()
+  if (!isExternal) return fetch(url, options)
+  if (status.value === 'offline') return { message: 'failed to fetch: client is offline' }
+
   try {
-    const res = await fetch(...args)
-    if (!res.ok) window.dispatchEvent(new CustomEvent('fetch-error', { detail: { error: { response: res?.response, status: res?.status, message: res?.message }, url: args[0]?.url || args[0], config: args[1] } }))
+    const res = await fetch(url, { ...options, signal: offlineController.signal })
+    if (!res?.ok) fetchError({ response: res?.response, status: res?.status, message: res?.message })
     return res
   } catch (error) {
-    window.dispatchEvent(new CustomEvent('fetch-error', { detail: { error, url: args[0]?.url || args[0], config: args[1] } }))
+    if (error.name !== 'AbortedOffline') fetchError(error)
     throw error
   }
 }
+
+const networkPing = (timeout = 2_000) => pingWith({
+  url: 'https://cp.cloudflare.com/generate_204?cacheBust=' + Date.now(),
+  options: {
+    method: 'HEAD',
+    mode: 'no-cors',
+    cache: 'no-cache',
+    headers: { 'Pragma': 'no-cache' }
+  },
+  timeout
+})
+
+// quick-check connection on initial startup
+networkPing(300).then(success => {
+  if (!success) isOffline({ message: 'failed to fetch: client is offline' })
+})
 
 function isNetworkError(error) {
   if (!error || error.response || (error.status && error.status >= 400)) return false
@@ -54,16 +97,7 @@ function isAnilistError(error) {
 
 export const isOffline = newOutageChecker({
   key: 'Network',
-  ping: (timeout = 2_000) => pingWith({
-    url: 'https://cp.cloudflare.com/generate_204?cacheBust=' + Date.now(),
-    options: {
-      method: 'HEAD',
-      mode: 'no-cors',
-      cache: 'no-cache',
-      headers: { 'Pragma': 'no-cache' }
-    },
-    timeout
-  }),
+  ping: networkPing,
   detect: isNetworkError,
   offlineEvent: 'offline',
   onlineEvent: 'online',
@@ -109,12 +143,18 @@ async function pingWith({ url, options, timeout = 2_000, validate }) {
   if (!navigator.onLine) return false
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeout)
+  trace(`Pinging ${url} to check for connection within ${timeout}ms`)
   try {
     const res = await fetch(url, { ...options, signal: controller.signal })
-    if (!res.ok) return false
+    if (!res.ok) {
+      trace(`Ping to ${url} failed, network or host is likely offline...`)
+      return false
+    }
+    trace(`Ping to ${url} successful.${validate ? ' Validating...' : ''}`)
     if (validate) return await validate(res)
     return true
   } catch {
+    trace(`Ping to ${url} failed, network or host is likely offline...`)
     return false
   } finally {
     clearTimeout(timer)
