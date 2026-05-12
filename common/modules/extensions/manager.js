@@ -2,9 +2,9 @@ import { settings } from '@/modules/settings.js'
 import { cache, caches } from '@/modules/cache.js'
 import { getRandomInt, createDeferred } from '@/modules/util.js'
 import { status, printError } from '@/modules/networking.js'
+import is_ip_private from '@rockinchaos/private-ip'
 import { SUPPORTS } from '@/modules/support.js'
 import { toast } from 'svelte-sonner'
-import isPrivateIp from 'private-ip'
 import { wrap } from 'comlink'
 import { parse } from 'tldts'
 import Debug from 'debug'
@@ -586,7 +586,7 @@ class ExtensionManager {
       const { hostname, protocol } = new URL(url)
       if (protocol !== 'http:' && protocol !== 'https:') return true
       const cleanHostname = hostname.startsWith('[') ? hostname.slice(1, -1) : hostname
-      if (isPrivateIp(cleanHostname)) return true
+      if (is_ip_private(cleanHostname)) return true
       const { publicSuffix } = parse(cleanHostname)
       return !publicSuffix
     } catch {
