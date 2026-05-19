@@ -282,6 +282,12 @@ class HistoryManager {
     let minimizeApp = null
     ANDROID.onBackButton(() => {
       debug('Android back button pressed', JSON.stringify({ canGoBack: canGoBack.value, minimizeApp: minimizeApp, currentIndex: this.currentIndex, historyLength: this.history.length }))
+      if (document.fullscreenElement) {
+        debug('Back was pressed while in fullscreen, skipping navigation and exiting fullscreen...')
+        document.exitFullscreen()
+        return
+      }
+
       if (canGoBack.value) this.goBack()
       else if (minimizeApp) {
         debug('Second back press detected, minimizing app')
