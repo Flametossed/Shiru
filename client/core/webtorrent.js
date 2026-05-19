@@ -31,6 +31,8 @@ export default class TorrentClient extends WebTorrent {
    * @param {Promise<any>|null} controller - Optional server controller promise.
    */
   constructor(ipc, storageQuota, serverMode, settings, controller) {
+    Debug.disable()
+    if (settings.debug) Debug.enable(settings.debug)
     debug('Initializing TorrentClient with settings:', JSON.stringify(settings))
     super({
       dht: settings.dht,

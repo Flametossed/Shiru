@@ -12,7 +12,6 @@ import Updater from './updater.js'
 import Debug from './debugger.js'
 import Dialog from './dialog.js'
 
-import { cache, caches } from '@/modules/cache.js'
 import { development, loadingClient } from './util.js'
 import { ipcWire } from './ipc.js'
 
@@ -65,13 +64,13 @@ export default class App {
     if (development) SplashScreen.hide()
     else ipcWire.once('common:windowReady', () => setTimeout(() => SplashScreen.hide({ fadeOutDuration: 200 }), 150).unref?.()) // HACK: Prevents the window from being shown while it's still loading. This is nice for production as the window can't be moved without the elements being rendered.
 
-    ipcWire.handle('torrent:portRequest', async () => {
     // Receives log events bridged from webtorrent.js stderr/stdout.
     NodeJS.addListener('torrent:log', ({ args }) => {
       const { level, message } = args[0]
       level === 'error' ? console.error(message) : console.debug(message)
     })
 
+    ipcWire.handle('torrent:portRequest', async (event, settings) => {
       const port = {
         onmessage: cb => {
           NodeJS.addListener('ipc', ({ args }) => cb(args[0]))
@@ -81,7 +80,6 @@ export default class App {
         }
       }
       await this.ready
-      await cache.isReady
       this.handleNotify = true
       NodeJS.send({ eventName: 'port-init', args: [] })
       let stethoscope = true
@@ -89,7 +87,7 @@ export default class App {
         NodeJS.addListener('webtorrent-heartbeat', () => {
           if (stethoscope) {
             stethoscope = false
-            NodeJS.send({ eventName: 'main-heartbeat', args: [{ ...cache.getEntry(caches.GENERAL, 'settings'), userID: cache.cacheID }] })
+            NodeJS.send({ eventName: 'main-heartbeat', args: [settings] })
             NodeJS.addListener('torrentRequest', () => {
               NodeJS.send({ eventName: 'torrentPort', args: [] })
               resolve(port)

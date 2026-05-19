@@ -1,5 +1,5 @@
 <script context='module'>
-  import { settings } from '@/modules/settings.js'
+  import { settings, debugStore } from '@/modules/settings.js'
   import { SUPPORTS } from '@/modules/support.js'
   import { capitalize, debounce } from '@/modules/util.js'
   import { toast } from 'svelte-sonner'
@@ -171,7 +171,7 @@
       <Tab>
         <div class='root h-full w-full overflow-y-md-auto p-20 pt-5'>
           <div class='page pb-100'>
-            <AppTab {version} bind:settings={$settings} />
+            <AppTab {version} {debugStore} bind:settings={$settings} />
           </div>
         </div>
       </Tab>

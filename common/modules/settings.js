@@ -1,4 +1,5 @@
 import { cache, caches } from '@/modules/cache.js'
+import { persisted } from 'svelte-persisted-store'
 import { writable } from 'simple-store-svelte'
 import { defaults } from '@/modules/util.js'
 import { toast } from 'svelte-sonner'
@@ -10,6 +11,8 @@ const debug = Debug('ui:settings')
 export let alToken = JSON.parse(localStorage.getItem('ALviewer')) || null
 /** @type {{viewer: import('./providers/myanimelist/mal.d.ts').Query<{Viewer: import('./providers/myanimelist/mal.d.ts').Viewer}>, token: string, refresh: string, refresh_in: number, reauth: boolean} | null} */
 export let malToken = JSON.parse(localStorage.getItem('MALviewer')) || null
+
+export const debugStore = persisted('debug', '', { serializer: { parse: e => e, stringify: e => e }})
 
 /**
  * Ensures that the webtorrent service is reloaded when the app is reloaded.

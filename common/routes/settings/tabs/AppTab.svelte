@@ -55,7 +55,6 @@
   }
 </script>
 <script>
-  import { persisted } from 'svelte-persisted-store'
   import { capitalize, defaults } from '@/modules/util.js'
   import { onDestroy } from 'svelte'
   import { updateState } from '@/modals/UpdateModal.svelte'
@@ -68,7 +67,9 @@
   import { copyToClipboard } from '@/modules/lib/clipboard.js'
   import semver from 'semver'
   import Debug from 'debug'
-  const debugStore = persisted('debug', '', { serializer: { parse: e => e, stringify: e => e }})
+
+  export let debugStore
+
   const debug = Debug('ui:app-settings')
   let debugPrev = null
 
