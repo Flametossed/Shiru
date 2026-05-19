@@ -66,6 +66,12 @@ export default class App {
     else ipcWire.once('common:windowReady', () => setTimeout(() => SplashScreen.hide({ fadeOutDuration: 200 }), 150).unref?.()) // HACK: Prevents the window from being shown while it's still loading. This is nice for production as the window can't be moved without the elements being rendered.
 
     ipcWire.handle('torrent:portRequest', async () => {
+    // Receives log events bridged from webtorrent.js stderr/stdout.
+    NodeJS.addListener('torrent:log', ({ args }) => {
+      const { level, message } = args[0]
+      level === 'error' ? console.error(message) : console.debug(message)
+    })
+
       const port = {
         onmessage: cb => {
           NodeJS.addListener('ipc', ({ args }) => cb(args[0]))

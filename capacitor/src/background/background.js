@@ -1,6 +1,6 @@
 import { channel } from 'bridge'
 import { statfs } from 'fs/promises'
-import { env } from 'node:process'
+import { env, stdout, stderr } from 'node:process'
 
 async function storageQuota (directory) {
   const { bsize, bavail } = await statfs(directory)
@@ -11,6 +11,18 @@ let client
 let heartbeatId
 function setHeartBeat() {
   heartbeatId = setInterval(() => channel.send('webtorrent-heartbeat'), 500)
+}
+
+// Intercept stream writes in webtorrent.js and forward them over IPC for logging.
+const originalStderrWrite = stderr.write.bind(stderr)
+stderr.write = (data, ...args) => {
+  originalStderrWrite(data, ...args)
+  channel.send('torrent:log', { level: 'error', message: typeof data === 'string' ? data.trim() : data.toString().trim() })
+}
+const originalStdoutWrite = stdout.write.bind(stdout)
+stdout.write = (data, ...args) => {
+  originalStdoutWrite(data, ...args)
+  channel.send('torrent:log', { level: 'debug', message: typeof data === 'string' ? data.trim() : data.toString().trim() })
 }
 
 channel.on('main-heartbeat', async settings => {

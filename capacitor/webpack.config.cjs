@@ -34,6 +34,7 @@ const capacitorConfig = {
       'node-datachannel': false,
       '@client': resolve(__dirname, '..', 'client'),
       'webtorrent-client': resolve(__dirname, '..', 'client/core/webtorrent.js'),
+      debug: resolve(__dirname, '..', 'common/modules/lib/debug.js'),
       'http-tracker': resolve('../node_modules/bittorrent-tracker/lib/client/http-tracker.js'),
       'webrtc-polyfill': false // no webrtc on mobile, need the resources
     }
