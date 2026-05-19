@@ -3,7 +3,7 @@
   "private": true,
   "dependencies": {
     "bittorrent-tracker": "^11.2.2",
-    "matroska-metadata": "^1.0.8",
+    "matroska-metadata": "^1.0.12",
     "parse-torrent": "^11.0.19",
     "uint8-util": "^2.2.6",
     "webtorrent": "github:RockinChaos/webtorrent#v2.8.7"

@@ -22,8 +22,8 @@
     "client": "workspace:*",
     "electron": "39.8.7",
     "electron-builder": "26.9.1",
-    "electron-log": "^5.4.3",
-    "electron-updater": "^6.8.5"
+    "electron-log": "^5.4.4",
+    "electron-updater": "^6.8.6"
   },
   "dependencies": {
     "@paymoapp/electron-shutdown-handler": "^1.1.2",
