@@ -52,9 +52,6 @@ export default class App {
   constructor() {
     this.updateOrientationInsets()
     screen.orientation.addEventListener('change', this.updateOrientationInsets)
-    Capacitor.addListener('appStateChange', (state) => {
-      if (state.isActive) this.updateOrientationInsets()
-    })
 
     SystemBars.hide({ bar: SystemBarType.StatusBar })
     Keyboard.addListener('keyboardWillHide', () => SystemBars.hide({ bar: SystemBarType.StatusBar }))

@@ -7,7 +7,7 @@
   let transition = true
   $: {
     const root = document.documentElement
-    if ($status.match(/offline/i)) root.style.setProperty('--wrapper-offset', getComputedStyle(root).getPropertyValue('--statusbar-height').trim())
+    if ($status.match(/offline/i)) root.style.setProperty('--wrapper-offset', 'calc(var(--statusbar-height) + env(safe-area-inset-top, 0))')
     else root.style.removeProperty('--wrapper-offset')
   }
 
@@ -49,5 +49,8 @@
   .status-bar-transition {
     transition: height 0.3s ease, padding-top 0.3s ease;
     transition-delay: 2s;
+  }
+  .status-bar:not(.status-bar-transition) {
+    transition: none !important;
   }
 </style>
