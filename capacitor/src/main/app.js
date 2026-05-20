@@ -147,5 +147,10 @@ export default class App {
   updateOrientationInsets() {
     document.documentElement.style.setProperty('--notch-inset-right', screen.orientation.type === 'landscape-primary' ? '0px' : 'env(safe-area-inset-right)')
     document.documentElement.style.setProperty('--navigation-inset-right', screen.orientation.type === 'landscape-secondary' ? '0px' : 'env(safe-area-inset-right)')
+    document.documentElement.style.setProperty('--safe-area-inset-bottom', `max(env(safe-area-inset-bottom, 0px), var(--navigation-inset-bottom, 0px))`)
+
+    const gestureSize = getComputedStyle(document.documentElement).getPropertyValue('--gesture-inset-bottom').trim()
+    const safeBottom = getComputedStyle(document.documentElement).getPropertyValue('--navigation-inset-bottom').trim()
+    document.documentElement.style.setProperty('--safe-area-inset-bottom-no-gesture', window.innerWidth < 769 && gestureSize && safeBottom === gestureSize ? '0px' : `env(safe-area-inset-bottom)`)
   }
 }

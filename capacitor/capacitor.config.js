@@ -28,8 +28,7 @@ const config = {
     },
     SystemBars: {
       insetsHandling: 'css',
-      style: 'DARK',
-      hidden: false
+      style: 'DARK'
     }
   },
   server: {

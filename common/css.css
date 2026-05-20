@@ -16,6 +16,8 @@
   --statusbar-height: 28px;
   --notch-inset-right: 0px;
   --navigation-inset-right: 0px;
+  --safe-area-inset-bottom: 0px;
+  --safe-area-inset-bottom-no-gesture: 0px;
 
   --accent-color: #e5204c;
   --highlight-color: #FFFFFF !important;
@@ -633,6 +635,9 @@ a[href]:active, button:not([disabled], .not-reactive):active:not([data-sonner-to
 }
 .mb-safe-area {
   margin-bottom: env(safe-area-inset-bottom, 0) !important;
+}
+.mb-navigation-safe-area {
+  margin-bottom: var(--safe-area-inset-bottom, 0) !important;
 }
 .pt-safe-area {
   padding-top: env(safe-area-inset-top, 0) !important;

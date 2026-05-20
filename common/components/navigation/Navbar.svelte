@@ -8,7 +8,7 @@
   import { Home, Search, Users, Download, CalendarSearch, Settings, Bell, BellDot, ListVideo, History, TvMinimalPlay } from 'lucide-svelte'
 </script>
 
-<nav class='navbar z-80 navbar-fixed-bottom d-block d-md-none border-0 bg-dark bt-10 mb-safe-area'>
+<nav class='navbar z-80 navbar-fixed-bottom d-block d-md-none border-0 bg-dark bt-10 mb-navigation-safe-area'>
   <div class='navbar-menu h-full d-flex flex-row justify-content-center align-items-center m-0 pb-5 animate'>
     <NavbarLink click={() => page.navigateTo(page.HOME)} _page={page.HOME} text='Home' let:active>
       <Home size='3.6rem' class='flex-shrink-0 p-5 m-5 rounded' strokeWidth='2.5' color={active ? 'currentColor' : 'var(--gray-color-very-dim)'} />

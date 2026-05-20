@@ -71,7 +71,7 @@
 
 <style>
   .page-wrapper {
-    height: calc(100% - var(--navbar-height) - env(safe-area-inset-bottom, 0)) !important;
+    height: calc(100% - var(--navbar-height) - var(--safe-area-inset-bottom-no-gesture, 0)) !important;
   }
   .content-wrapper {
     will-change: width;
