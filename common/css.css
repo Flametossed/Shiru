@@ -651,6 +651,16 @@ a[href]:active, button:not([disabled], .not-reactive):active:not([data-sonner-to
 .pr-navigation-area {
   padding-right: var(--navigation-inset-right, 0) !important;
 }
+.pr-navigation-area::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: calc(var(--navigation-inset-right, 0) - .10rem);
+  width: min(.10rem, var(--navigation-inset-right, 0));
+  background: var(--border-color-sp);
+  z-index: 45;
+}
 
 .h-10 {
   height: 1rem !important;

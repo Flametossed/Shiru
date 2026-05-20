@@ -25,7 +25,7 @@
 </script>
 
 <div class='overflow-hidden status-bar h-0' class:status-bar-transition={transition} class:offline={!SUPPORTS.isAndroid && $status.match(/offline/i)} class:offline-safe={SUPPORTS.isAndroid && $status.match(/offline/i)}>
-  <div class='z-79 position-absolute w-full d-flex align-items-center justify-content-center overflow-hidden status-bar h-0' class:status-bar-transition={transition} class:offline={!SUPPORTS.isAndroid && $status.match(/offline/i)} class:offline-safe={SUPPORTS.isAndroid && $status.match(/offline/i)} class:padding-safe={SUPPORTS.isAndroid} class:bg-very-dark={$status.match(/offline/i)} class:bg-success={!$status.match(/offline/i)}>
+  <div class='z-79 position-absolute d-flex align-items-center justify-content-center overflow-hidden status-bar h-0' style='width: calc(100% - var(--navigation-inset-right, 0) - env(safe-area-inset-left, 0))' class:status-bar-transition={transition} class:offline={!SUPPORTS.isAndroid && $status.match(/offline/i)} class:offline-safe={SUPPORTS.isAndroid && $status.match(/offline/i)} class:padding-safe={SUPPORTS.isAndroid} class:bg-very-dark={$status.match(/offline/i)} class:bg-success={!$status.match(/offline/i)}>
     {#if $status === 'online'}
       <Earth size='1.8rem' strokeWidth='2.5' />
       <span class='ml-10 font-weight-semi-bold font-size-16'>Connection Restored</span>
