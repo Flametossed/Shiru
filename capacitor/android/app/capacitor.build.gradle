@@ -17,6 +17,7 @@ dependencies {
     implementation project(':capacitor-keyboard')
     implementation project(':capacitor-local-notifications')
     implementation project(':capacitor-splash-screen')
+    implementation project(':capacitor-toast')
     implementation project(':capawesome-team-capacitor-android-foreground-service')
     implementation project(':capacitor-intent-uri')
     implementation project(':capacitor-nodejs')

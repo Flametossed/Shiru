@@ -1,4 +1,5 @@
 import { App as Capacitor } from '@capacitor/app'
+import { Toast } from '@capacitor/toast'
 import { Browser } from '@capacitor/browser'
 import { IntentUri } from 'capacitor-intent-uri'
 import { Filesystem } from '@capacitor/filesystem'
@@ -187,6 +188,12 @@ window.android = {
    * We prefer to use #minimizeApp instead as it is a safe paused state.
    */
   minimize: () => Capacitor.minimizeApp(),
+  /**
+   * Displays a native toast notification.
+   * @param {string} text The message to display.
+   * @param {'short'|'long'} duration How long the toast is visible.
+   */
+  toast: async (text, duration = 'short') => await Toast.show({ text, duration, position: 'bottom' }),
   /**
    * Listens for system back button presses.
    *

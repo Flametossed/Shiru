@@ -109,6 +109,9 @@ importers:
       '@capacitor/splash-screen':
         specifier: ^8.0.1
         version: 8.0.1(@capacitor/core@8.3.4)
+      '@capacitor/toast':
+        specifier: ^8.0.1
+        version: 8.0.1(@capacitor/core@8.3.4)
       '@capawesome-team/capacitor-android-foreground-service':
         specifier: ^8.1.0
         version: 8.1.0(@capacitor/core@8.3.4)
@@ -393,6 +396,11 @@ packages:
 
   '@capacitor/synapse@1.0.4':
     resolution: {integrity: sha512-/C1FUo8/OkKuAT4nCIu/34ny9siNHr9qtFezu4kxm6GY1wNFxrCFWjfYx5C1tUhVGz3fxBABegupkpjXvjCHrw==}
+
+  '@capacitor/toast@8.0.1':
+    resolution: {integrity: sha512-0uoyftoAeFjtOMiozBo7YXEo+zcpQCAxtBONSvrljJ05SKdlb1A8OFHaV/DZfIpGt+19kzUGaEaUemLdll4wUw==}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
 
   '@capawesome-team/capacitor-android-foreground-service@8.1.0':
     resolution: {integrity: sha512-q1LaZQ5K2cu2IXjbabwssF+RpUBikLxkOHYS69ahXz6a1kIsr2jC4RU1bwAEBTopRz0ccgfai0dSSTdqbtEwhw==}
@@ -6204,6 +6212,10 @@ snapshots:
       '@capacitor/core': 8.3.4
 
   '@capacitor/synapse@1.0.4': {}
+
+  '@capacitor/toast@8.0.1(@capacitor/core@8.3.4)':
+    dependencies:
+      '@capacitor/core': 8.3.4
 
   '@capawesome-team/capacitor-android-foreground-service@8.1.0(@capacitor/core@8.3.4)':
     dependencies:
@@ -12066,7 +12078,7 @@ snapshots:
       type-fest: 0.16.0
       unique-string: 2.0.0
 
-  terser-webpack-plugin@5.3.17(webpack@5.106.2(webpack-cli@7.0.2)):
+  terser-webpack-plugin@5.3.17(webpack@5.106.2):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.25
       jest-worker: 27.5.1
@@ -12530,7 +12542,7 @@ snapshots:
       neo-async: 2.6.2
       schema-utils: 4.3.3
       tapable: 2.3.0
-      terser-webpack-plugin: 5.3.17(webpack@5.106.2(webpack-cli@7.0.2))
+      terser-webpack-plugin: 5.3.17(webpack@5.106.2)
       watchpack: 2.5.1
       webpack-sources: 3.3.4
     optionalDependencies:

@@ -36,6 +36,7 @@
     "@capacitor/keyboard": "^8.0.3",
     "@capacitor/local-notifications": "^8.2.0",
     "@capacitor/splash-screen": "^8.0.1",
+    "@capacitor/toast": "^8.0.1",
     "@capawesome-team/capacitor-android-foreground-service": "^8.1.0",
     "capacitor-intent-uri": "^0.0.2",
     "capacitor-nodejs": "https://github.com/hampoelz/Capacitor-NodeJS/releases/download/v1.0.0-beta.9/capacitor-nodejs.tgz",

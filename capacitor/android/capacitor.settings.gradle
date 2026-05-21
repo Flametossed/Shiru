@@ -26,6 +26,9 @@ project(':capacitor-local-notifications').projectDir = new File('../../node_modu
 include ':capacitor-splash-screen'
 project(':capacitor-splash-screen').projectDir = new File('../../node_modules/.pnpm/@capacitor+splash-screen@8.0.1_@capacitor+core@8.3.4/node_modules/@capacitor/splash-screen/android')
 
+include ':capacitor-toast'
+project(':capacitor-toast').projectDir = new File('../../node_modules/.pnpm/@capacitor+toast@8.0.1_@capacitor+core@8.3.4/node_modules/@capacitor/toast/android')
+
 include ':capawesome-team-capacitor-android-foreground-service'
 project(':capawesome-team-capacitor-android-foreground-service').projectDir = new File('../../node_modules/.pnpm/@capawesome-team+capacitor-_bb7998085e26e95b4575b6abfa83ecf5/node_modules/@capawesome-team/capacitor-android-foreground-service/android')
 

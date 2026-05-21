@@ -296,10 +296,11 @@ class HistoryManager {
         ANDROID.minimize()
       } else {
         debug('First back press, setting minimize timeout')
+        ANDROID.toast('Press back again to exit')
         minimizeApp = setTimeout(() => {
           debug('Resetting minimize timeout it has been 1000ms')
           minimizeApp = null
-        }, 1_000)
+        }, 2_000)
         minimizeApp?.unref?.()
       }
     })

@@ -72,6 +72,7 @@ const commonDefaults = {
 }
 const androidDefaults = {
   minimize: noopVoid,
+  toast: noopAsyncVoid,
   onBackButton: noopVoid,
   hideStatusBar: noopVoid,
   /** @param {'LIGHT' | 'DARK'} style */
