@@ -14,7 +14,9 @@
 <div class='w-full z-101 navbar bg-transparent border-0 p-0 d-none draggable' class:d-flex={!SUPPORTS.isAndroid && !fullScreen} class:ml-sb={!SUPPORTS.isAndroid && (COMMON.getPlatformInfo().platform !== 'darwin' || fullScreen)}>
   <div class='controls-container d-none position-absolute top-0 {COMMON.getPlatformInfo().platform !== `darwin` ? `right-0 ${COMMON.getPlatformInfo().platform === `win32` ? `right-width-win` : `right-width-linux`}` : `left-0 left-width`} h-full' class:mr-sb={!SUPPORTS.isAndroid && COMMON.getPlatformInfo().platform !== 'darwin'} class:d-flex={!SUPPORTS.isAndroid && !fullScreen}/>
 </div>
-<div class='z-100 ribbon text-center position-absolute font-size-16 font-weight-bold pointer-events-none right-0' class:d-none={!$debug}>Debug Mode</div>
+<div class='z-100 position-absolute pointer-events-none' style="inset: 0 var(--navigation-inset-right, 0px) auto auto; overflow: hidden; width: 18rem; height: 18rem;">
+  <div class='ribbon text-center font-size-16 font-weight-bold' class:d-none={!$debug}>DEBUG</div>
+</div>
 
 <style>
   .ribbon {
@@ -22,9 +24,7 @@
     background: var(--accent-color);
     box-shadow: 0 0 0 10rem var(--accent-color);
     clip-path: inset(0 -100%);
-    opacity: 0.6;
-    min-width: 19rem;
-    inset: 0 0 auto auto;
+    opacity: 0.7;
     transform-origin: 0 0;
   }
   .draggable {

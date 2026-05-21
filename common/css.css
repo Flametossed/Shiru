@@ -656,8 +656,8 @@ a[href]:active, button:not([disabled], .not-reactive):active:not([data-sonner-to
   position: absolute;
   top: 0;
   bottom: 0;
-  right: calc(var(--navigation-inset-right, 0) - .10rem);
-  width: min(.10rem, var(--navigation-inset-right, 0));
+  right: calc(var(--navigation-inset-right, 0px) - .10rem);
+  width: min(.10rem, var(--navigation-inset-right, 0px));
   background: var(--border-color-sp);
   z-index: 45;
 }

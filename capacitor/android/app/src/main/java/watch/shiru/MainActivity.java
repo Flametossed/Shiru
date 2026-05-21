@@ -30,14 +30,17 @@ public class MainActivity extends BridgeActivity {
       // Injects the bottom system inset (includes gesture/navigation bar height) as a CSS variable.
       Insets systemInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
       Insets navBarInsets = insets.getInsets(WindowInsetsCompat.Type.navigationBars());
+      Insets cutoutInsets = insets.getInsets(WindowInsetsCompat.Type.displayCutout());
       float density = getResources().getDisplayMetrics().density;
       boolean isGestureNav = navBarInsets.bottom > 0 && navBarInsets.bottom < (int) (40 * density);
       int bottom = !keyboardVisible ? (int) (systemInsets.bottom / density) : 0;
       int gestureBottom = isGestureNav && !keyboardVisible ? bottom : 0;
+      int cutoutRight = (int) (cutoutInsets.right / density);
       getBridge().getWebView().evaluateJavascript(
           "if (document.documentElement) {" +
               "  document.documentElement.style.setProperty('--navigation-inset-bottom', '" + bottom + "px');" +
               "  document.documentElement.style.setProperty('--gesture-inset-bottom', '" + gestureBottom + "px');" +
+              "  document.documentElement.style.setProperty('--cutout-inset-right', '" + cutoutRight + "px');" +
           "}", null
       );
 

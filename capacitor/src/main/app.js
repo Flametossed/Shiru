@@ -140,14 +140,15 @@ export default class App {
     })
   }
 
-  /** Updates navigation and notch inset variables based on screen orientation. */
+  /**
+   * Updates navigation and notch inset variables based on screen orientation.
+   *
+   * TODO: Replace with our own custom inset handling plugin and disable native SystemBars...
+   */
   updateOrientationInsets() {
     document.documentElement.style.setProperty('--notch-inset-right', screen.orientation.type === 'landscape-primary' ? '0px' : 'env(safe-area-inset-right)')
-    document.documentElement.style.setProperty('--navigation-inset-right', screen.orientation.type === 'landscape-secondary' ? '0px' : 'env(safe-area-inset-right)')
+    document.documentElement.style.setProperty('--navigation-inset-right', 'max(0px, round(down, env(safe-area-inset-right) - var(--cutout-inset-right, 0px), 1px))')
     document.documentElement.style.setProperty('--safe-area-inset-bottom', `max(env(safe-area-inset-bottom, 0px), var(--navigation-inset-bottom, 0px))`)
-
-    const gestureSize = getComputedStyle(document.documentElement).getPropertyValue('--gesture-inset-bottom').trim()
-    const safeBottom = getComputedStyle(document.documentElement).getPropertyValue('--navigation-inset-bottom').trim()
-    document.documentElement.style.setProperty('--safe-area-inset-bottom-no-gesture', window.innerWidth < 769 && gestureSize && safeBottom === gestureSize ? '0px' : `env(safe-area-inset-bottom)`)
+    document.documentElement.style.setProperty('--safe-area-inset-bottom-no-gesture', window.innerWidth < 769 ? `max(0px, env(safe-area-inset-bottom) - var(--gesture-inset-bottom, 0px))` : `env(safe-area-inset-bottom)`) // adds padding below mobile navbar (< 769), is set to 0 when sidebar is visible.
   }
 }
