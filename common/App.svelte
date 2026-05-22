@@ -54,7 +54,7 @@
 
 <MinimizeModal />
 <UpdateModal />
-<div class='page-wrapper with-transitions bg-dark position-relative pl-safe-area pr-navigation-area' data-sidebar-type='overlayed-all'>
+<div class='page-wrapper with-transitions bg-dark position-relative pl-safe-area pr-navigation-safe-area' data-sidebar-type='overlayed-all'>
   <Status />
   <Menubar />
   <Sidebar />
@@ -71,7 +71,7 @@
 
 <style>
   .page-wrapper {
-    height: calc(100% - var(--navbar-height) - var(--safe-area-inset-bottom-no-gesture, 0)) !important;
+    height: calc(100% - var(--navbar-height) - max(0px, calc(var(--safe-area-navigation-bottom) - var(--safe-area-gesture-bottom)))) !important;
   }
   .content-wrapper {
     will-change: width;
@@ -81,6 +81,11 @@
   .page-wrapper > .content-wrapper {
     margin-left: var(--sidebar-minimised) !important;
     width: calc(100% - var(--sidebar-minimised)) !important;
-    height: calc(100% - var(--wrapper-offset, 0rem)) !important;
+    height: calc(100% - var(--wrapper-offset, 0px)) !important;
+  }
+  @media (max-width: 768px) {
+    .page-wrapper {
+      height: calc(100% - var(--navbar-height) - var(--safe-area-gesture-bottom)) !important;
+    }
   }
 </style>

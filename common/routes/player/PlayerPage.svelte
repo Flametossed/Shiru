@@ -2448,7 +2448,7 @@
     }
     @media (orientation: portrait) {
       .top  {
-        padding-top: env(safe-area-inset-top, 0) !important;
+        padding-top: var(--safe-area-top) !important;
       }
     }
     .middle .ctrl {

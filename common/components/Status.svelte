@@ -7,7 +7,7 @@
   let transition = true
   $: {
     const root = document.documentElement
-    if ($status.match(/offline/i)) root.style.setProperty('--wrapper-offset', 'calc(var(--statusbar-height) + env(safe-area-inset-top, 0))')
+    if ($status.match(/offline/i)) root.style.setProperty('--wrapper-offset', 'calc(var(--statusbar-height) + var(--safe-area-top))')
     else root.style.removeProperty('--wrapper-offset')
   }
 
@@ -25,7 +25,7 @@
 </script>
 
 <div class='overflow-hidden status-bar h-0' class:status-bar-transition={transition} class:offline={!SUPPORTS.isAndroid && $status.match(/offline/i)} class:offline-safe={SUPPORTS.isAndroid && $status.match(/offline/i)}>
-  <div class='z-79 position-absolute d-flex align-items-center justify-content-center overflow-hidden status-bar h-0' style='width: calc(100% - var(--navigation-inset-right, 0) - env(safe-area-inset-left, 0))' class:status-bar-transition={transition} class:offline={!SUPPORTS.isAndroid && $status.match(/offline/i)} class:offline-safe={SUPPORTS.isAndroid && $status.match(/offline/i)} class:padding-safe={SUPPORTS.isAndroid} class:bg-very-dark={$status.match(/offline/i)} class:bg-success={!$status.match(/offline/i)}>
+  <div class='z-79 position-absolute d-flex align-items-center justify-content-center overflow-hidden status-bar h-0' style='width: calc(100% - var(--safe-area-navigation-right) - var(--safe-area-left))' class:status-bar-transition={transition} class:offline={!SUPPORTS.isAndroid && $status.match(/offline/i)} class:offline-safe={SUPPORTS.isAndroid && $status.match(/offline/i)} class:padding-safe={SUPPORTS.isAndroid} class:bg-very-dark={$status.match(/offline/i)} class:bg-success={!$status.match(/offline/i)}>
     {#if $status === 'online'}
       <Earth size='1.8rem' strokeWidth='2.5' />
       <span class='ml-10 font-weight-semi-bold font-size-16'>Connection Restored</span>
@@ -41,10 +41,10 @@
     height: var(--statusbar-height);
   }
   .status-bar.offline-safe {
-    height: calc(var(--statusbar-height) + env(safe-area-inset-top, 0));
+    height: calc(var(--statusbar-height) + var(--safe-area-top));
   }
   .status-bar.offline-safe.padding-safe {
-    padding-top: env(safe-area-inset-top, 0);
+    padding-top: var(--safe-area-top);
   }
   .status-bar-transition {
     transition: height 0.3s ease, padding-top 0.3s ease;

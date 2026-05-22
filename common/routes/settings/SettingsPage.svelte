@@ -131,7 +131,7 @@
         </div>
       </div>
     </div>
-    <div class='mt-75 mt-lg-0 w-full overflow-y-auto overflow-y-md-hidden pr-notch-area' class:status-transition={statusTransition} class:pt-28px={!SUPPORTS.isAndroid && !$status.match(/offline/i)} class:pt-safe-area={SUPPORTS.isAndroid && !$status.match(/offline/i)}>
+    <div class='mt-75 mt-lg-0 w-full overflow-y-auto overflow-y-md-hidden pr-notch-safe-area' class:status-transition={statusTransition} class:pt-28px={!SUPPORTS.isAndroid && !$status.match(/offline/i)} class:pt-safe-area={SUPPORTS.isAndroid && !$status.match(/offline/i)}>
       <Tab>
         <div class='root h-full w-full overflow-y-md-auto p-20 pt-5'>
           <div class='page pb-100'>

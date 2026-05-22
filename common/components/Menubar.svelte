@@ -14,7 +14,7 @@
 <div class='w-full z-101 navbar bg-transparent border-0 p-0 d-none draggable' class:d-flex={!SUPPORTS.isAndroid && !fullScreen} class:ml-sb={!SUPPORTS.isAndroid && (COMMON.getPlatformInfo().platform !== 'darwin' || fullScreen)}>
   <div class='controls-container d-none position-absolute top-0 {COMMON.getPlatformInfo().platform !== `darwin` ? `right-0 ${COMMON.getPlatformInfo().platform === `win32` ? `right-width-win` : `right-width-linux`}` : `left-0 left-width`} h-full' class:mr-sb={!SUPPORTS.isAndroid && COMMON.getPlatformInfo().platform !== 'darwin'} class:d-flex={!SUPPORTS.isAndroid && !fullScreen}/>
 </div>
-<div class='z-100 position-absolute pointer-events-none' style="inset: 0 var(--navigation-inset-right, 0px) auto auto; overflow: hidden; width: 18rem; height: 18rem;">
+<div class='z-100 position-absolute pointer-events-none' style="inset: 0 var(--safe-area-navigation-right) auto auto; overflow: hidden; width: 18rem; height: 18rem;">
   <div class='ribbon text-center font-size-16 font-weight-bold' class:d-none={!$debug}>DEBUG</div>
 </div>
 

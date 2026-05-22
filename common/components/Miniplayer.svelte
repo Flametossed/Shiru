@@ -76,9 +76,12 @@
     else if (shelved && playerPage && (!$modal || !modal.length)) unshelve()
   }
   $: paddingTop = (() => {
-    if (!active || (!position.match(/top/i) && !draggingPos.match(/top/i))) return padding
-    if ($page === page.SETTINGS && (!$modal || !modal.length)) return $isLg ? SUPPORTS.isAndroid ? padding : '4rem' : SUPPORTS.isAndroid ? '9rem' : '13rem'
-    return SUPPORTS.isAndroid ? padding : '4rem'
+    const base = (() => {
+      if (!active || (!position.match(/top/i) && !draggingPos.match(/top/i))) return padding
+      if ($page === page.SETTINGS && (!$modal || !modal.length)) return $isLg ? SUPPORTS.isAndroid ? padding : '4rem' : SUPPORTS.isAndroid ? '9rem' : '13rem'
+      return SUPPORTS.isAndroid ? padding : '4rem'
+    })()
+    return `calc(${base} + ${(!position.match(/top/i) && !draggingPos.match(/top/i)) ? 'var(--safe-area-navigation-bottom)' : 'var(--safe-area-top)'})`
   })()
   $: paddingLeft = (() => {
     if (!active || (!position.match(/left/i) && !draggingPos.match(/left/i))) return padding
@@ -422,7 +425,7 @@
   style:--width={width}
   style:--padding-top={paddingTop}
   style:--padding-left={paddingLeft}
-  style:--padding-bottom={padding}
+  style:--padding-bottom={"calc(" + padding + " + var(--safe-area-navigation-bottom))"}
   style:--padding-right={padding}
   style:--maxwidth={maxWidth}
   style:--minwidth={minWidth}

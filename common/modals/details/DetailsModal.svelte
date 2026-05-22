@@ -168,7 +168,7 @@
 <div class='modal modal-full z-50' class:show={staticMedia} on:keydown={checkClose} tabindex='-1' role='button' bind:this={_modal}>
   <div class='h-full modal-content bg-dark p-0 overflow-y-auto position-relative overflow-x-hidden' bind:this={container}>
     {#if staticMedia}
-      <button class='close pointer z-30 bg-dark-light top-20 right-0 position-fixed' style='margin-right: var(--navigation-inset-right, 0)' type='button' use:click={() => close()}> &times; </button>
+      <button class='close pointer z-30 bg-dark-light top-20 right-0 position-fixed mr-navigation-safe-area' type='button' use:click={() => close()}> &times; </button>
       <SmartImage class='w-full cover-img anime-details position-absolute' images={[
         staticMedia.bannerImage,
         ...(staticMedia.trailer?.id ? [
