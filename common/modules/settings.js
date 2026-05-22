@@ -7,7 +7,7 @@ import { COMMON, TORRENT } from '@/modules/bridge.js'
 import Debug from 'debug'
 const debug = Debug('ui:settings')
 
-/** @type {{viewer: import('./providers/anilist/al.d.ts').Query<{Viewer: import('./providers/anilist/al.d.ts').Viewer}>, token: string} | null} */
+/** @type {{viewer: import('./providers/anilist/al.d.ts').Query<{Viewer: import('./providers/anilist/al.d.ts').Viewer}>, token: string, expires_in: number, reauth: boolean } | null} */
 export let alToken = JSON.parse(localStorage.getItem('ALviewer')) || null
 /** @type {{viewer: import('./providers/myanimelist/mal.d.ts').Query<{Viewer: import('./providers/myanimelist/mal.d.ts').Viewer}>, token: string, refresh: string, refresh_in: number, reauth: boolean} | null} */
 export let malToken = JSON.parse(localStorage.getItem('MALviewer')) || null
@@ -122,13 +122,36 @@ COMMON.onProviderToken((provider, opts) => {
 })
 async function handleToken (token) {
   const { anilistClient } = await import('./providers/anilist/anilist.js')
-  const viewer = await anilistClient.viewer({token})
+  const viewer = await anilistClient.viewer({ token })
   if (!viewer.data?.Viewer) {
-    toast.error('Failed to sign in with AniList. Please try again.', {description: JSON.stringify(viewer)})
+    toast.error('Failed to sign in with AniList. Please try again.', { description: JSON.stringify(viewer) })
     debug('Failed to sign in with AniList:', JSON.stringify(viewer))
     return
   }
-  await swapProfiles({token, viewer}, true)
+  // AniList tokens are "long-lived" with no ability to refresh them. Tokens expire ~12 months from when they are issued, so we set our expiry to a month prior.
+  await swapProfiles({ token, expires_in: Math.floor((Date.now() + 335 * 24 * 60 * 60 * 1000) / 1000), reauth: false, viewer }, true)
+}
+export function validateToken (token, error = false) {
+  if (!token) return true
+  const profile = alToken?.token === token ? alToken : profiles.value.find(profile => profile.token === token)
+  const now = Math.floor(Date.now() / 1_000)
+  if (profile && profile.reauth) return false
+  else if (profile && !profile.reauth && ((error && !profile.expires_in) || (profile.expires_in && now >= profile.expires_in))) {
+    // Tokens should function for ~12 months, so it's best to allow a month to "softly" expire.
+    const isExpired = error || now >= (profile.expires_in + 30 * 24 * 60 * 60)
+    if (alToken?.token === token) {
+      alToken.reauth = true
+      localStorage.setItem('ALviewer', JSON.stringify(alToken))
+    } else {
+      profiles.update(profiles => profiles.map(profile => profile.token === token ? { ...profile, reauth: true } : profile))
+    }
+    toast.error(`Login ${isExpired ? 'Expired' : 'Expiring'}`, {
+      description: `Your AniList session for ${profile.viewer.data.Viewer.name} ${isExpired ? 'has expired' : 'is expiring soon'}. Please go to Profiles and log in again to continue syncing.`,
+      duration: Infinity
+    })
+    return false
+  }
+  return true
 }
 
 async function handleMalToken (code, state) {
@@ -167,8 +190,8 @@ async function handleMalToken (code, state) {
 
 export async function refreshMalToken (token) {
   const { clientID } = await import('./providers/myanimelist/myanimelist.js')
-  const currentProfile = malToken?.token === token
-  const refresh = currentProfile ? malToken.refresh : profiles.value.find(profile => profile.token === token)?.refresh
+  const profile = malToken?.token === token ? malToken : profiles.value.find(profile => profile.token === token)
+  const refresh = profile?.refresh
   debug(`Attempting to refresh authorization token ${token} with the refresh token ${refresh}`)
   let response
   if (refresh && refresh.length > 0) {
@@ -185,11 +208,14 @@ export async function refreshMalToken (token) {
     })
   }
   if (!refresh || refresh.length <= 0 || !response?.ok) {
-    if (currentProfile && !malToken.reauth) {
-      toast.error('Failed to re-authenticate with MyAnimeList. You will need to log in again.', {description: JSON.stringify(response?.status || response)})
+    if (profile && !profile.reauth) {
+      toast.error('Login Expired', {
+        description: `Your MyAnimeList session for ${profile.viewer.data.Viewer.name} has expired. Please go to Profiles and log in again to continue syncing.\n\n${JSON.stringify(response?.status || response)}`,
+        duration: Infinity
+      })
     }
     debug(`Failed to refresh MyAnimeList User Token ${ !refresh || refresh.length <= 0 ? 'as the refresh token could not be fetched!' : 'the refresh token has likely expired: ' + JSON.stringify(response)}`)
-    if (currentProfile) {
+    if (malToken?.token === token) {
       malToken.reauth = true
       localStorage.setItem('MALviewer', JSON.stringify(malToken))
     } else {

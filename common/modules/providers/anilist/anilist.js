@@ -2,7 +2,7 @@ import lavenshtein from 'js-levenshtein'
 import { writable } from 'simple-store-svelte'
 import Bottleneck from 'bottleneck'
 
-import { alToken, settings } from '@/modules/settings.js'
+import { alToken, settings, validateToken } from '@/modules/settings.js'
 import { malDubs } from '@/modules/anime/animedubs.js'
 import { isSubbedProgress, getMediaMaxEp } from '@/modules/anime/anime.js'
 import { getRandomInt, sleep, debounce, uniqueStore } from '@/modules/util.js'
@@ -193,6 +193,7 @@ class AnilistClient {
     })
 
     if (this.userID?.viewer?.data?.Viewer) {
+      validateToken(this.userID.token) // Check if token is expired on startup.
       this.userLists.value = this.getUserLists({ sort: 'UPDATED_TIME_DESC'}, true)
       setTimeout(() => {
         this.getUserLists({ sort: 'UPDATED_TIME_DESC' }).then(updatedLists => {
@@ -232,6 +233,9 @@ class AnilistClient {
   /** @type {(options: RequestInit) => Promise<any>} */
   handleRequest = this.limiter.wrap(async opts => {
     await this.rateLimitPromise
+    // Skip using token if its expired, causes fetch to fail for queries that do not need a token.
+    if (opts.headers.Authorization && this.userID && this.userID.reauth && this.userID.token === opts.headers.Authorization && (!this.userID.expires_in || (Math.floor(Date.now() / 1_000) >= (this.userID.expires_in + 30 * 24 * 60 * 60)))) delete opts.headers.Authorization
+    validateToken(opts.headers.Authorization)
     if (status.value.match(/offline/i)) throw new Error('AniList API is temporarily disabled or network is offline')
     trace(`[${this.numberOfQueries}] requesting`, JSON.stringify({ ...opts, headers: { ...opts.headers, Authorization: opts.headers.Authorization ? '[redacted]' : undefined } }))
     this.numberOfQueries++
@@ -253,6 +257,9 @@ class AnilistClient {
     if (!res.ok && res.status !== 404) {
       if (json) {
         for (const error of json?.errors || []) {
+          if (error.status === 400 && error.message?.match(/invalid token/i) && opts.headers.Authorization && !validateToken(opts.headers.Authorization, true)) {
+            return { data: null, errors: [{ message: 'AniList session has expired. Please go to Profiles and log in again to continue syncing.', status: 401 }] }
+          }
           printError('Search Failed', 'Failed making request to Anilist!\nTry again in a minute.', error)
         }
       } else {
@@ -275,7 +282,7 @@ class AnilistClient {
         ...variables
       }
     }
-    if (vars?.variables?.sort === 'OMIT') { delete vars.variables.sort}
+    if (vars?.variables?.sort === 'OMIT') { delete vars.variables.sort }
 
     /** @type {RequestInit} */
     const options = {

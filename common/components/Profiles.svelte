@@ -55,6 +55,13 @@
     linkAccount(`https://myanimelist.net/v1/oauth2/authorize?response_type=code&client_id=${clientID}&state=${state}&code_challenge=${challenge}&code_challenge_method=plain`) // Change redirect_url to shiru://malauth
   }
 
+  function reauth(profile) {
+    if (profile) {
+      if (isAniProfile(profile)) confirmAnilist()
+      else confirmMAL()
+    }
+  }
+
   async function linkAccount(uri) {
     if (!uri) return
     COMMON.linkAccount(uri).then(tokenUri => {
@@ -109,7 +116,7 @@
               <label for='sync-{profile.viewer.data.Viewer.id}'><br/></label>
             </button>
           {:else}
-            <button type='button' class='button {profile.reauth ? `pa-button` : `p-button`} pt-5 pb-5 pl-5 pr-5 mr-15 bg-transparent border-0 d-flex align-items-center justify-content-center z-1' data-toggle='tooltip' data-placement='left' data-title='Authenticate' use:click|stopPropagation={confirmMAL}>
+            <button type='button' class='button {profile.reauth ? `pa-button` : `p-button`} pt-5 pb-5 pl-5 pr-5 mr-15 bg-transparent border-0 d-flex align-items-center justify-content-center z-1' data-toggle='tooltip' data-placement='left' data-title='Authenticate' use:click|stopPropagation={() => reauth(profile)}>
               <ClockAlert size='2.2rem' />
             </button>
           {/if}
@@ -145,7 +152,7 @@
     {/if}
     {#if $currentProfile}
       {#if $currentProfile.reauth}
-        <button type='button' class='box authenticate pointer border-0 pt-10 pb-10 d-flex align-items-center justify-content-center text-center' use:click={confirmMAL}>
+        <button type='button' class='box authenticate pointer border-0 pt-10 pb-10 d-flex align-items-center justify-content-center text-center' use:click={() => reauth($currentProfile)}>
           <ClockAlert class='mr-10' size='2.2rem' />
           <div class='mt-4'>
             Authenticate
