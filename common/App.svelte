@@ -7,6 +7,7 @@
 </script>
 
 <script>
+  import Bottombar from '@/components/navigation/Bottombar.svelte'
   import Sidebar from '@/components/navigation/Sidebar.svelte'
   import Router from '@/routes/Router.svelte'
   import DetailsModal from '@/modals/details/DetailsModal.svelte'
@@ -16,7 +17,6 @@
   import Profiles from '@/components/Profiles.svelte'
   import NotificationModal from '@/modals/notification/NotificationModal.svelte'
   import MinimizeModal from '@/modals/MinimizeModal.svelte'
-  import Navbar from '@/components/navigation/Navbar.svelte'
   import Status from '@/components/Status.svelte'
   import { status } from '@/modules/networking.js'
   import { Toaster } from 'svelte-sonner'
@@ -58,7 +58,7 @@
   <Status />
   <Menubar />
   <Sidebar />
-  <Navbar />
+  <Bottombar />
   <div class='overflow-hidden content-wrapper h-full' class:status-transition={$statusTransition}>
     <Toaster visibleToasts={2} position='top-right' theme='dark' richColors duration={10_000} closeButton toastOptions={{class: `${$page === page.SETTINGS ? 'mt-70 mt-lg-0' : ''} ${isFullscreen && (!$modal || !modal.length) ? 'd-none' : ''}`}} />
     <DetailsModal />
@@ -71,7 +71,7 @@
 
 <style>
   .page-wrapper {
-    height: calc(100% - var(--navbar-height) - max(0px, calc(var(--safe-area-navigation-bottom) - var(--safe-area-gesture-bottom)))) !important;
+    height: calc(100% - var(--bottombar-height) - max(0px, calc(var(--safe-area-navigation-bottom) - var(--safe-area-gesture-bottom)))) !important;
   }
   .content-wrapper {
     will-change: width;
@@ -85,7 +85,7 @@
   }
   @media (max-width: 768px) {
     .page-wrapper {
-      height: calc(100% - var(--navbar-height) - var(--safe-area-gesture-bottom)) !important;
+      height: calc(100% - var(--bottombar-height) - max(var(--safe-area-navigation-bottom), var(--safe-area-gesture-bottom))) !important;
     }
   }
 </style>

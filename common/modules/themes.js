@@ -23,10 +23,14 @@ export function setStyle(value) {
   style.textContent = `:root[data-theme='${settings.value.presetTheme}']{${(value || variables.value).replace(/{|}/g, '')}}`
   if (SUPPORTS.isAndroid) {
     if (settings.value.presetTheme === 'default-light') ANDROID.setSystemStyle('LIGHT') // Future light theme handling for Android.
-   else ANDROID.setSystemStyle('DARK')
+    else ANDROID.setSystemStyle('DARK')
   }
 }
 
 export function setScale() {
   document.documentElement.style.setProperty('--ui-scale', settings.value.uiScale)
+  if (SUPPORTS.isAndroid) {
+    document.documentElement.style.setProperty('--nav-button-size', '3.6rem')
+    document.documentElement.style.setProperty('--default-bottombar-height', settings.value.showLabels ? '7.5rem' : '7rem')
+  }
 }

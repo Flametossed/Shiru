@@ -29,8 +29,8 @@
   $: foundResults = !(searchText?.length && !filteredLoaded && !filteredStaging.length && !filteredSeeding.length && !filteredCompleted.length)
 </script>
 
-<div class='bg-dark h-full w-full root status-transition {$$restProps.class}' class:pt-safe-area={$$restProps.class && !$status.match(/offline/i)}>
-  <div class='w-full status-transition' class:pl-20={$$restProps.class} class:pt-28px={$$restProps.class && !$status.match(/offline/i)}>
+<div class='bg-dark h-full w-full root status-transition overflow-y-scroll overflow-x-hidden' class:pt-safe-area={!$status.match(/offline/i)}>
+  <div class='w-full status-transition pl-20' class:pt-28px={!$status.match(/offline/i)}>
     <h4 class='font-weight-bold m-0 mb-10'>Manage Torrents</h4>
     <div class='d-flex align-items-center'>
       <div class='input-group wm-600'>
@@ -47,7 +47,7 @@
     </div>
   </div>
   <div class='d-none' class:d-inline-block={disableRescan}>
-    <div class='alert bg-warning border-warning-dim text-warning-very-dim p-10 pl-15 mt-10 mb-5 d-flex {$$restProps.class ? `ml-20` : ``}'>
+    <div class='alert bg-warning border-warning-dim text-warning-very-dim p-10 pl-15 mt-10 mb-5 d-flex ml-20'>
       <TriangleAlert class='flex-shrink-0' size='1.8rem' />
       <span class='ml-10'>You've reached your pre-download limit. To pre-download more torrents, stop seeding some, increase your seeding limit, or enable Persist Files in Client Settings.</span>
     </div>

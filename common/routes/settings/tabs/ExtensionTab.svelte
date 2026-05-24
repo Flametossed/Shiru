@@ -151,13 +151,7 @@
   <div>
     {#each settings.torrentProvider as _, i}
       <div class='input-group mb-10 w-200 mw-full'>
-        <input id='torrent-provider-{i}' type='text' list='torrent-provider-list-{i}' class='w-400 form-control mw-full bg-dark text-truncate' placeholder={'SubsPlease'} autocomplete='off' bind:value={settings.torrentProvider[i]} />
-        <datalist id='torrent-provider-list-{i}'>
-          <option value='SubsPlease'>SubsPlease</option>
-          <option value='Erai-raws'>Erai-raws</option>
-          <option value='Yameii'>Yameii</option>
-          <option value='Judas'>Judas</option>
-        </datalist>
+        <input id='torrent-provider-{i}' type='text' list='torrent-provider-list-{i}' class='w-400 form-control mw-full bg-dark text-truncate' placeholder={'QuickSubs'} autocomplete='off' bind:value={settings.torrentProvider[i]} />
         <div class='input-group-append'>
           <button type='button' use:click={() => { settings.torrentProvider.splice(i, 1); settings.torrentProvider = settings.torrentProvider }} class='btn btn-danger btn-square input-group-append px-5 d-flex align-items-center'><Trash2 size='1.8rem' /></button>
         </div>

@@ -12,7 +12,9 @@
   --input-border-width: 0;
   --sidebar-minimised: 0px;
   --sidebar-width: 0px;
-  --navbar-height: 7rem;
+  --default-bottombar-height: 7rem;
+  --bottombar-height: var(--default-bottombar-height);
+  --nav-button-size: 3.1rem;
   --statusbar-height: 28px;
   /* Injected by Capacitors SystemBars plugin */
   --safe-area-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
@@ -257,6 +259,9 @@
   border-radius: 0 var(--base-border-radius) var(--base-border-radius) 0 !important;
 }
 
+.vh-60 {
+  max-height: 60vh !important;
+}
 .vwh-90 {
   width: 90vw !important;
   height: 90vh !important;
@@ -328,7 +333,7 @@
   :root {
     --sidebar-minimised: 7rem;
     --sidebar-width: 7rem;
-    --navbar-height: 0px;
+    --bottombar-height: 0rem;
   }
 }
 
@@ -1000,13 +1005,19 @@ img[src=''], img[src=' '] {
 .bt-10 {
   border-top: .10rem var(--border-color-sp) solid !important;
 }
+.bl-10 {
+  border-left: .10rem var(--border-color-sp) solid !important;
+}
 
 .pre-wrap {
   white-space: pre-wrap
 }
 
+.p-3 {
+  padding: .3rem;
+}
 .p-4 {
-  padding: 0.4rem;
+  padding: .4rem;
 }
 .p-30 {
   padding: 3rem;

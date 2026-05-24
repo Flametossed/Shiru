@@ -36,5 +36,5 @@
 {:else if $page === page.WATCH_TOGETHER}
   <WatchTogetherPage />
 {:else if $page === page.TORRENT_MANAGER}
-  <TorrentPage class='overflow-y-scroll overflow-x-hidden'/>
+  <TorrentPage />
 {/if}

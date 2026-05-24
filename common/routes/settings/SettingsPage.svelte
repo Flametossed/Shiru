@@ -56,11 +56,10 @@
   import AppTab from '@/routes/settings/tabs/AppTab.svelte'
   import ChangelogTab from '@/routes/settings/tabs/ChangelogTab.svelte'
   import ExtensionTab from '@/routes/settings/tabs/ExtensionTab.svelte'
-  import TorrentPage from '@/routes/torrentManager/TorrentPage.svelte'
   import { status } from '@/modules/networking.js'
   import { modal } from '@/modules/navigation.js'
   import semver from 'semver'
-  import { AppWindow, Puzzle, User, Heart, Logs, Play, Rss, Download, LayoutDashboard } from 'lucide-svelte'
+  import { AppWindow, Puzzle, User, Heart, Logs, Play, Rss, LayoutDashboard } from 'lucide-svelte'
 
   export let statusTransition = false
 
@@ -72,11 +71,6 @@
     client: {
       name: 'Client',
       icon: Rss
-    },
-    torrents: {
-      name: 'Torrents',
-      icon: Download,
-      substitute: true
     },
     interface: {
       name: 'Interface',
@@ -110,6 +104,7 @@
 
   $: debounceRPC($settings.enableRPC)
 </script>
+<!-- TODO: Remove usage of tabs in favor of native routing, add top navigation bar with search box for easily finding settings. -->
 
 <Tabs>
   <div class='d-flex w-full h-full position-relative settings root flex-md-row flex-column'>
@@ -143,13 +138,6 @@
         <div class='root h-full w-full overflow-y-md-auto p-20 pt-5'>
           <div class='page pb-100'>
             <ClientTab bind:settings={$settings} {requestFileAccess} />
-          </div>
-        </div>
-      </Tab>
-      <Tab>
-        <div class='root h-full w-full overflow-y-md-auto p-20 pt-15'>
-          <div class='page pb-100'>
-            <TorrentPage />
           </div>
         </div>
       </Tab>

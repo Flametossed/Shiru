@@ -13,17 +13,6 @@
   const listStatus = [['Watching', 'CURRENT'], ['Planning', 'PLANNING'], ['Paused', 'PAUSED'], ['Completed', 'COMPLETED'], ['Dropped', 'DROPPED'], ['Rewatching', 'REPEATING'], ['Not on List', 'NOTONLIST']]
 </script>
 
-{#if SUPPORTS.discord}
-  <h4 class='mb-10 font-weight-bold'>Rich Presence Settings</h4>
-  <SettingCard title='Discord Rich Presence' description={'Enables the use of Discord rich presence to display app activity.\nFull enables complete rich presence support showing anime details, limited reduces what is seen not showing the currently played anime and episode, disabled completely disables rich presence.'}>
-    <select class='form-control bg-dark w-100 mw-full text-truncate' bind:value={settings.enableRPC}>
-      <option value='full' selected>Full</option>
-      <option value='limited'>Limited</option>
-      <option value='disabled'>Disabled</option>
-    </select>
-  </SettingCard>
-{/if}
-
 <h4 class='mb-10 font-weight-bold'>Interface Settings</h4>
 <SettingCard title='Theme' description='Select how the app looks and feels, including colors, layouts, and other visual styles.'>
   <select class='form-control bg-dark w-160 mw-full text-truncate' bind:value={settings.presetTheme} on:change={() => setStyle()}>
@@ -60,20 +49,6 @@
     <label for='w2g'>{settings.w2g ? 'On' : 'Off'}</label>
   </div>
 </SettingCard>
-<SettingCard title='Expandable Sidebar' description='Enables the sidebar to expand revealing detailed text for the navigation buttons.'>
-  <div class='custom-switch fit-content'>
-    <input type='checkbox' id='disable-sidebar' bind:checked={settings.expandingSidebar} />
-    <label for='disable-sidebar'>{settings.expandingSidebar ? 'On' : 'Off'}</label>
-  </div>
-</SettingCard>
-{#if SUPPORTS.isAndroid}
-  <SettingCard title='Expandable Lists' description='Choose whether lists like recommendations or relations, open as dropdowns or scroll horizontally. Scrollable lists work better on smaller screens.'>
-    <div class='custom-switch fit-content'>
-      <input type='checkbox' id='toggle-list' bind:checked={settings.toggleList} />
-      <label for='toggle-list'>{settings.toggleList ? 'On' : 'Off'}</label>
-    </div>
-  </SettingCard>
-{/if}
 {#if !Helper.isAniAuth()}
   <SettingCard title='Preferred Title Language' description='What title language to automatically select when displaying the title of an anime.'>
     <select class='form-control bg-dark mw-150 w-150' bind:value={settings.titleLang}>
@@ -150,6 +125,37 @@
       <input type='checkbox' id='hentai-banner' bind:checked={settings.hentaiBanner} />
       <label for='hentai-banner'>{settings.hentaiBanner ? 'On' : 'Off'}</label>
     </div>
+  </SettingCard>
+{/if}
+<h4 class='mb-10 font-weight-bold'>Accessibility Settings</h4>
+<SettingCard title='Show Labels' description='Shows additional text labels throughout the app for easier identification of buttons, icons and navigation.'>
+  <div class='custom-switch fit-content'>
+    <input type='checkbox' id='show-labels' bind:checked={settings.showLabels} on:change={() => setScale()} />
+    <label for='show-labels'>{settings.showLabels ? 'On' : 'Off'}</label>
+  </div>
+</SettingCard>
+<SettingCard title='Expandable Sidebar' description='Enables the sidebar to expand revealing detailed text for the navigation buttons.'>
+  <div class='custom-switch fit-content'>
+    <input type='checkbox' id='disable-sidebar' bind:checked={settings.expandingSidebar} />
+    <label for='disable-sidebar'>{settings.expandingSidebar ? 'On' : 'Off'}</label>
+  </div>
+</SettingCard>
+{#if SUPPORTS.isAndroid}
+  <SettingCard title='Expandable Lists' description='Choose whether lists like recommendations or relations, open as dropdowns or scroll horizontally. Scrollable lists work better on smaller screens.'>
+    <div class='custom-switch fit-content'>
+      <input type='checkbox' id='toggle-list' bind:checked={settings.toggleList} />
+      <label for='toggle-list'>{settings.toggleList ? 'On' : 'Off'}</label>
+    </div>
+  </SettingCard>
+{/if}
+{#if SUPPORTS.discord}
+  <h4 class='mb-10 font-weight-bold'>Rich Presence Settings</h4>
+  <SettingCard title='Discord Rich Presence' description={'Enables the use of Discord rich presence to display app activity.\nFull enables complete rich presence support showing anime details, limited reduces what is seen not showing the currently played anime and episode, disabled completely disables rich presence.'}>
+    <select class='form-control bg-dark w-100 mw-full text-truncate' bind:value={settings.enableRPC}>
+      <option value='full' selected>Full</option>
+      <option value='limited'>Limited</option>
+      <option value='disabled'>Disabled</option>
+    </select>
   </SettingCard>
 {/if}
 {#if SUPPORTS.angle}
