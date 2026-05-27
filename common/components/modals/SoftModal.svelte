@@ -21,7 +21,7 @@
 <svelte:window on:keydown={handleKeydown} />
 
 <div class='modal-soft position-absolute d-flex align-items-center justify-content-center z-50 w-full h-full {css}' class:hide={!showModal} class:show={showModal} id={`${id}_modal`}>
-  <div class='modal-soft-dialog d-flex align-items-center justify-content-center pt-40 {innerCss}' tabindex='-1' role='button' class:hide={!showModal} class:show={showModal} on:pointerdown|self={close}>
+  <div class='modal-soft-dialog d-flex align-items-center justify-content-center pt-md-40 {innerCss}' tabindex='-1' role='button' class:hide={!showModal} class:show={showModal} on:pointerdown|self={close}>
     <div class='overflow-hidden d-flex flex-column overflow-y-scroll {$$restProps.class}'>
       {#if showModal || shouldRender}
         <slot />
@@ -31,9 +31,6 @@
 </div>
 
 <style>
-  .pt-40 {
-    padding-top: 4rem;
-  }
   .modal-soft {
     background-color: hsla(var(--black-color-hsl), 0.85);
     transition: opacity .2s ease-in-out, visibility .2s ease-in-out;

@@ -407,10 +407,10 @@
   })
 </script>
 
-<div class='controls w-full bg-very-dark position-sticky top-0 z-10 pt-20 pb-10 px-30 mb-10'>
+<div class='controls w-full bg-very-dark position-sticky top-0 z-10 pb-10 px-30 mb-10'>
   <div class='d-flex'>
     <h3 class='mb-0 font-weight-bold text-white title mr-5 font-scale-40'>{anilistClient.title(search?.media)}</h3>
-    <button type='button' class='btn btn-square bg-dark-very-light ml-auto d-flex align-items-center justify-content-center rounded-2 flex-shrink-0' use:click={close}><X size='1.7rem' strokeWidth='3'/></button>
+    <button type='button' class='btn btn-square bg-dark-very-light mt-20 ml-auto d-flex align-items-center justify-content-center rounded-2 flex-shrink-0' use:click={close}><X size='1.7rem' strokeWidth='3'/></button>
     <div class='position-absolute top-0 left-0 w-full h-full z--1'>
       <div class='position-absolute w-full h-full overflow-hidden' >
         <SmartImage class='img-cover w-full h-full' images={[

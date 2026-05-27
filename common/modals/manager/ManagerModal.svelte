@@ -32,13 +32,13 @@
   }
 </script>
 
-<SoftModal class='m-0 w-800 mw-0 mh-full d-flex flex-column rounded bg-very-dark pt-0 py-30 pl-20 pr-30 mx-20 scrollbar-none' bind:showModal={$modal[modal.FILE_MANAGER]} {close} id={modal.FILE_MANAGER}>
-  <div class='d-flex mt-30 mb-10'>
+<SoftModal class='fluid-min-width mh-full d-flex flex-column rounded bg-very-dark pt-0 px-5 px-md-20 mt-safe-area scrollbar-none' bind:showModal={$modal[modal.FILE_MANAGER]} {close} id={modal.FILE_MANAGER}>
+  <div class='d-flex mt-10 mb-10'>
     <div class='mb-0 mr-5 ml-20'>
       <h3 class='mb-0 font-weight-bold text-white title font-size-24'>File Manager</h3>
       <h5 class='mb-0 mt-0 text-muted info font-size-12'>Something didn't resolve correctly? Please open an issue on GitHub so we can investigate and fix it!</h5>
     </div>
-    <button type='button' class='btn btn-square ml-auto d-flex align-items-center justify-content-center rounded-2 flex-shrink-0' use:click={close}><X size='1.7rem' strokeWidth='3'/></button>
+    <button type='button' class='btn btn-square ml-auto d-flex align-items-center justify-content-center rounded-2 flex-shrink-0 mt-10 mr-10' use:click={close}><X size='1.7rem' strokeWidth='3'/></button>
   </div>
   <FileCard {playFile} bind:file={playing} bind:files playing={true} bind:fileEdit class='mr-30'/>
   <div class='input-group mt-10 long-input' class:d-none={files?.length < 2}>
@@ -51,7 +51,7 @@
         data-option='search'
         placeholder='Filter by file name or series title' bind:value={searchText} on:input={() => { container.scrollTo({top: 0}); }} />
   </div>
-  <div bind:this={container} class='overflow-y-auto mt-10'>
+  <div bind:this={container} class='overflow-y-auto mt-10 pb-20'>
     {#each filterResults(files?.filter((file) => file !== playing), searchText) as file, index}
       <FileCard {playFile} bind:file bind:files bind:fileEdit class='{index === 0 ? `mt-15` : ``}'/>
     {/each}

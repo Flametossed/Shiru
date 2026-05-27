@@ -171,7 +171,7 @@
   }
 </script>
 
-<form class='container-fluid pt-20 px-md-50 bg-dark position-sticky top-0 search-container z-40' class:mt-20={!SUPPORTS.isAndroid && !search.fileEdit} class:mt-md-0={!SUPPORTS.isAndroid && !search.fileEdit} class:bg-very-dark={search.fileEdit} style:--container-color={search.fileEdit ? 'var(--dark-color-dim)' : 'var(--dark-color)'} on:input bind:this={form}>
+<form class='container-fluid px-md-10 bg-dark position-sticky top-0 search-container z-40' class:px-10={search.fileEdit} class:px-md-50={!search.fileEdit} class:pt-20={!search.fileEdit} class:mt-20={!SUPPORTS.isAndroid && !search.fileEdit} class:mt-md-0={!SUPPORTS.isAndroid && !search.fileEdit} class:bg-very-dark={search.fileEdit} style:--container-color={search.fileEdit ? 'var(--dark-color-dim)' : 'var(--dark-color)'} on:input bind:this={form}>
   <div class='row'>
     <div class='col-lg col-4 p-10 d-flex flex-column justify-content-end' class:d-advanced-title={advancedSearch}>
       <div class='pb-10 font-weight-semi-bold d-flex align-items-center {advancedSearch} font-scale-24'>
@@ -324,7 +324,7 @@
       </div>
     </div>
   </div>
-  <div class='w-full p-10 d-flex flex-colum align-items-center'>
+  <div class='w-full p-10 d-flex flex-colum'>
     <form>
       <div class='not-reactive' role='button' tabindex='0'>
         {#if sanitisedSearch?.length}
@@ -337,9 +337,9 @@
             {@const matchingBadges = filteredBadges.filter(badge => badge.key === key)}
             {#each matchingBadges as badge}
               {#if badge.key === key && (badge.key !== 'hideStatus' && badge.key !== 'showStatus' && (search.userList || badge.key !== 'title')) && !(badge.key === 'sort' && badge.value === 'TRENDING_DESC')}
-                <div use:click={() => removeBadge(badge)} class='badge border-0 py-5 px-10 text-capitalize mr-10 text-white text-nowrap d-flex align-items-center mb-5' class:bg-dark-light={!badge.key.includes('_not')} class:bg-danger-very-dim={badge.key.includes('_not')}>
+                <div use:click={() => removeBadge(badge)} class='badge border-0 py-5 px-10 text-capitalize mr-10 text-white text-nowrap d-flex align-items-center mb-5' style='max-width: 60vw' class:bg-dark-light={!badge.key.includes('_not')} class:bg-danger-very-dim={badge.key.includes('_not')}>
                   <svelte:component this={badge.key === 'genre' ? genreIcons[badge.value] || badgeDisplayNames[badge.key] : badgeDisplayNames[badge.key]} class='mr-5 square-scale-18'/>
-                  <span>{badge.key === 'sort' ? getSortDisplayName(badge.value) : (badge.key === 'format' || badge.key === 'format_not') ? getFormatDisplayName(badge.value) : (badge.key === 'hideMyAnime' ? 'Hide My Anime' : badge.key === 'showMyAnime' ? 'Show My Anime' : badge.key === 'hideSubs' ? 'Dubbed' : ('' + badge.value).replace(/_/g, ' ').toLowerCase())}</span>
+                  <span class='text-truncate'>{badge.key === 'sort' ? getSortDisplayName(badge.value) : (badge.key === 'format' || badge.key === 'format_not') ? getFormatDisplayName(badge.value) : (badge.key === 'hideMyAnime' ? 'Hide My Anime' : badge.key === 'showMyAnime' ? 'Show My Anime' : badge.key === 'hideSubs' ? 'Dubbed' : ('' + badge.value).replace(/_/g, ' ').toLowerCase())}</span>
                   <button on:click={() => removeBadge(badge)} class='pointer bg-transparent border-0 icon text-white position-relative pl-0 pr-0 pt-0 x-filter d-flex align-items-center z-1' type='button' data-toggle='tooltip' data-placement='bottom' data-target-breakpoint='md' data-title='Remove Filter'><X size='1.3rem' strokeWidth='3'/></button>
                 </div>
               {/if}

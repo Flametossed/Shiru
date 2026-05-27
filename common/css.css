@@ -171,6 +171,10 @@
   background-color: var(--dark-color) !important;
 }
 
+.profile-safe-height {
+  max-height: calc(100% - var(--safe-area-top) - var(--safe-area-bottom));
+}
+
 .h-0 {
   height: 0;
 }
@@ -262,14 +266,15 @@
 .vh-60 {
   max-height: 60vh !important;
 }
-.vwh-90 {
-  width: 90vw !important;
-  height: 90vh !important;
-}
 
 .wh-25 {
   width: 2.5rem;
   height: 2.5rem;
+}
+
+.fluid-min-width {
+  width: max-content !important;
+  min-width: min(80rem, calc(100% - 4rem)) !important;
 }
 
 .mw-0 {
@@ -633,6 +638,11 @@ a[href]:active, button:not([disabled], .not-reactive):active:not([data-sonner-to
   margin-top: 7rem;
 }
 
+.my-3 {
+  margin-top: .3rem !important;
+  margin-bottom: .3rem !important;
+}
+
 .pt-28px {
   padding-top: 28px;
 }
@@ -644,6 +654,9 @@ a[href]:active, button:not([disabled], .not-reactive):active:not([data-sonner-to
   padding-bottom: 1.3rem !important;
 }
 
+.mt-safe-area-10 {
+  margin-top: max(var(--safe-area-top), 1rem) !important;
+}
 .mt-safe-area {
   margin-top: var(--safe-area-top) !important;
 }
