@@ -126,20 +126,23 @@
 }
 
 @media (max-width: 768px), (max-height: 768px) {
-  .p-md-d-safe-area {
+  .p-md-mwh-safe-area {
     padding: var(--safe-area-top) var(--safe-area-navigation-right) var(--safe-area-bottom) var(--safe-area-left) !important;
   }
 }
 
 @media (min-width: 769px) and (min-height: 769px) {
-  .viewport-md-4-3 {
+  .vp-md-wh-4-3 {
     width: 80vw !important;
     height: 60vh !important;
   }
-  .pt-md-40 {
+  .pt-md-wh-20 {
+    padding-top: 2rem !important;
+  }
+  .pt-md-wh-40 {
     padding-top: 4rem !important;
   }
-  .pb-md-30 {
+  .pb-md-wh-30 {
     padding-bottom: 3rem !important;
   }
 }

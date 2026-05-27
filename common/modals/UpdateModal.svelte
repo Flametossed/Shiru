@@ -121,7 +121,7 @@
   const deliveryText = 'This update was delivered directly from the GitHub release. If you originally downloaded this app from F-Droid or IzzyOnDroid, note that updating through this method bypasses the extra review and screening normally conducted by those platforms.'
 </script>
 
-<SoftModal class='m-0 d-flex flex-column bg-very-dark scrollbar-none viewport-md-4-3 border-md w-full h-full rounded-md-10 p-md-d-safe-area' css='z-105 m-0 p-0 modal-soft-ellipse' innerCss='m-0 p-0' showModal={$modal[modal.UPDATE_PROMPT]} close={() => {}} id={modal.UPDATE_PROMPT}>
+<SoftModal class='m-0 d-flex flex-column bg-very-dark scrollbar-none vp-md-wh-4-3 border-md w-full h-full rounded-md-10 p-md-mwh-safe-area' css='z-105 m-0 p-0 modal-soft-ellipse' innerCss='m-0 p-0' showModal={$modal[modal.UPDATE_PROMPT]} close={() => {}} id={modal.UPDATE_PROMPT}>
   <div class='update-header bg-very-dark px-20 px-md-40 mt-md-15 mb-1 pb-15 border-bottom' class:mt-15={!SUPPORTS.isAndroid}>
     <div class='text-muted w-full mt-20 mt-md-0'>
       <div class='d-flex align-items-center mb-10'>

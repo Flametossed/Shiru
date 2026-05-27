@@ -84,7 +84,7 @@
   }
 </script>
 
-<SoftModal class='w-auto mw-350 profile-safe-height d-flex justify-content-center flex-column scrollbar-none bg-very-dark pt-0 pb-10 px-30 pb-md-30 mx-20 rounded' bind:showModal={$modal[modal.PROFILE]} {close} id={modal.PROFILE}>
+<SoftModal class='w-auto mw-350 profile-safe-height d-flex justify-content-center flex-column scrollbar-none bg-very-dark pt-0 pb-10 px-30 pb-md-wh-30 mx-20 rounded' bind:showModal={$modal[modal.PROFILE]} {close} id={modal.PROFILE}>
   <div class='d-flex flex-row'>
     {#if !$currentProfile && !$profiles.length}
       <h5 class='modal-title mt-20 mr-auto'>Log In</h5>
