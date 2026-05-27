@@ -29,8 +29,8 @@
   $: foundResults = !(searchText?.length && !filteredLoaded && !filteredStaging.length && !filteredSeeding.length && !filteredCompleted.length)
 </script>
 
-<div class='bg-dark h-full w-full root status-transition overflow-y-scroll overflow-x-hidden' class:pt-safe-area={!$status.match(/offline/i)}>
-  <div class='w-full status-transition pl-20' class:pt-28px={!$status.match(/offline/i)}>
+<div class='bg-dark h-full w-full root overflow-y-scroll overflow-x-hidden'>
+  <div class='header w-full status-transition pl-20 position-sticky top-0 bg-dark z-20 pb-10' class:mb-25={!disableRescan} class:pt-28px={!$status.match(/offline/i)} class:pt-15={$status.match(/offline/i)}>
     <h4 class='font-weight-bold m-0 mb-10'>Manage Torrents</h4>
     <div class='d-flex align-items-center'>
       <div class='input-group wm-600'>
@@ -47,13 +47,13 @@
     </div>
   </div>
   <div class='d-none' class:d-inline-block={disableRescan}>
-    <div class='alert bg-warning border-warning-dim text-warning-very-dim p-10 pl-15 mt-10 mb-5 d-flex ml-20'>
+    <div class='alert bg-warning border-warning-dim text-warning-very-dim p-10 pl-15 mb-25 mt-10 d-flex mx-20'>
       <TriangleAlert class='flex-shrink-0' size='1.8rem' />
       <span class='ml-10'>You've reached your pre-download limit. To pre-download more torrents, stop seeding some, increase your seeding limit, or enable Persist Files in Client Settings.</span>
     </div>
   </div>
-  <div class='d-flex flex-column w-full text-wrap text-break-word font-scale-16 mt-20'>
-    <div class='d-flex flex-row mb-10 font-scale-18'>
+  <div class='d-flex flex-column w-full text-wrap text-break-word font-scale-16'>
+    <div class='labels d-flex flex-row mb-10 font-scale-18 position-sticky bg-dark z-20 status-transition' style='top: calc(9rem + {!$status.match(/offline/i) ? `28px` : `1.5rem`})'>
       <div class='font-weight-bold p-5 ml-20 mw-150 flex-1 w-auto'>Name</div>
       <div class='font-weight-bold p-5 w-150 d-none d-md-block'><span class='d-none d-lg-block'>Size</span><Package class='d-lg-none' size='2rem'/></div>
       <div class='font-weight-bold p-5 w-150'><span class='d-none d-lg-block'>Progress</span><Percent class='d-lg-none' size='2rem'/></div>
@@ -85,3 +85,18 @@
     {/if}
   </div>
 </div>
+
+<style>
+  .header::after,
+  .labels::after {
+    content: '';
+    position: absolute;
+    bottom: -1.2rem;
+    left: 0;
+    right: 0;
+    height: 1.2rem;
+    background: linear-gradient(to bottom, var(--dark-color), transparent);
+    pointer-events: none;
+    z-index: 1;
+  }
+</style>

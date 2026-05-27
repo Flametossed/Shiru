@@ -359,7 +359,7 @@
 }
 
 .status-transition {
-  transition: height .3s ease 2s, padding .3s ease 2s;
+  transition: height .3s ease 2s, padding .3s ease 2s, top .3s ease 2s;
 }
 .opacity-ts-3 {
   transition: opacity .3s ease-in-out;
@@ -599,6 +599,9 @@ a[href]:active, button:not([disabled], .not-reactive):active:not([data-sonner-to
 }
 .mb-8 {
   margin-bottom: .8rem !important;
+}
+.mb-25 {
+  margin-bottom: 2.5rem;
 }
 .mb-30 {
   margin-bottom: 3rem;

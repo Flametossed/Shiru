@@ -126,7 +126,7 @@
         </div>
       </div>
     </div>
-    <div class='mt-75 mt-lg-0 w-full overflow-y-auto overflow-y-md-hidden pr-notch-safe-area' class:status-transition={statusTransition} class:pt-28px={!SUPPORTS.isAndroid && !$status.match(/offline/i)} class:pt-safe-area={SUPPORTS.isAndroid && !$status.match(/offline/i)}>
+    <div class='mt-75 mt-lg-0 w-full overflow-y-auto overflow-y-md-hidden pr-notch-safe-area' class:status-transition={statusTransition} class:pt-28px={!SUPPORTS.isAndroid && !$status.match(/offline/i)} class:scroll-container={!SUPPORTS.isAndroid && !$status.match(/offline/i)} class:pt-safe-area={SUPPORTS.isAndroid && !$status.match(/offline/i)}>
       <Tab>
         <div class='root h-full w-full overflow-y-md-auto p-20 pt-5'>
           <div class='page pb-100'>
@@ -198,6 +198,16 @@
     background: linear-gradient(to bottom, var(--dark-color), transparent);
     pointer-events: none;
     z-index: 100;
+  }
+  .scroll-container::before {
+    content: '';
+    position: absolute;
+    top: 28px;
+    left: 0;
+    right: 0;
+    height: 1.2rem;
+    background: linear-gradient(to bottom, var(--dark-color), transparent);
+    pointer-events: none;
   }
   @media (min-width: 993px) {
     .bb-10 {
