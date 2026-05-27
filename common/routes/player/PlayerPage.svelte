@@ -430,8 +430,8 @@
     resolvePrompt = current?.failed || current?.media?.failed || current?.parseObject?.failed
     skipPrompt = filler || recap
   }
-  async function autoPlay () {
-    await promptFiller()
+  async function autoPlay (promptSkip = false) {
+    if (!promptSkip) await promptFiller()
     if ((($page === page.PLAYER && modal.length === 0) || pip) && !resolvePrompt && !skipPrompt) {
       if (externalPlayback) playPause()
       else if (!hidden) {
@@ -1120,19 +1120,13 @@
   function skipResponse (skip) {
     skipPrompt = false
     if (skip) playNext()
-    else {
-      video.play()
-      updateSubs()
-    }
+    else autoPlay(true)
   }
   let resolvePrompt = false
   function resolveResponse (resolve) {
     resolvePrompt = false
     if (resolve) modal.open(modal.FILE_MANAGER)
-    else {
-      video.play()
-      updateSubs()
-    }
+    else autoPlay(true)
   }
   let stats = null
   let requestCallback = null
