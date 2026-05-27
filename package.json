@@ -25,13 +25,13 @@
     "eslint-plugin-svelte": "^3.17.1",
     "html-webpack-plugin": "^5.6.7",
     "mini-css-extract-plugin": "^2.10.2",
-    "semver": "^7.8.0",
-    "webpack": "^5.106.2",
+    "semver": "^7.8.1",
+    "webpack": "^5.107.2",
     "webpack-cli": "^7.0.2",
     "webpack-dev-server": "^5.2.4"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260519.1",
+    "@cloudflare/workers-types": "^4.20260527.1",
     "npm-run-all": "^4.1.5"
   },
   "pnpm": {
