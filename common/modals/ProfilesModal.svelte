@@ -105,8 +105,8 @@
       Other Profiles
     </div>
   {/if}
-  <div class='d-flex flex-column align-items-start' style={`min-height: ${$profiles.length ? `10rem` : `0`}`}>
-    <div class='d-flex flex-column align-items-center overflow-y-auto scrollbar-none px-10 my-3' style={`min-height: ${$profiles.length ? `10rem` : `0`}; margin-left: -1rem; margin-right: -1rem; width: calc(100% + 2rem)`}>
+  <div class='d-flex flex-column align-items-start' style={`min-height: ${$profiles.length > 1 ? `10rem` : `0`}`}>
+    <div class='d-flex flex-column align-items-center overflow-y-auto scrollbar-none px-10 my-3' style={`min-height: ${$profiles.length > 1 ? `10rem` : `0`}; margin-left: -1rem; margin-right: -1rem; width: calc(100% + 2rem)`}>
       {#each $profiles as profile}
         <button type='button' class='profile-item {profile.reauth ? `authenticate` : ``} box text-left pointer border-0 d-flex align-items-center justify-content-between position-relative flex-wrap z-1' data-toggle='tooltip' data-placement='top' data-title='Switch to Profile: {profile.viewer.data.Viewer.name}' class:not-reactive={!$reactive} use:click={() => switchProfile(profile)}>
           <div class='d-flex align-items-center flex-wrap'>

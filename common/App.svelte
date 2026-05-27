@@ -14,7 +14,7 @@
   import TorrentModal from '@/modals/torrent/TorrentModal.svelte'
   import Menubar from '@/components/Menubar.svelte'
   import UpdateModal from '@/modals/UpdateModal.svelte'
-  import Profiles from '@/components/Profiles.svelte'
+  import ProfilesModal from '@/modals/ProfilesModal.svelte'
   import NotificationModal from '@/modals/notification/NotificationModal.svelte'
   import MinimizeModal from '@/modals/MinimizeModal.svelte'
   import Status from '@/components/Status.svelte'
@@ -64,7 +64,7 @@
     <DetailsModal />
     <TorrentModal />
     <NotificationModal />
-    <Profiles />
+    <ProfilesModal />
     <Router bind:statusTransition={$statusTransition} />
   </div>
 </div>
