@@ -17,7 +17,7 @@ export const key = writable({})
 export const search = writable(lastSearched || { genre: [], genre_not: [], tag: [], tag_not: [], format: [], format_not: [], status: [], status_not: [] })
 search.subscribe(value => {
   if (!value.clearNext) {
-    const searched = {...value}
+    const searched = { ...value }
     delete searched.load
     delete searched.preview
     cache.setEntry(caches.HISTORY, 'lastSearched', searched)

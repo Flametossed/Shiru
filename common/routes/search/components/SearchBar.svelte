@@ -42,10 +42,15 @@
   }
 
   $: {
-    search.genre = searchTags.tags.filter(val => genreList.includes(val))
-    search.tag = searchTags.tags.filter(val => tagList.includes(val))
-    search.genre_not = searchTags.tags_not.filter(val => genreList.includes(val))
-    search.tag_not = searchTags.tags_not.filter(val => tagList.includes(val))
+    for (const [key, val] of Object.entries(
+      {
+        genre: searchTags.tags.filter(val => genreList.includes(val)),
+        tag: searchTags.tags.filter(val => tagList.includes(val)),
+        genre_not: searchTags.tags_not.filter(val => genreList.includes(val)),
+        tag_not: searchTags.tags_not.filter(val => tagList.includes(val))
+      })) {
+      if (val.join() !== search[key]?.join()) search[key] = val
+    }
   }
 
   $: sanitisedSearch = Object.entries(searchCleanup(search, true)).flatMap(

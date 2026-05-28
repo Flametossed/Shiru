@@ -15,7 +15,6 @@
   export let search
   /** @type {import('simple-store-svelte').Writable<boolean>} Whether to clear the search */
   export let clearNow = writable(false)
-  search?.subscribe((value) => $clearNow = value?.clearNow)
 
   /** @type {number} Current page index for pagination */
   let page = 0
@@ -33,6 +32,9 @@
   const items = writable([])
   /** @type {number} Distance from bottom (px) at which the next page load is triggered */
   const scrollThreshold = 500
+
+  key?.subscribe(() => $items = [])
+  search?.subscribe((value) => $clearNow = value?.clearNow)
 
   $: loadTillFull($key)
 

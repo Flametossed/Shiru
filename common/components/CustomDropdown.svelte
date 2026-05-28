@@ -97,9 +97,6 @@
         }
     }
 
-    let shown = new Set()
-    $: if ($dropdown || searchTextInput || value || altValue) shown = new Set()
-
     const headerEntries = Object.entries(headers || {})
     const headerSections = []
     for (let i = 0; i < headerEntries.length; i++) {
