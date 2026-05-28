@@ -50,7 +50,7 @@
   }
 </script>
 
-<div class='sidebar z-80 d-md-block' class:animated={$settings.expandingSidebar} class:open={$drawerOpen && $settings.expandingSidebar}>
+<div class='sidebar z-80 d-md-block' style='height: calc(100% - var(--safe-area-bottom)) !important' class:animated={$settings.expandingSidebar} class:open={$drawerOpen && $settings.expandingSidebar}>
   <div class='z--1 pointer-events-none h-full bg-dark position-absolute' style='width: var(--sidebar-width)'/>
   <div class='sidebar-overlay z--1 pointer-events-none h-full position-absolute' class:animated={$settings.expandingSidebar} />
   <div class='sidebar-menu h-full d-flex flex-column m-0 pb-5 animate' class:br-10={!$settings.expandingSidebar}>
@@ -71,7 +71,7 @@
 </div>
 
 {#if $drawerOpen}<div class='drawer-backdrop position-fixed inset-0 z-100 pointer-events-none d-none d-md-block' class:z-79={!$settings.expandingSidebar} in:fadeIn={{ y: 0, startScale: 1, duration: 200 }} out:fadeOut={{ y: 0, endScale: 1, duration: 150 }} />{/if}
-<div class='drawer position-fixed left-0 bottom-0 z-100 bg-very-dark d-none d-md-block' class:open={$drawerOpen} class:expanding={$settings.expandingSidebar} class:z-79={!$settings.expandingSidebar} class:bt-10={!$settings.expandingSidebar} class:br-10={!$settings.expandingSidebar} role='dialog' aria-label='More'>
+<div class='drawer position-fixed left-0 bottom-0 mb-navigation-safe-area z-100 bg-very-dark d-none d-md-block' class:open={$drawerOpen} class:expanding={$settings.expandingSidebar} class:z-79={!$settings.expandingSidebar} class:bt-10={!$settings.expandingSidebar} class:br-10={!$settings.expandingSidebar} role='dialog' aria-label='More'>
   <div class='drawer-handle position-absolute pointer' tabindex='-1' class:d-none={$settings.expandingSidebar} use:click={closeDrawer} on:pointerdown={closeDrawer} />
   <div class='overflow-y-auto vh-60'>
     {#each $drawerItems as item (item)}
