@@ -174,18 +174,18 @@ class ExtensionManager {
     try {
       delete this.inactiveWorkers[key]
       let validated
+      let validationError
       try {
         validated = status.value !== 'offline' ? await inactiveWorker.validate() : false
       } catch (err) {
         validated = false
+        validationError = err
       }
       if (!validated && (await inactiveWorker.hasBadModule())) {
         await this.getExtensionCode(key, inactiveWorker)
         if (this.activeWorkers[key]) return
       }
-      if (!validated) {
-        throw new Error('The content source appears to be unreachable.')
-      }
+      if (!validated) throw validationError || new Error('The content source appears to be unreachable.')
       this.activeWorkers[key] = inactiveWorker
       settings.set(settings.value)
     } catch (error) {

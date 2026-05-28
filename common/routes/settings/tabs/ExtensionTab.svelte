@@ -174,8 +174,8 @@
           <div class='d-flex'>
             <TriangleAlert size='4.3rem' />
             <div class='ml-10 mb-5 mb-md-0'>
-              <div class='font-size-18 font-weight-bold'>No Extensions Found</div>
-              <div class='text-muted pre-wrap'>It looks like you haven't added any extension sources, click the <u>Sources</u> tab to get started.</div>
+              <div class='font-size-18 font-weight-bold'>No Extensions Installed</div>
+              <div class='text-muted pre-wrap'>This is not a bug, extensions are not included by default. Visit the <u>Sources</u> tab to add an extension source.</div>
             </div>
           </div>
         </div>

@@ -15,7 +15,7 @@
             {#if JSON.stringify(errors)?.match(/found no results/i) || JSON.stringify(errors)?.match(/will be released on|hasn't released yet/i)}
               No results found.
             {:else if (JSON.stringify(errors)?.match(/extension is not enabled/i) && !errors?.filter(error => !error?.message.match(/extension is not enabled/i))?.length) || JSON.stringify(errors)?.match(/sources configured/i)}
-              No Extensions Found
+              No Extensions Installed
             {:else if errors?.length === 1 && Array.isArray(errors[0].message)}
               {errors[0].message[0]}
             {:else if errors}
