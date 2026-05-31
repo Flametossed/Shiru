@@ -150,15 +150,10 @@
     }
   }
 
-  const updateSubs = debounce(() => {
+  const updateSubs = debounce((delayChanged = false) => {
     if (!subs?.renderer) return
     subs.renderer.resize()
-    if (paused) {
-      seek(-0.001)
-      requestAnimationFrame(() => {
-        if (video.currentTime !== 0) seek(0.001)
-      })
-    }
+    if (delayChanged) subs.renderer._timeupdate({ type: 'seeking' })
   }, 200) // stupid fix (resize) because video metadata doesn't update for multiple frames
   function checkSubtitle() {
     const lastSubtitle = cache.getEntry(caches.HISTORY, 'lastSubtitle')?.[`${media?.media?.id || media?.title || media?.parseObject?.title || media?.parseObject?.file_name}`]
@@ -264,7 +259,8 @@
     externalPlayerReady = false
     showBuffering()
     if (file) {
-      if (thumbnailData.video?.src) URL.revokeObjectURL(video?.src)
+      if (thumbnailData.video?.src) URL.revokeObjectURL(thumbnailData.video?.src)
+      if (thumbnailData.thumbnails?.length) thumbnailData.thumbnails.forEach(url => URL.revokeObjectURL(url))
       Object.assign(thumbnailData, {
         thumbnails: [],
         interval: undefined,
@@ -364,7 +360,7 @@
   function updateDelay(delay) {
     if (subs?.renderer) {
       subs.renderer.timeOffset = Number(delay)
-      updateSubs()
+      updateSubs(true)
     }
   }
   function setSubDelay(delay) {
@@ -437,7 +433,6 @@
       else if (!hidden) {
         video.play()
         resetImmerse()
-        updateSubs()
       }
     } else if (!externalPlayback) video.pause()
   }
@@ -474,7 +469,6 @@
       TORRENT.launchExternal(current)
     } else paused = !paused
     resetImmerse()
-    updateSubs()
   }
   let hidden = false
   let visibilityPaused = true
@@ -938,14 +932,14 @@
       desc: 'Volume Down'
     },
     BracketLeft: {
-      fn: () => !viewAnime && !externalPlayback && (playbackRate = video.defaultPlaybackRate -= 0.1),
+      fn: () => !viewAnime && !externalPlayback && (playbackRate = video.defaultPlaybackRate = Math.max(0.1, Number((video.defaultPlaybackRate - 0.1).toFixed(1)))),
       id: 'history',
       icon: RotateCcw,
       type: 'icon',
       desc: 'Decrease Playback Rate'
     },
     BracketRight: {
-      fn: () => !viewAnime && !externalPlayback && (playbackRate = video.defaultPlaybackRate += 0.1),
+      fn: () => !viewAnime && !externalPlayback && (playbackRate = video.defaultPlaybackRate = Math.min(16, Number((video.defaultPlaybackRate + 0.1).toFixed(1)))),
       id: 'update',
       icon: RotateCw,
       type: 'icon',
@@ -1140,11 +1134,9 @@
         stats = {}
         handleStats(a, b, b)
       })
-      if (paused) {
-        seek(-0.001) // stupid hack because the initial request doesn't trigger canvas to re-render, stats won't appear unless the current time changes.
-        requestAnimationFrame(() => {
-          if (video.currentTime !== 0) seek(0.001)
-        })
+      if (paused) { // callback will not trigger until video is unpaused, just show basic stats for now...
+        stats = {}
+        handleStats(performance.now(), { mediaTime: video.currentTime, presentedFrames: 1, processingDuration: 0 }, { mediaTime: video.currentTime, presentedFrames: 1 })
       }
     }
   }
@@ -1313,9 +1305,8 @@
     if (vid?.readyState >= 2) {
       const index = Math.floor(vid.currentTime / thumbnailData.interval)
       if (!thumbnailData.thumbnails[index]) {
-        thumbnailData.context.fillRect(0, 0, 200, thumbnailData.canvas.height)
         thumbnailData.context.drawImage(vid, 0, 0, 200, thumbnailData.canvas.height)
-        thumbnailData.thumbnails[index] = thumbnailData.canvas.toDataURL('image/jpeg')
+        thumbnailData.canvas.toBlob(blob => thumbnailData.thumbnails[index] = URL.createObjectURL(blob), 'image/jpeg')
       }
     }
   }
@@ -1338,8 +1329,9 @@
       await new Promise(resolve => setTimeout(resolve, 5 * 1_000))
     }
     const t0 = performance.now()
-    thumbnailProcess = { videoDraw: document.createElement('video'), running: true}
+    thumbnailProcess = { videoDraw: document.createElement('video'), running: true }
     const videoDraw = thumbnailProcess.videoDraw
+    thumbnailData.video = videoDraw
     videoDraw.src = current.url
     videoDraw.preload = 'auto'
     videoDraw.volume = 0
@@ -1377,6 +1369,7 @@
 
         if (currentTime >= videoDraw.duration) {
           debug('Thumbnail generation has successfully completed, took:', (toTS((performance.now() - t0) / 1_000)))
+          thumbnailData.video = null
           videoDraw.remove()
           return
         } else if (isFinite(currentTime) && currentTime >= 0 && currentTime <= dynamicDuration) {
@@ -1391,16 +1384,20 @@
             debug('Thumbnail generation process was interrupted due to a change in the video url, exiting...')
             return
           }
-          thumbnailData.context.fillRect(0, 0, 200, thumbnailData.canvas.height)
           thumbnailData.context.drawImage(videoDraw, 0, 0, 200, thumbnailData.canvas.height)
-          thumbnailData.thumbnails[index] = thumbnailData.canvas.toDataURL('image/jpeg')
-          captureThumbnail()
+          thumbnailData.canvas.toBlob(blob => {
+            thumbnailData.thumbnails[index] = URL.createObjectURL(blob)
+            captureThumbnail()
+          }, 'image/jpeg')
         }
       }
       captureThumbnail()
     }
     videoDraw.onerror = (e) => {
       debug('Error loading video for thumbnail generation:', e)
+      thumbnailData.thumbnails.forEach(url => URL.revokeObjectURL(url))
+      thumbnailData.thumbnails = []
+      thumbnailData.video = null
       videoDraw.remove()
     }
   }

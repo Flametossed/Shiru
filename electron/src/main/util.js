@@ -8,23 +8,27 @@ export const store = new Store(app.getPath('userData'), 'persist.json', { angle:
 export const development = process.env.NODE_ENV?.trim() === 'development'
 
 const flags = [
-  // fix for gpu crashing issue with wayland, this fix primarily targets intel iris... probably safe...? Doesn't work on wayland without this regardless.
-  ...(process.env.XDG_SESSION_TYPE?.toLowerCase() === 'wayland' ? [['in-process-gpu']] : []),
-  // not sure if safe?
+  // Wayland GPU workaround that targeted Intel Iris.
+  // Older Electron had weaker Wayland GPU support, newer versions handle it better. Using this now cause issues with hardware-accelerated decoding and shutdown hangs.
+  // ...(process.env.XDG_SESSION_TYPE?.toLowerCase() === 'wayland' ? [['in-process-gpu']] : []),
+
+  // GPU / rendering pipeline overrides (behavior varies across hardware and driver versions)
   ['disable-gpu-sandbox'], ['disable-direct-composition-video-overlays'], ['double-buffer-compositing'], ['enable-zero-copy'], ['ignore-gpu-blocklist'], ['force_high_performance_gpu'],
-  // should be safe
+  // Overlay behavior (generally safe, affects fullscreen layering behavior)
   ['enable-hardware-overlays', 'single-fullscreen,single-on-top,underlay'],
-  // safe performance stuff
+  // Safe performance-related features
   ['enable-features', 'PlatformEncryptedDolbyVision,CanvasOopRasterization,ThrottleDisplayNoneAndVisibilityHiddenCrossOriginIframes,UseSkiaRenderer,WebAssemblyLazyCompilation,AutoPictureInPictureForVideoPlayback'],
   // Note: FluentOverlayScrollbars and WindowsScrollingPersonality were used for smoother scrolling, but both have been deprecated and disabled by Chromium (see: https://issues.chromium.org/issues/359747082)
 
-  // disabling shit, vulkan rendering, widget layering aka right click context menus [I think] for macOS [I think], rest is for chromium detecting how much video it should buffer, hopefully it makes it buffer more
-  ['disable-features', 'Vulkan,WidgetLayering,MediaEngagementBypassAutoplayPolicies,PreloadMediaEngagementData,RecordMediaEngagementScores'],
-  // utility stuff, aka website security that's useless for a native app:
+  // Disables Chromium UI layering behavior (WidgetLayering)
+  ['disable-features', 'WidgetLayering'],
+  // Legacy Chromium media engagement: ['disable-features', 'MediaEngagementBypassAutoplayPolicies,PreloadMediaEngagementData,RecordMediaEngagementScores']
+
+  // Chromium behavior overrides (permissions, process model, throttling, media policy)
   ['autoplay-policy', 'no-user-gesture-required'], ['disable-notifications'], ['disable-logging'], ['disable-permissions-api'], ['no-zygote'], ['disable-renderer-backgrounding'],
-  // chromium throttles stuff if it detects slow network, nono, this is native, don't do that
+  // Network throttling override (prevents Chromium from downscaling behavior on slow networks)
   ['force-effective-connection-type', '4G'],
-  // image, and video cache hopefully lets video buffer more and remembers more images, might be bad to touch this?
+  // Cache sizing (can improve media/image responsiveness, tradeoff is disk usage)
   ['disk-cache-size', '500000000']
 ]
 for (const [flag, value] of flags) app.commandLine.appendSwitch(flag, value)
