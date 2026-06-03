@@ -25,19 +25,17 @@
     "eslint-plugin-svelte": "^3.19.0",
     "html-webpack-plugin": "^5.6.7",
     "mini-css-extract-plugin": "^2.10.2",
-    "semver": "^7.8.1",
+    "semver": "^7.8.2",
     "webpack": "^5.107.2",
     "webpack-cli": "^7.0.3",
     "webpack-dev-server": "^5.2.4"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260531.1",
+    "@cloudflare/workers-types": "^4.20260604.1",
     "npm-run-all": "^4.1.5"
   },
   "pnpm": {
     "overrides": {
-      "node-abi": "3.77.0",
-      "node-datachannel": "0.30.0",
       "@electron/universal": "3.0.4"
     },
     "patchedDependencies": {
@@ -45,7 +43,8 @@
       "@capacitor/android": "patches/@capacitor__android.patch",
       "lucide-svelte@0.455.0": "patches/lucide-svelte@0.455.0.patch",
       "rfdc": "patches/rfdc.patch",
-      "svelte-keybinds": "patches/svelte-keybinds.patch"
+      "svelte-keybinds": "patches/svelte-keybinds.patch",
+      "cordova-plugin-apkupdater": "patches/cordova-plugin-apkupdater.patch"
     },
     "onlyBuiltDependencies": [
       "@paymoapp/electron-shutdown-handler",

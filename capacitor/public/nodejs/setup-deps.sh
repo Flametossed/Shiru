@@ -1,13 +1,8 @@
 #!/bin/bash
 
-# instructions
-# Install Android NDK
-# Set $ANDROID_NDK_PATH (example: ~/Android/Sdk/ndk/26.1.10909125)
-# Download and extract android .zip for nodejs-mobile from https://github.com/nodejs-mobile/nodejs-mobile/releases/tag/v18.17.2
-# Update LIBNODE_PATH
-# npm install nodejs-mobile-gyp
-# install other npm packages like normal
-# run this script
+# Build native Node.js addons for Android
+# This script is intended to be run inside the Docker container defined in Dockerfile
+# It cross-compiles native modules for arm, arm64, and x86_64 Android targets
 
 if [ -d "node_modules" ]; then
     echo "node_modules already exists, skipping npm install"
@@ -40,7 +35,7 @@ for ((i=0;i<${#toolchain_target_archs[@]};i++)); do
   export npm_config_format=make-android
   export npm_gyp_defines="target_arch=$node_target_arch v8_target_arch=$node_target_arch android_target_arch=$node_target_arch host_os=linux OS=android"
   
-  # --from-from-source is used by node-pre-gyp
+  # --build-from-source is used by node-pre-gyp
   echo "Rebuilding for $node_target_arch"
   npm rebuild --build-from-source
 
