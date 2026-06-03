@@ -54,6 +54,7 @@
       "electron-winstaller",
       "fs-native-extensions",
       "fsctl",
+      "ip-set",
       "node-datachannel",
       "sharp",
       "utf-8-validate",

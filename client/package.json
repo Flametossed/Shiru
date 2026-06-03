@@ -2,10 +2,10 @@
   "name": "client",
   "private": true,
   "dependencies": {
-    "bittorrent-tracker": "^11.2.2",
+    "bittorrent-tracker": "^11.2.3",
     "matroska-metadata": "^1.0.12",
-    "parse-torrent": "^11.0.19",
+    "parse-torrent": "^11.0.21",
     "uint8-util": "^2.2.6",
-    "webtorrent": "github:RockinChaos/webtorrent#v2.8.7"
+    "webtorrent": "^3.0.16"
   }
 }

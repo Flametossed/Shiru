@@ -2,7 +2,7 @@ import WebTorrent from 'webtorrent'
 import HTTPTracker from 'http-tracker'
 import Client from 'bittorrent-tracker'
 import { hex2bin, arr2hex, text2arr } from 'uint8-util'
-import { makeHash, getInfoHash, hasIntegrity, getProgressAndSize, stringifyQuery, errorToString, encodeStreamURL, TMP } from '@client/lib/util.js'
+import { makeHash, getInfoHash, hasIntegrity, getProgressAndSize, stringifyQuery, errorToString, TMP } from '@client/lib/util.js'
 import { fontRx, sleep, subRx, videoRx, isValidNumber } from '@/modules/util.js'
 import { SUPPORTS } from '@/modules/support.js'
 import { spawn } from 'node:child_process'
@@ -43,7 +43,8 @@ export default class TorrentClient extends WebTorrent {
       uploadLimit: settings.uploadLimit,
       torrentPort: settings.torrentPort,
       dhtPort: settings.dhtPort,
-      natUpnp: SUPPORTS.permamentNAT ? 'permanent' : true
+      natUpnp: SUPPORTS.permamentNAT ? 'permanent' : true,
+      ...(SUPPORTS.isAndroid && { secure: 0 }) // Currently not supported on Android so we override with 0.
     })
     this.settings = settings
     this.player = settings.playerPath
@@ -182,7 +183,7 @@ export default class TorrentClient extends WebTorrent {
         type: file.type,
         size: file.size,
         path: file.path,
-        url: this.serverMode === 'node' ? 'http://localhost:' + this.server.address().port + encodeStreamURL(file.streamURL) : encodeStreamURL(file.streamURL)
+        url: this.serverMode === 'node' ? 'http://localhost:' + this.server.address().port + file.streamURL : file.streamURL
       }
     })
     this.dispatch('files', files)
@@ -561,7 +562,7 @@ export default class TorrentClient extends WebTorrent {
           this.playerProcess = null
         }
         if (this.player) {
-          this.playerProcess = spawn(this.player, ['' + new URL('http://localhost:' + this.server.address().port + encodeStreamURL(found.streamURL))])
+          this.playerProcess = spawn(this.player, ['' + new URL('http://localhost:' + this.server.address().port + found.streamURL)])
           this.playerProcess.stdout.on('data', () => {})
           this.playerProcess.once('close', () => {
             if (this.destroyed) return
@@ -569,7 +570,7 @@ export default class TorrentClient extends WebTorrent {
             const seconds = (Date.now() - startTime) / 1000
             this.dispatch('externalWatched', seconds)
           })
-        } else if (SUPPORTS.isAndroid) this.dispatch('androidExternal', `intent://localhost:${this.server.address().port}${encodeStreamURL(found.streamURL)}#Intent;type=video/any;scheme=http;end;`)
+        } else if (SUPPORTS.isAndroid) this.dispatch('androidExternal', `intent://localhost:${this.server.address().port}${found.streamURL}#Intent;type=video/any;scheme=http;end;`)
         break
       } case 'torrent': {
         const hash = data.data && data.data.hash

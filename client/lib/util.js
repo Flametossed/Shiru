@@ -2,7 +2,6 @@ import { createHash } from 'crypto'
 import { videoRx } from '@/modules/util.js'
 import querystring from 'querystring'
 import parseTorrent from 'parse-torrent'
-import { SUPPORTS } from '@/modules/support.js'
 import { stat } from 'fs/promises'
 import { statSync } from 'fs'
 import path from 'path'
@@ -28,36 +27,6 @@ export const stringifyQuery = obj => {
   ret = ret.replace(/[@*/+]/g, char => // `escape` doesn't encode the characters @*/+ so we do it manually
       `%${char.charCodeAt(0).toString(16).toUpperCase()}`)
   return ret
-}
-
-/**
- * Safely encodes the filename segment of a stream URL, preserving the path structure.
- * Encodes only the last path segment to ensure special characters in filenames are properly escaped for use in intents or URLs.
- * THIS IS VERY IMPORTANT FOR ANDROID!
- *
- * @param {string} streamURL - The stream URL containing the filename to encode.
- * @returns {string} The stream URL with the filename segment URI-encoded.
- */
-export const encodeStreamURL = (streamURL) => {
-  if (!streamURL?.length || !SUPPORTS.isAndroid) return streamURL
-  return streamURL.replace(/\\/g, '/').split('/').map(segment => {
-    if (!segment) return segment
-    return encodeURIComponent(decodeURIComponent(segment))
-      .replace(/%5B/g, '[')
-      .replace(/%5D/g, ']')
-      .replace(/%2C/g, ',')
-      .replace(/%28/g, '(')
-      .replace(/%29/g, ')')
-      .replace(/%2A/g, '*')
-      .replace(/%2B/g, '+')
-      .replace(/%3B/g, ';')
-      .replace(/%3D/g, '=')
-      .replace(/%40/g, '@')
-      .replace(/%21/g, '!')
-      .replace(/%24/g, '$')
-      .replace(/%26/g, '&')
-      .replace(/%27/g, "'")
-  }).join('/')
 }
 
 /**
