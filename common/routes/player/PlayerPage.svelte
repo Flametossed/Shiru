@@ -1312,6 +1312,7 @@
   }
   let videoWidth, videoHeight
   function initThumbnails () {
+    if (externalPlayback) return
     const height = 200 / (videoWidth / videoHeight)
     if (!isNaN(height)) {
       thumbnailData.interval = safeduration / 300 < 5 ? 5 : safeduration / 300
@@ -1321,6 +1322,7 @@
   }
   let thumbnailProcess = null
   async function generateThumbnails() {
+    if (externalPlayback || SUPPORTS.isAndroid) return // TODO: Generate and show thumbnails on android when seeking.
     debug('Starting thumbnail generation...')
     if (thumbnailProcess && thumbnailProcess.running) {
       debug('Detected a currently running thumbnail generation process, interrupting...')
@@ -1352,7 +1354,7 @@
         }
         while (thumbnailData.thumbnails[index]) index++
         const currentTime = index * thumbnailData.interval
-        if (currentTime >= dynamicDuration && currentTime < videoDraw.duration) {
+        if (!externalPlayback && currentTime >= dynamicDuration && currentTime < videoDraw.duration) {
           if (lastIndex !== index) {
             lastIndex = index
             debug(`Reached currently downloaded video duration, current seek time is: ${currentTime}s (${index} of ${buffer}%), waiting for buffer update...`)
@@ -1367,7 +1369,7 @@
           return
         }
 
-        if (currentTime >= videoDraw.duration) {
+        if (externalPlayback || currentTime >= videoDraw.duration) {
           debug('Thumbnail generation has successfully completed, took:', (toTS((performance.now() - t0) / 1_000)))
           thumbnailData.video = null
           videoDraw.remove()
@@ -1380,7 +1382,7 @@
         }
 
         videoDraw.onseeked = () => {
-          if (!thumbnailProcess.running) {
+          if (externalPlayback || !thumbnailProcess.running) {
             debug('Thumbnail generation process was interrupted due to a change in the video url, exiting...')
             return
           }
