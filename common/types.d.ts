@@ -17,14 +17,45 @@ declare global {
       reload: () => void
       onCrash: (callback: () => void) => void
       onRequest: (callback: (updateVersion: any) => void) => void
-      portRequest: (settings: any) => Promise<{
-        onmessage: (cb: (data: { type: string; data: any }) => void) => void
-        postMessage: (a: any, b: any) => void
-      }>
+      debug: (debug: any) => void
+      rescan: () => Promise<void>
+      scrape: (id: any, infoHashes: any) => Promise<any>
+      stream: (id: any, hash: any, magnet: any, base64: any) => void
+      stage: (id: any, hash: any) => void
+      complete: (hash: any) => void
+      unload: (data: any) => void
+      untrack: (hash: any) => void
+      reannounce: (hash: any) => void
+      onStats: (callback: (data: any) => void) => void
+      onFiles: (callback: (data: any) => void) => void
+      onMagnet: (callback: (data: any) => void) => void
+      onTracks: (callback: (data: any) => void) => void
+      offTracks: () => void
+      onSubtitles: (cbSubtitle: any, cbFont: any, cbFiles: any) => void
+      offSubtitles: () => void
+      onChapters: (callback: (data: any) => void) => void
+      onProgress: (callback: (data: any) => void) => void
+      onCurrentStats: (callback: (data: any) => void) => void
+      onExternalReady: (callback: (data: any) => void) => void
+      onExternalWatched: (callback: (data: any) => void) => void
+      onAndroidExternal: (callback: (data: any) => void) => void
+      onLoaded: (callback: (data: any) => void) => void
+      onUntrack: (callback: (data: any) => void) => void
+      onStage: (callback: (data: any) => void) => void
+      onSeed: (callback: (data: any) => void) => void
+      onComplete: (callback: (data: any) => void) => void
+      onCompletedStats: (callback: (data: any) => void) => void
+      setPlayback: (current: any, external: any) => void
+      restoreSession: (staging: any, seeding: any, completed: any, current: any) => void
+      launchExternal: (current: any) => void
+      updateNetwork: (status: any) => void
+      updateSettings: (settings: any) => void
+      onNotify: (callback: (type: string, detail: any) => void) => void
+      portRequest: (settings: any) => Promise<void>
     }
     common: {
       getAppVersion: () => Promise<string>
-      getPlatformInfo: () => { platform: string; arch: string; session: string; development: boolean }
+      getPlatformInfo: () => { platform: string; arch: string; flatpak: string | undefined; session: string; development: boolean; manualInstall: boolean }
       getDeviceInfo: () => Promise<any>
       exportLog: () => Promise<any>
       resetLog: () => Promise<any>
@@ -50,6 +81,7 @@ declare global {
     }
     android?: {
       minimize: () => void
+      toast: (text: string, duration?: 'short' | 'long') => Promise<void>
       onBackButton: (callback: (event: any) => void) => void
       hideStatusBar: () => void
       setSystemStyle: (style: 'LIGHT' | 'DARK') => void

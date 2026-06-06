@@ -25,7 +25,7 @@
   })
 
   const startedAt = Date.now()
-  if (SUPPORTS.isAndroid) COMMON.onUpdateAvailable((version) => setChangeLog(version))
+  if (SUPPORTS.isAndroid || COMMON.getPlatformInfo().manualInstall) COMMON.onUpdateAvailable((version) => setChangeLog(version))
   else COMMON.onUpdateDownloaded((version) => setChangeLog(version))
   function setChangeLog(version) {
     if (latestVersion !== version) {

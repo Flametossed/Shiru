@@ -1,5 +1,6 @@
 import { autoUpdater } from 'electron-updater'
 import { app, ipcMain, shell } from 'electron'
+import { development } from './util.js'
 import semver from 'semver'
 
 /**
@@ -9,6 +10,7 @@ import semver from 'semver'
 export default class Updater {
   hasUpdate = false
   downloading = false
+  isManualInstall = process.platform === 'darwin' || !!process.env.FLATPAK_ID
 
   window
   torrentWindow
@@ -27,7 +29,9 @@ export default class Updater {
     this.currentVersion = app.getVersion()
     this.window = window
     this.torrentWindow = torrentWindow
+    autoUpdater.autoDownload = false
     autoUpdater.autoInstallOnAppQuit = false
+    if (this.isManualInstall && !development) autoUpdater.isUpdaterActive = () => true
     ipcMain.on('common:checkForUpdates', (event, channel) => {
       if (channel) this.updateChannel = channel
       autoUpdater.channel = this.updateChannel === 'nightly' ? 'beta' : 'latest'
@@ -46,15 +50,17 @@ export default class Updater {
       }
       if (!this.downloading) {
         this.downloading = true
+        if (!this.isManualInstall) autoUpdater.downloadUpdate()
+        else this.hasUpdate = true
         this.availableInterval = setInterval(() => {
-          if (!this.hasUpdate) this.window.webContents.send('common:onUpdateAvailable', info.version)
+          if (!this.hasUpdate || this.isManualInstall) this.window.webContents.send('common:onUpdateAvailable', info.version)
         }, 1_000)
         this.availableInterval.unref?.()
       }
       this.latestVersion = info.version
     })
     autoUpdater.on('update-downloaded', (info) => {
-      if (this.skipUpdate(info.version)) return
+      if (this.skipUpdate(info.version) || this.isManualInstall) return
       if (!this.hasUpdate) {
         this.hasUpdate = true
         clearInterval(this.availableInterval)
@@ -100,7 +106,7 @@ export default class Updater {
    * @param {boolean} forceRunAfter Whether to force installation
    * @returns {boolean} True if installation started, false otherwise
    */
-  install (forceRunAfter = false) {
+  install(forceRunAfter = false) {
     if (this.hasUpdate && forceRunAfter) {
       setImmediate(() => {
         try {
@@ -108,11 +114,16 @@ export default class Updater {
           this.torrentWindow().close()
         } catch (e) {}
         clearInterval(this.downloadedInterval)
-        autoUpdater.quitAndInstall(true, true)
+        if (!this.isManualInstall) autoUpdater.quitAndInstall(true, true)
       })
-      if (process.platform === 'darwin') shell.openExternal('https://github.com/RockinChaos/Shiru/releases/latest')
+      if (this.isManualInstall) {
+        const url = semver.valid(this.latestVersion) && semver.prerelease(this.latestVersion)
+          ? `https://github.com/RockinChaos/Shiru/releases/tag/v${this.latestVersion}`
+          : `https://github.com/RockinChaos/Shiru/releases/latest`
+        shell.openExternal(url)
+      }
       this.hasUpdate = false
-      return true
+      return !this.isManualInstall
     }
     return false
   }
