@@ -1,0 +1,91 @@
+appId: com.github.rockinchaos.shiru
+productName: Shiru
+extraMetadata:
+  _synopsis: &synopsis "A personal anime library manager."
+  _description: &description "A personal anime library manager for watching and tracking your collection in real time. Lightweight, powerful, and paws-itively fast. No waiting required!"
+publish:
+  - provider: github
+    owner: RockinChaos
+    repo: shiru
+electronDownload:
+  mirror: https://craftationgaming.com/api/packages/electron/
+  customDir: "42.3.0"
+protocols:
+  name: shiru
+  schemes:
+    - shiru
+    - magnet
+fileAssociations:
+  - ext: torrent
+    name: Torrent File
+    description: Play and manage your personal torrent media
+    role: Viewer
+files:
+  - build/**/*
+  - "!node_modules/**/*.{mk,a,o,h}"
+directories:
+  buildResources: buildResources
+asarUnpack: "**/*.node"
+portable:
+  artifactName: ${os}-${productName}-v${version}-portable.${ext}
+nsis:
+  artifactName: ${os}-${productName}-v${version}-installer.${ext}
+  allowToChangeInstallationDirectory: true
+  oneClick: false
+win:
+  artifactName: ${os}-${productName}-v${version}.${ext}
+  icon: buildResources/icon.ico
+  target:
+    - nsis
+    - portable
+linux:
+  artifactName: ${os}-${productName}-v${version}.${ext}
+  icon: buildResources/icon.png
+  category: AudioVideo;Video
+  synopsis: *synopsis
+  description: *description
+  maintainer: RockinChaos <RockinChaos@users.noreply.github.com>
+  desktop:
+    entry:
+      Comment: *description
+      Keywords: anime
+      MimeType: x-scheme-handler/shiru;
+  target:
+    - arch: x64
+      target: AppImage
+    - arch: x64
+      target: deb
+    - arch: x64
+      target: flatpak
+flatpak:
+  runtime: org.freedesktop.Platform
+  sdk: org.freedesktop.Sdk
+  runtimeVersion: "25.08"
+  baseVersion: "25.08"
+  branch: stable
+  useWaylandFlags: true
+  synopsis: *synopsis
+  description: *description
+  desktop:
+    entry:
+      Comment: *description
+      Keywords: anime
+      MimeType: x-scheme-handler/shiru;
+      Icon: shiru
+  files:
+    - - buildResources/icon.png
+      - /share/icons/hicolor/512x512/apps/shiru.png
+    - - buildResources/icon.png
+      - /share/icons/hicolor/256x256/apps/shiru.png
+mac:
+  artifactName: ${os}-${productName}-v${version}.${ext}
+  singleArchFiles: node_modules/+(register-scheme|utp-native|fs-native-extensions)/**
+  entitlements: buildResources/entitlements.mac.plist
+  category: public.app-category.video
+  icon: buildResources/icon.icns
+  darkModeSupport: true
+  hardenedRuntime: true
+  notarize: false
+  target:
+    - arch: universal
+      target: default

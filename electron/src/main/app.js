@@ -307,7 +307,7 @@ export default class App {
       if (crashed) this.mainWindow.webContents.send('torrent:onCrash')
       this.webtorrentWindow.on('closed', () => this.destroy())
       this.webtorrentWindow.webContents.on('render-process-gone', async (e, { reason }) => {
-       if (reason === 'crashed') this.setWebTorrentWindow(true)
+        if (reason === 'crashed') this.setWebTorrentWindow(true)
       })
     }
   }
