@@ -25,13 +25,14 @@ stdout.write = (data, ...args) => {
   channel.send('torrent:log', { level: 'debug', message: typeof data === 'string' ? data.trim() : data.toString().trim() })
 }
 
-channel.on('main-heartbeat', async settings => {
+channel.on('port-init', async() => {
   clearInterval(heartbeatId)
-  const { default: TorrentClient } = await import('webtorrent-client')
-  client = new TorrentClient(channel, storageQuota, 'node', { ...settings, torrentPathNew: (settings.torrentPathNew || env.TMPDIR), TMPDIR: env.TMPDIR })
-})
+  channel.removeAllListeners('ipc')
+  channel.removeAllListeners('torrentPort')
+  channel.removeAllListeners('torrent:reload')
+  channel.removeAllListeners('main-heartbeat')
+  await destroy()
 
-channel.on('port-init', () => {
   const port = {
     onmessage: _ => {},
     postMessage: data => {
@@ -47,14 +48,23 @@ channel.on('port-init', () => {
       })
     })
   }
-  channel.on('torrent:reload', async () => {
-    if (client) {
-      client.destroy()
-      await new Promise(resolve => {
-        channel.once('destroyed', resolve)
-        setTimeout(resolve, 5000).unref?.()
-      })
-      setHeartBeat()
-    }
+  channel.on('torrent:reload', async () => await destroy(true))
+  channel.on('main-heartbeat', async settings => {
+    clearInterval(heartbeatId)
+    await destroy()
+    const { default: TorrentClient } = await import('webtorrent-client')
+    client = new TorrentClient(channel, storageQuota, 'node', { ...settings, torrentPathNew: (settings.torrentPathNew || env.TMPDIR), TMPDIR: env.TMPDIR })
   })
 })
+
+async function destroy(heartbeat = false) {
+  if (client) {
+    client.destroy()
+    await new Promise(resolve => {
+      channel.once('destroyed', resolve)
+      setTimeout(resolve, 5_000).unref?.()
+    })
+    client = null
+    if (heartbeat) setHeartBeat()
+  }
+}
