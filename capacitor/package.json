@@ -39,7 +39,7 @@
     "@capacitor/toast": "^8.0.1",
     "@capawesome-team/capacitor-android-foreground-service": "^8.1.0",
     "capacitor-intent-uri": "^0.0.2",
-    "capacitor-nodejs": "https://github.com/RockinChaos/Capacitor-NodeJS/releases/download/v1.0.0-beta.11/capacitor-nodejs-1.0.0-beta.11.tgz",
+    "capacitor-nodejs": "https://github.com/RockinChaos/capacitor-nodejs/releases/download/v1.0.0-beta.12/capacitor-nodejs-1.0.0-beta.12.tgz",
     "client": "workspace:*",
     "common": "workspace:*",
     "cordova-plugin-apkupdater": "^5.0.1",
