@@ -10,6 +10,7 @@ publish:
 electronDownload:
   mirror: https://craftationgaming.com/api/packages/electron/
   customDir: "42.3.0"
+  isVerifyChecksum: false
 protocols:
   name: shiru
   schemes:
@@ -26,6 +27,8 @@ files:
 directories:
   buildResources: buildResources
 asarUnpack: "**/*.node"
+toolsets:
+  appimage: "1.0.2"
 portable:
   artifactName: ${os}-${productName}-v${version}-portable.${ext}
 nsis:
