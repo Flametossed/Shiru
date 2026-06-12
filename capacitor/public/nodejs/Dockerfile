@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-RUN curl -fsSL https://github.com/RockinChaos/capacitor-nodejs/releases/download/v1.0.0-beta.12/capacitor-nodejs-1.0.0-beta.12.tgz | tar -xz \
+RUN curl -fsSL https://github.com/RockinChaos/capacitor-nodejs/releases/download/v1.0.0-beta.13/capacitor-nodejs-1.0.0-beta.13.tgz | tar -xz \
     && mv package/android/libnode /opt/libnode \
     && rm -rf package
 
