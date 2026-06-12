@@ -1,4 +1,4 @@
-import { app, protocol, shell, ipcMain } from 'electron'
+import { app, net, protocol, shell, ipcMain } from 'electron'
 import { readFile } from 'fs/promises'
 import { development } from './util.js'
 import path from 'path'
@@ -38,11 +38,6 @@ export default class Protocol {
   constructor (window) {
     this.window = window
 
-    protocol.registerHttpProtocol('shiru', (req, cb) => {
-      const token = req.url.slice(7)
-      this.window.loadURL(development ? 'http://localhost:5000/app.html' + token : `file://${path.join(__dirname, '/app.html')}${token}`)
-    })
-
     app.on('open-url', (event, url) => {
       event.preventDefault()
       this.handleProtocol(url)
@@ -56,12 +51,12 @@ export default class Protocol {
     })
 
     // Handle locally loaded extensions (test extensions)
-    protocol.registerFileProtocol('extension', (request, callback) => {
+    protocol.handle('extension', (request) => {
       // Extract path after 'extension://'
       let filePath = request.url.replace('extension://', '')
       // Fix drive paths
       if (/^[A-Z]\//i.test(filePath)) filePath = filePath.charAt(0) + ':' + filePath.slice(1)
-      callback({ path: filePath })
+      return net.fetch('file://' + filePath)
     })
 
     if (process.argv.length >= 2 && !process.defaultApp) {
