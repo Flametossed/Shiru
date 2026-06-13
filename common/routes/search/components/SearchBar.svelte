@@ -42,14 +42,14 @@
   }
 
   $: {
-    for (const [key, val] of Object.entries(
-      {
-        genre: searchTags.tags.filter(val => genreList.includes(val)),
-        tag: searchTags.tags.filter(val => tagList.includes(val)),
-        genre_not: searchTags.tags_not.filter(val => genreList.includes(val)),
-        tag_not: searchTags.tags_not.filter(val => tagList.includes(val))
-      })) {
-      if (val.join() !== search[key]?.join()) search[key] = val
+    for (const [key, val] of Object.entries({
+      genre: searchTags.tags.filter(val => genreList.includes(val)),
+      tag: searchTags.tags.filter(val => tagList.includes(val)),
+      genre_not: searchTags.tags_not.filter(val => genreList.includes(val)),
+      tag_not: searchTags.tags_not.filter(val => tagList.includes(val))
+    })) {
+      const current = Array.isArray(search[key]) ? search[key] : []
+      if (current.length !== val.length || current.join() !== val.join()) search[key] = val
     }
   }
 
