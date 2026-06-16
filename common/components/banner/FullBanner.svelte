@@ -61,9 +61,9 @@
 <img src='./icon_filled.png' class='position-absolute z--1 m-10 p-0 {SUPPORTS.isAndroid || COMMON.getPlatformInfo().platform === `darwin` ? `right-0 mr-20 ${!SUPPORTS.isAndroid ? `d-md-none d-sm-h-block` : ``}` : `left-0 ml-20 d-md-none d-sm-h-block`}' style='width: 4rem; height: 4rem' alt='ico' />
 <div class='pl-20 pb-20 justify-content-end d-flex flex-column h-full banner mw-full grab' use:drag={swipeMedia}>
   <div class='text-white font-weight-bold font-scale-40'>
-    <span class='default-cursor title overflow-hidden d-inline-block pr-5'>{anilistClient.title(currentStatic)}</span>
+    <span class='cursor-default title overflow-hidden d-inline-block pr-5'>{anilistClient.title(currentStatic)}</span>
   </div>
-  <div class='details text-white text-capitalize pt-10 pb-10 d-flex w-600 mw-full default-cursor'>
+  <div class='details text-white text-capitalize pt-10 pb-10 d-flex w-600 mw-full cursor-default'>
     <span class='text-nowrap d-flex align-items-center'>
       {#if currentStatic.format}
         {formatMap[currentStatic.format]}
@@ -99,18 +99,18 @@
     {/if}
   </div>
   <div class='h-100'>
-    <div class='line-4 overflow-hidden w-600 mw-full default-cursor' class:text-muted={!hasSpoiler || !['strict', 'hermit'].includes($settings.spoilers)} class:text-spoiler={hasSpoiler && ['strict', 'hermit'].includes($settings.spoilers)}>
+    <div class='line-4 overflow-hidden w-600 mw-full cursor-default' class:text-muted={!hasSpoiler || !['strict', 'hermit'].includes($settings.spoilers)} class:text-spoiler={hasSpoiler && ['strict', 'hermit'].includes($settings.spoilers)}>
       {currentStatic.description?.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim() || ''}
     </div>
   </div>
-  <div class='details text-white text-capitalize pt-15 pb-10 d-flex w-600 mw-full default-cursor'>
+  <div class='details text-white text-capitalize pt-15 pb-10 d-flex w-600 mw-full cursor-default'>
     {#each currentStatic.genres as genre}
       <span class='text-nowrap d-flex align-items-center'>
         {genre}
       </span>
     {/each}
   </div>
-  <div class='d-flex flex-row pb-10 w-600 mw-full default-cursor'>
+  <div class='d-flex flex-row pb-10 w-600 mw-full cursor-default'>
     <button class='btn bg-dark-light px-20 shadow-none border-0 d-flex align-items-center justify-content-center' title='Watch' use:click={() => playMedia(currentStatic)}>
       <Play class='mr-10' size='1.7rem' />
       <span>{current.mediaListEntry?.progress ? current.mediaListEntry?.status === 'COMPLETED' ? 'Rewatch Now' : 'Continue Now' : 'Watch Now'}</span>
@@ -133,7 +133,7 @@
     {#each mediaList as media}
       {@const active = (currentStatic?.id === media?.id)}
       {@const disabled = active || null}
-      <div class='pt-10 pb-10 badge-wrapper' aria-hidden='true' {disabled} class:pointer={!active} class:default-cursor={active} use:click={() => setCurrent(media)}>
+      <div class='pt-10 pb-10 badge-wrapper' aria-hidden='true' {disabled} class:pointer={!active} class:cursor-default={active} use:click={() => setCurrent(media)}>
         <div class='rounded bg-dark-light mr-10 progress-badge overflow-hidden progressive' {disabled} class:active style='height: 3px;' style:width={active ? '5rem' : '2.7rem'}>
           <div class='progress-content h-full' class:bg-white={active} />
         </div>
@@ -184,9 +184,6 @@
   .banner, img {
     animation: fadeIn ease .8s;
     will-change: opacity;
-  }
-  .default-cursor {
-    cursor: default;
   }
 
   @keyframes fadeIn {

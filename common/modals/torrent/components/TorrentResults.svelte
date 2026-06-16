@@ -1,6 +1,6 @@
 <script context='module'>
   import { settings } from '@/modules/settings.js'
-  import { debounce, matchPhrase, createListener } from '@/modules/util.js'
+  import { debounce, matchPhrase } from '@/modules/util.js'
   import { sanitiseTerms } from '@/modals/torrent/components/TorrentCard.svelte'
   import { add } from '@/modules/torrent.js'
   import { nowPlaying as currentMedia } from '@/components/MediaHandler.svelte'
@@ -15,7 +15,8 @@
   import { anilistClient } from '@/modules/providers/anilist/anilist.js'
   import { click } from '@/modules/lib/click.js'
   import { toast } from 'svelte-sonner'
-  import { X, Search, EllipsisVertical, Timer, Clapperboard, MonitorCog, ArrowDownWideNarrow, ChevronLeft, ChevronUp, ChevronDown, Radio, RefreshCw } from 'lucide-svelte'
+  import NestedDropdown from '@/components/overlays/NestedDropdown.svelte'
+  import { X, Search, EllipsisVertical, Timer, Clapperboard, MonitorCog, ArrowDownWideNarrow, Paintbrush, ListMusic, ChevronUp, ChevronDown, Radio, RefreshCw } from 'lucide-svelte'
   import Debug from 'debug'
   const debug = Debug('ui:torrents')
 
@@ -159,6 +160,7 @@
   export let search
   export let close
 
+  let containerEl
   let countdown = 5
   let timeoutHandle
   const maxEpisode = 10_000
@@ -374,28 +376,8 @@
     if ($settings.rssAutoplay) countdown = 5
   }
 
-  const showOptions = writable(false)
-  function toggleDropdown({ target }) {
-    target.classList.toggle('active')
-    target.closest('.dropdown').classList.toggle('show')
-  }
-
-  $: {
-    if ($showOptions) {
-      const { reactive, init } = createListener([`primary`])
-      init(true, true)
-      reactive.subscribe(value => {
-        if (!value) {
-          showOptions.set(false)
-          init(false, true)
-        }
-      })
-    }
-  }
-
   onDestroy(() => {
     clearTimeout(timeoutHandle)
-    showOptions.set(false)
     viewHidden = false
     $results = {}
     search = null
@@ -406,199 +388,191 @@
     errorCardOnly = false
   })
 </script>
-
-<div class='controls w-full bg-very-dark position-sticky top-0 z-10 pt-md-wh-20 pb-10 px-30 mb-10'>
-  <div class='d-flex'>
-    <h3 class='mb-0 font-weight-bold text-white title mr-5 font-scale-40'>{anilistClient.title(search?.media)}</h3>
-    <button type='button' class='btn btn-square bg-dark-very-light mt-20 ml-auto d-flex align-items-center justify-content-center rounded-2 flex-shrink-0' use:click={close}><X size='1.7rem' strokeWidth='3'/></button>
-    <div class='position-absolute top-0 left-0 w-full h-full z--1'>
-      <div class='position-absolute w-full h-full overflow-hidden' >
-        <SmartImage class='img-cover w-full h-full' images={[
-          search.media.bannerImage,
-          ...(search.media.trailer?.id ? [
-            `https://i.ytimg.com/vi/${search.media.trailer.id}/maxresdefault.jpg`,
-            `https://i.ytimg.com/vi/${search.media.trailer.id}/hqdefault.jpg`] : []),
-          () => getKitsuMappings(search.media.id).then(metadata =>
-            [metadata?.included?.[0]?.attributes?.coverImage?.original,
-            metadata?.included?.[0]?.attributes?.coverImage?.large,
-            metadata?.included?.[0]?.attributes?.coverImage?.small,
-            metadata?.included?.[0]?.attributes?.coverImage?.tiny]),
-          () => getEpisodeMetadataForMedia(search.media).then(metadata => metadata?.[1]?.image),
-          search.media.coverImage?.extraLarge]}
-        />
-      </div>
-      <div class='position-absolute top-0 left-0 w-full h-full' style='background: var(--torrent-banner-gradient)' />
-    </div>
-  </div>
-  <div class='input-group mt-20 h-40 long-input z-11'>
-    <Search size='2.6rem' strokeWidth='2.5' class='position-absolute z-10 text-dark-light h-full pl-10 pointer-events-none' />
-    <input
-      type='search'
-      class='form-control bg-dark-very-light pl-40 pr-30 rounded-3 h-40 text-truncate'
-      autocomplete='off'
-      spellcheck='false'
-      data-option='search'
-      placeholder='Filter torrents by text, or manually specify one by pasting a magnet link or torrent file' bind:value={searchText} />
-    <div class='dropdown primary dropleft with-arrow position-absolute z-20 h-full right-0' use:click={() => {showOptions.set(!$showOptions)}}>
-      <button type='button' class='options h-full bg-transparent shadow-none border-0 pointer p-0 pr-10 muted d-flex align-items-center' title='More Options'><EllipsisVertical size='2rem' /></button>
-      <div class='position-absolute visibility top-0 text-capitalize hm-40 text-nowrap bg-dark-very-light dmr-arrow d-flex flex-column' class:hidden={!$showOptions}>
-        <div class='dropdown dropleft with-arrow z-20 pointer p-5 rounded-1 option' aria-label='Preferred Audio Language' title='Preferred Audio Language' use:click={toggleDropdown}>
-          <div class='d-flex align-items-center pr-5'><ChevronLeft size='2rem' strokeWidth={2.5} class='flex-shrink-0' /><span class='ml-10 flex-grow-1 text-center'>Preferred Audio</span></div>
-          <div class='dropdown-menu dropdown-menu-right text-capitalize text-nowrap'>
-            <div class='custom-radio overflow-y-auto overflow-x-hidden hm-400'>
-              {#each languages as language}
-                <input name='audio-radio-set' type='radio' id='audio-{language.value}-radio' value={language.value} checked={language.value === $settings.audioLanguage} />
-                <label for='audio-{language.value}-radio' use:click={() => { $settings.audioLanguage = language.value }} class='pb-5'>
-                  {language.label}
-                </label>
-              {/each}
-            </div>
-          </div>
+<div bind:this={containerEl}>
+  <div class='controls w-full bg-very-dark position-sticky top-0 z-10 pt-md-wh-20 pb-10 px-30 mb-10'>
+    <div class='d-flex'>
+      <h3 class='mb-0 font-weight-bold text-white title mr-5 font-scale-40'>{anilistClient.title(search?.media)}</h3>
+      <button type='button' class='btn btn-square bg-dark-very-light mt-20 ml-auto d-flex align-items-center justify-content-center rounded-2 flex-shrink-0' use:click={close}><X size='1.7rem' strokeWidth='3'/></button>
+      <div class='position-absolute top-0 left-0 w-full h-full z--1'>
+        <div class='position-absolute w-full h-full overflow-hidden' >
+          <SmartImage class='img-cover w-full h-full' images={[
+            search.media.bannerImage,
+            ...(search.media.trailer?.id ? [
+              `https://i.ytimg.com/vi/${search.media.trailer.id}/maxresdefault.jpg`,
+              `https://i.ytimg.com/vi/${search.media.trailer.id}/hqdefault.jpg`] : []),
+            () => getKitsuMappings(search.media.id).then(metadata =>
+              [metadata?.included?.[0]?.attributes?.coverImage?.original,
+              metadata?.included?.[0]?.attributes?.coverImage?.large,
+              metadata?.included?.[0]?.attributes?.coverImage?.small,
+              metadata?.included?.[0]?.attributes?.coverImage?.tiny]),
+            () => getEpisodeMetadataForMedia(search.media).then(metadata => metadata?.[1]?.image),
+            search.media.coverImage?.extraLarge]}
+          />
         </div>
-        <div class='dropdown dropleft with-arrow z-20 pointer p-5 rounded-1 option' aria-label='Auto-Scrape Results' title='Auto-Scrape Results' use:click={toggleDropdown}>
-          <div class='d-flex align-items-center pr-5'><ChevronLeft size='2rem' strokeWidth={2.5} class='flex-shrink-0' /><span class='ml-10 flex-grow-1 text-center'>Auto-Scrape Results</span></div>
-          <div class='dropdown-menu dropdown-menu-right text-capitalize text-nowrap mw-80'>
-            <div class='custom-radio overflow-y-auto overflow-x-hidden'>
-              <input name='scrape-radio-set' type='radio' id='scrape-on-radio' value='on' checked={$settings.torrentAutoScrape} />
-              <label for='scrape-on-radio' use:click={() => $settings.torrentAutoScrape = true} class='pb-5'>On</label>
-              <input name='scrape-radio-set' type='radio' id='scrape-off-radio' value='off' checked={!$settings.torrentAutoScrape} />
-              <label for='scrape-off-radio' use:click={() => $settings.torrentAutoScrape = false} class='pb-5'>Off</label>
-            </div>
-          </div>
+        <div class='position-absolute top-0 left-0 w-full h-full' style='background: var(--torrent-banner-gradient)' />
+      </div>
+    </div>
+    <div class='input-group mt-20 h-40 long-input z-11'>
+      <Search size='2.6rem' strokeWidth='2.5' class='position-absolute z-10 text-dark-light h-full pl-10 pointer-events-none' />
+      <input
+        type='search'
+        class='form-control bg-dark-very-light pl-40 pr-30 rounded-3 h-40 text-truncate'
+        autocomplete='off'
+        spellcheck='false'
+        data-option='search'
+        placeholder='Filter torrents by text, or manually specify one by pasting a magnet link or torrent file' bind:value={searchText} />
+      <div class='position-absolute right-0 h-full d-flex'>
+        <NestedDropdown direction='left' panelHeightPadding={6.5} title='More Filters' alignStart={true} {containerEl} items={[
+            {
+              icon: Paintbrush,
+              label: 'Auto-Scrape Results',
+              value: $settings.torrentAutoScrape ? 'On' : 'Off',
+              onSelect: () => $settings.torrentAutoScrape = !$settings.torrentAutoScrape
+            },
+            {
+              icon: ListMusic,
+              label: 'Preferred Audio',
+              value: languages.find(language => language.value === $settings.audioLanguage)?.label,
+              children: languages.map(language => ({
+                label: language.label,
+                value: language.value === $settings.audioLanguage ? '✓' : undefined,
+                valueCSS: 'text-primary font-size-18 font-weight-very-bold',
+                onSelect: () => $settings.audioLanguage = language.value
+              })),
+            }
+          ]}>
+          <button type='button' class='options h-full bg-transparent shadow-none border-0 pointer p-0 pr-10 muted d-flex align-items-center' title='More Options'>
+            <EllipsisVertical size='2rem' />
+          </button>
+        </NestedDropdown>
+      </div>
+    </div>
+    <div class='row mt-10'>
+      <div class='col-12 col-sm-6 d-flex align-items-center justify-content-center justify-content-sm-start'>
+        <div class='d-flex align-items-center mr-5' title='Toggle Autoplay'>
+          <Timer size='2.75rem' class='position-absolute z-10 text-dark-light pl-10 pointer-events-none' />
+          <button type='button' class='form-control w-full bg-dark-very-light pointer control text-nowrap {!$settings.rssAutoplay ? `pl-15` : `px-25`}' use:click={() => autoPlayToggle()}>
+          <span class:ml-20={!$settings.rssAutoplay} class:ml-10={$settings.rssAutoplay}>
+            {#if $settings.rssAutoplay}
+              Autoplay [{countdown}]
+            {:else}
+              Autoplay [Off]
+            {/if}
+          </span>
+          </button>
+        </div>
+        <div class='d-flex align-items-center mr-5' style='width: calc(5.2rem + {(String(episodeSearch).length <= 10 ? String(episodeSearch).length : 10) * 1}rem) !important' title='Episode'>
+          <Clapperboard size='2.75rem' class='position-absolute z-10 text-dark-light pl-10 pointer-events-none' />
+          <input type='number' inputmode='numeric' pattern='[0-9]*' max={maxEpisode} class='form-control bg-dark-very-light pl-40 control' placeholder='5' step='1' value={episodeSearch} on:input={episodeInput} disabled={(!search.episode && search.episode !== 0) || movie} />
+        </div>
+      </div>
+      <div class='col-12 col-sm-6 d-flex align-items-center mt-5 justify-content-center mt-sm-0 justify-content-sm-end'>
+        <div class='d-flex align-items-center mr-5' data-toggle='tooltip' data-placement='top' data-title='Scrape Peer Data'>
+          <button type='button' class='btn btn-square bg-dark-very-light ml-auto d-flex align-items-center justify-content-center rounded-2 flex-shrink-0' use:click={handleScrape} disabled={!$results?.resolved || !$results?.torrents?.length || scraping}><Radio size='1.8rem' class={scraping ? 'pulsing' : ''} /></button>
+        </div>
+        <div class='d-flex align-items-center mr-5' data-toggle='tooltip' data-placement='top' data-title='Refresh Search Results'>
+          <button type='button' class='btn btn-square bg-dark-very-light ml-auto d-flex align-items-center justify-content-center rounded-2 flex-shrink-0' use:click={() => queries = queryExtensions({...search}, resolution)} disabled={!$results?.resolved}><RefreshCw size='1.8rem' class={!$results?.resolved ? 'spinning' : ''} /></button>
+        </div>
+        <div class='d-flex align-items-center pr-5' title='Sorting Preference'>
+          <ArrowDownWideNarrow size='2.75rem' class='position-absolute z-10 text-dark-light pl-10 pointer-events-none' />
+          <select class='form-control w-full bg-dark-very-light pl-40 control' bind:value={$settings.torrentSort}>
+            <option value='seeders' selected>Seeders</option>
+            <option value='smallest' selected>Smallest</option>
+            <option value='new' selected>Newest</option>
+            <option value='old' selected>Oldest</option>
+            <option value='batch' selected>Batch</option>
+            <option value='best' selected>Best</option>
+          </select>
+        </div>
+        <div class='d-flex align-items-center' title='Video Quality'>
+          <MonitorCog size='2.75rem' class='position-absolute z-10 text-dark-light pl-10 pointer-events-none' />
+          <select class='form-control w-full bg-dark-very-light pl-40 control' bind:value={$settings.rssQuality}>
+            <option value='1080' selected>1080p</option>
+            <option value='720'>720p</option>
+            <option value='540'>540p</option>
+            <option value='480'>480p</option>
+            <option value=''>Any</option>
+          </select>
         </div>
       </div>
     </div>
   </div>
-  <div class='row mt-10'>
-    <div class='col-12 col-sm-6 d-flex align-items-center justify-content-center justify-content-sm-start'>
-      <div class='d-flex align-items-center mr-5' title='Toggle Autoplay'>
-        <Timer size='2.75rem' class='position-absolute z-10 text-dark-light pl-10 pointer-events-none' />
-        <button type='button' class='form-control w-full bg-dark-very-light pointer control text-nowrap {!$settings.rssAutoplay ? `pl-15` : `px-25`}' use:click={() => autoPlayToggle()}>
-        <span class:ml-20={!$settings.rssAutoplay} class:ml-10={$settings.rssAutoplay}>
-          {#if $settings.rssAutoplay}
-            Autoplay [{countdown}]
-          {:else}
-            Autoplay [Off]
-          {/if}
-        </span>
-        </button>
-      </div>
-      <div class='d-flex align-items-center mr-5' style='width: calc(5.2rem + {(String(episodeSearch).length <= 10 ? String(episodeSearch).length : 10) * 1}rem) !important' title='Episode'>
-        <Clapperboard size='2.75rem' class='position-absolute z-10 text-dark-light pl-10 pointer-events-none' />
-        <input type='number' inputmode='numeric' pattern='[0-9]*' max={maxEpisode} class='form-control bg-dark-very-light pl-40 control' placeholder='5' step='1' value={episodeSearch} on:input={episodeInput} disabled={(!search.episode && search.episode !== 0) || movie} />
-      </div>
-    </div>
-    <div class='col-12 col-sm-6 d-flex align-items-center mt-5 justify-content-center mt-sm-0 justify-content-sm-end'>
-      <div class='d-flex align-items-center mr-5' data-toggle='tooltip' data-placement='top' data-title='Scrape Peer Data'>
-        <button type='button' class='btn btn-square bg-dark-very-light ml-auto d-flex align-items-center justify-content-center rounded-2 flex-shrink-0' use:click={handleScrape} disabled={!$results?.resolved || !$results?.torrents?.length || scraping}><Radio size='1.8rem' class={scraping ? 'pulsing' : ''} /></button>
-      </div>
-      <div class='d-flex align-items-center mr-5' data-toggle='tooltip' data-placement='top' data-title='Refresh Search Results'>
-        <button type='button' class='btn btn-square bg-dark-very-light ml-auto d-flex align-items-center justify-content-center rounded-2 flex-shrink-0' use:click={() => queries = queryExtensions({...search}, resolution)} disabled={!$results?.resolved}><RefreshCw size='1.8rem' class={!$results?.resolved ? 'spinning' : ''} /></button>
-      </div>
-      <div class='d-flex align-items-center pr-5' title='Sorting Preference'>
-        <ArrowDownWideNarrow size='2.75rem' class='position-absolute z-10 text-dark-light pl-10 pointer-events-none' />
-        <select class='form-control w-full bg-dark-very-light pl-40 control' bind:value={$settings.torrentSort}>
-          <option value='seeders' selected>Seeders</option>
-          <option value='smallest' selected>Smallest</option>
-          <option value='new' selected>Newest</option>
-          <option value='old' selected>Oldest</option>
-          <option value='batch' selected>Batch</option>
-          <option value='best' selected>Best</option>
-        </select>
-      </div>
-      <div class='d-flex align-items-center' title='Video Quality'>
-        <MonitorCog size='2.75rem' class='position-absolute z-10 text-dark-light pl-10 pointer-events-none' />
-        <select class='form-control w-full bg-dark-very-light pl-40 control' bind:value={$settings.rssQuality}>
-          <option value='1080' selected>1080p</option>
-          <option value='720'>720p</option>
-          <option value='540'>540p</option>
-          <option value='480'>480p</option>
-          <option value=''>Any</option>
-        </select>
-      </div>
-    </div>
-  </div>
-</div>
-<div class='mt-10 mb-sm-10 px-30'>
-  {#await errors then errorResult}
-    {#if errorResult?.errorCardOnly && $results?.resolved && !$results?.torrents?.length}
-      <div class='mt-80'>
-        {hideErrors()}
-        <ErrorCard promise={Promise.resolve(errorResult)} />
-      </div>
-    {/if}
-  {/await}
-  {#if $results?.torrents?.length && !$results?.resolved && ($results?.torrents?.length !== lookupHidden?.length) && (!best || !Object.values(best)?.length)}
-    <TorrentCardSk />
-  {:else if $results?.torrents?.length}
-    {#if best}<TorrentCard type='best' countdown={$settings.rssAutoplay && $results?.resolved ? countdown : -1} result={best} {play} media={search.media} episode={search.episode} />{/if}
-    {#if lastMagnet}
-      {#each filterResults(lookup, searchText) as result}
-        {#if ((result.link === lastMagnet.link) || (result.hash === lastMagnet.hash)) && (result.seeders ?? 0) > 1 && ((best?.link !== lastMagnet.link) && (best?.hash !== lastMagnet.hash)) }
-          <TorrentCard type='magnet' result={result} {play} media={search.media} episode={search.episode} />
-        {/if}
-      {/each}
-    {/if}
-  {/if}
-  {#each filterResults(lookup, searchText) as result}
-    {#if ((best?.link !== result.link) && (best?.hash !== result.hash)) && (!lastMagnet || (((result.link !== lastMagnet.link) || (result.hash !== lastMagnet.hash)) || (result.seeders ?? 0) <= 1))}
-      <TorrentCard {result} {play} media={search.media} episode={search.episode} />
-    {/if}
-  {/each}
-  {#if queries}
-    {#await queries then queries}
-      {#each queries as [key, extension] (key)}
-        {#await extension.promise}
-          <TorrentCardSk name={extension.name} icon={extension.icon || 'none'} />
-        {:then resolved}
-          {#if !resolved?.errors?.length}
-            {addResults(resolved, { name: extension.name, icon: extension.icon })}
-          {/if}
-        {/await}
-      {/each}
+  <div class='mt-10 mb-sm-10 px-30'>
+    {#await errors then errorResult}
+      {#if errorResult?.errorCardOnly && $results?.resolved && !$results?.torrents?.length}
+        <div class='mt-80'>
+          {hideErrors()}
+          <ErrorCard promise={Promise.resolve(errorResult)} />
+        </div>
+      {/if}
     {/await}
-  {/if}
-  {#if !$results?.resolved}
-    {#each Array.from({ length: $results?.torrents?.length ? Math.max(15 - $results.torrents.length, 0) : 15 }) as _}
+    {#if $results?.torrents?.length && !$results?.resolved && ($results?.torrents?.length !== lookupHidden?.length) && (!best || !Object.values(best)?.length)}
       <TorrentCardSk />
+    {:else if $results?.torrents?.length}
+      {#if best}<TorrentCard type='best' countdown={$settings.rssAutoplay && $results?.resolved ? countdown : -1} result={best} {play} media={search.media} episode={search.episode} />{/if}
+      {#if lastMagnet}
+        {#each filterResults(lookup, searchText) as result}
+          {#if ((result.link === lastMagnet.link) || (result.hash === lastMagnet.hash)) && (result.seeders ?? 0) > 1 && ((best?.link !== lastMagnet.link) && (best?.hash !== lastMagnet.hash)) }
+            <TorrentCard type='magnet' result={result} {play} media={search.media} episode={search.episode} />
+          {/if}
+        {/each}
+      {/if}
+    {/if}
+    {#each filterResults(lookup, searchText) as result}
+      {#if ((best?.link !== result.link) && (best?.hash !== result.hash)) && (!lastMagnet || (((result.link !== lastMagnet.link) || (result.hash !== lastMagnet.hash)) || (result.seeders ?? 0) <= 1))}
+        <TorrentCard {result} {play} media={search.media} episode={search.episode} />
+      {/if}
     {/each}
-  {/if}
-  {#if lookupHidden?.length && $results?.torrents?.length && filterResults(lookupHidden, searchText)?.length}
-    <button type='button' class='long-button mb-10 control bd-highlight h-50 btn w-full p-5 rounded-3 d-flex align-items-center font-size-16 font-weight-semi-bold overflow-hidden' class:bg-dark={!viewHidden} class:bg-primary={viewHidden} use:click={()=> { viewHidden = !viewHidden }}>
-      <span class='ml-20'>{lookupHidden?.length} Unseeded Result{lookupHidden?.length > 1 ? 's' : ''} (Unavailable)</span>
-      <svelte:component this={ viewHidden ? ChevronUp : ChevronDown } class='ml-auto mr-10' size='2.2rem' />
-    </button>
-    {#if viewHidden}
-      {#each filterResults(lookupHidden, searchText) as result}
-        {#if (!best || ((best.link !== result.link) && (best.hash !== result.hash))) && (!lastMagnet || (((result.link !== lastMagnet.link) || (result.hash !== lastMagnet.hash)) || (result.seeders ?? 0) <= 1))}
-          <div class='unavailable'><TorrentCard {result} {play} media={search.media} episode={search.episode} /></div>
-        {/if}
+    {#if queries}
+      {#await queries then queries}
+        {#each queries as [key, extension] (key)}
+          {#await extension.promise}
+            <TorrentCardSk name={extension.name} icon={extension.icon || 'none'} />
+          {:then resolved}
+            {#if !resolved?.errors?.length}
+              {addResults(resolved, { name: extension.name, icon: extension.icon })}
+            {/if}
+          {/await}
+        {/each}
+      {/await}
+    {/if}
+    {#if !$results?.resolved}
+      {#each Array.from({ length: $results?.torrents?.length ? Math.max(15 - $results.torrents.length, 0) : 15 }) as _}
+        <TorrentCardSk />
       {/each}
     {/if}
-  {/if}
-  {#if queries && !errorCardOnly}
-    {#await queries then queries}
-      {#each queries as [key, extension] (key)}
-        {#await extension.promise then resolved}
-          {#if resolved?.errors?.length}
-            <TorrentCard type='error' result={{ title: cleanErrorMessage(resolved.errors[0].message), source: { name: extension.name, icon: extension.icon } }} media={search.media} episode={search.episode} />
+    {#if lookupHidden?.length && $results?.torrents?.length && filterResults(lookupHidden, searchText)?.length}
+      <button type='button' class='long-button mb-10 control bd-highlight h-50 btn w-full p-5 rounded-3 d-flex align-items-center font-size-16 font-weight-semi-bold overflow-hidden' class:bg-dark={!viewHidden} class:bg-primary={viewHidden} use:click={()=> { viewHidden = !viewHidden }}>
+        <span class='ml-20'>{lookupHidden?.length} Unseeded Result{lookupHidden?.length > 1 ? 's' : ''} (Unavailable)</span>
+        <svelte:component this={ viewHidden ? ChevronUp : ChevronDown } class='ml-auto mr-10' size='2.2rem' />
+      </button>
+      {#if viewHidden}
+        {#each filterResults(lookupHidden, searchText) as result}
+          {#if (!best || ((best.link !== result.link) && (best.hash !== result.hash))) && (!lastMagnet || (((result.link !== lastMagnet.link) || (result.hash !== lastMagnet.hash)) || (result.seeders ?? 0) <= 1))}
+            <div class='unavailable'><TorrentCard {result} {play} media={search.media} episode={search.episode} /></div>
           {/if}
-        {:catch error}
-          <TorrentCard type='error' result={{ title: cleanErrorMessage(error?.message), source: { name: extension.name, icon: extension.icon } }} media={search.media} episode={search.episode} />
-        {/await}
-      {/each}
-    {/await}
-  {/if}
+        {/each}
+      {/if}
+    {/if}
+    {#if queries && !errorCardOnly}
+      {#await queries then queries}
+        {#each queries as [key, extension] (key)}
+          {#await extension.promise then resolved}
+            {#if resolved?.errors?.length}
+              <TorrentCard type='error' result={{ title: cleanErrorMessage(resolved.errors[0].message), source: { name: extension.name, icon: extension.icon } }} media={search.media} episode={search.episode} />
+            {/if}
+          {:catch error}
+            <TorrentCard type='error' result={{ title: cleanErrorMessage(error?.message), source: { name: extension.name, icon: extension.icon } }} media={search.media} episode={search.episode} />
+          {/await}
+        {/each}
+      {/await}
+    {/if}
+  </div>
 </div>
 
 <style>
   .unavailable {
     opacity: 0.6;
-  }
-  .visibility {
-    margin-top: .4rem;
-    margin-left: -18.5rem;
-    transition: opacity 0.1s ease-in;
   }
 
   .controls {

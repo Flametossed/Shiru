@@ -119,6 +119,7 @@
   --nonary-color: #F7931E !important;
   --quindenary-color: #FFB088 !important;
 
+  --dark-color-glass: hsla(var(--dark-color-hsl), .8);
   --border-color-sp: hsla(var(--gray-color-dim-hsl), 0.2);
   --dm-input-border-color: none;
   --dm-link-text-color: var(--dm-muted-text-color) !important;
@@ -575,6 +576,9 @@ a[href]:active, button:not([disabled], .not-reactive):active:not([data-sonner-to
 .cursor-wait {
   cursor: wait !important;
 }
+.cursor-default {
+  cursor: default;
+}
 .touch-none {
   touch-action: none;
 }
@@ -829,7 +833,7 @@ body {
 }
 
 .gap-5 {
-  gap: 0.5rem;
+  gap: .5rem;
 }
 .gap-10 {
   gap: 1rem !important;
@@ -987,6 +991,11 @@ img[src=''], img[src=' '] {
   will-change: transform, opacity;
   backface-visibility: hidden;
   transform: translateZ(0);
+}
+
+
+.will-transform {
+  will-change: transform;
 }
 
 .align-content-start {

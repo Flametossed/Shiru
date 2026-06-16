@@ -11,13 +11,14 @@
   import { writable } from 'simple-store-svelte'
   import { createEventDispatcher } from 'svelte'
   import Subtitles from '@/modules/subtitles.js'
-  import { toTS, fastPrettyBytes, matchPhrase, videoRx, isValidNumber, debounce } from '@/modules/util.js'
+  import { toTS, fastPrettyBytes, capitalize, matchPhrase, videoRx, isValidNumber, debounce } from '@/modules/util.js'
   import { toast } from 'svelte-sonner'
   import { getChaptersAniSkip } from '@/modules/anime/anime.js'
   import { mediaCache } from '@/modules/cache.js'
   import Seekbar from '@/routes/player/components/Seekbar.svelte'
   import { click } from '@/modules/lib/click.js'
   import VideoDeband from 'video-deband'
+  import NestedDropdown from '@/components/overlays/NestedDropdown.svelte'
   import Helper from '@/modules/providers/helper.js'
 
   import { w2gEmitter, state } from '@/routes/w2g/WatchTogetherPage.svelte'
@@ -27,7 +28,7 @@
   import 'rvfc-polyfill'
   import { ELECTRON, ANDROID, TORRENT } from '@/modules/bridge.js'
   import { unload } from '@/modules/torrent.js'
-  import { X, Minus, ArrowDown, ArrowUp, Captions, CircleHelp, Contrast, FastForward, Keyboard, EllipsisVertical, SquareArrowOutUpRight, List, Eye, FilePlus2, ListMusic, ListVideo, Maximize, Minimize, Pause, PictureInPicture, PictureInPicture2, Play, Proportions, RefreshCcw, Rewind, RotateCcw, RotateCw, ScreenShare, SkipBack, SkipForward, Users, Volume1, Volume2, VolumeX, SlidersVertical, SquarePen, Milestone, ClockArrowDown, ClockArrowUp } from 'lucide-svelte'
+  import { Settings, Gauge, Timer, X, Minus, ArrowDown, ArrowUp, Captions, CaptionsOff, CircleHelp, Contrast, FastForward, Keyboard, EllipsisVertical, SquareArrowOutUpRight, List, Eye, FilePlus2, ListMusic, ListVideo, Maximize, Minimize, Pause, PictureInPicture, PictureInPicture2, Play, Proportions, RefreshCcw, Rewind, RotateCcw, RotateCw, ScreenShare, SkipBack, SkipForward, Users, Volume1, Volume2, VolumeX, SlidersVertical, SquarePen, Milestone, ClockArrowDown, ClockArrowUp } from 'lucide-svelte'
   import Debug from 'debug'
   const debug = Debug('ui:player')
 
@@ -546,7 +547,7 @@
   }
   function handleWheel(event) {
     const onPlayerPage = $page === page.PLAYER
-    const onDropdown = event.target?.closest('.dropdown') // checks for dropdowns like subtitles or audio tracks as they can be scrollable.
+    const onDropdown = event.target?.closest('.dropdown') || event.target?.closest('.nd-panel') // checks for dropdowns like subtitles or audio tracks as they can be scrollable.
     const onOverflow = event.target?.closest('.overflow-auto') || event.target?.closest('.overflow-y-auto') || event.target?.closest('.overflow-y-scroll') // checks for potentially scrollable containers
     const hasFileModal = modal.exists(modal.FILE_MANAGER) || modal.exists(modal.FILE_EDITOR)
     if (onPlayerPage ? hasFileModal || onDropdown || onOverflow || (modal.length && miniplayerShelved) : !miniplayer || miniplayerShelved) return
@@ -748,10 +749,10 @@
     }
   }
   let fitWidth = settings.value.playerCoverVideo ?? false
-  function toggleFitWidth() {
-    fitWidth = !fitWidth
-    settings.value.playerCoverVideo = fitWidth
-    return fitWidth
+  function toggleFitWidth(value = fitWidth) {
+    fitWidth = !value
+    settings.value.playerCoverVideo = value
+    return value
   }
   let showKeybinds = false
   loadWithDefaults({
@@ -1427,12 +1428,6 @@
   //   }
   // }
 
-  const showOptions = writable(false)
-  function toggleDropdown ({ target }) {
-    target.classList.toggle('active')
-    target.closest('.dropdown').classList.toggle('show')
-  }
-
   let completed = false
   function checkCompletion () {
     if (!completed && $settings.playerAutocomplete) {
@@ -1900,128 +1895,248 @@
         <div class='ts mr-auto font-scale-20'>x{playbackRate.toFixed(1)}</div>
       {/if}
       <input type='file' class='d-none' id='search-subtitle' accept='.srt,.vtt,.ass,.ssa,.sub,.txt' on:input|preventDefault|stopPropagation={handleFile} bind:this={fileInput}/>
-      <div class='dropdown dropleft with-arrow' use:click={() => { showOptions.set(!$showOptions) }}>
-        <span class='icon text-white ctrl d-flex align-items-center h-full' title='More'><EllipsisVertical size='2.5rem' strokeWidth={2.5} /></span>
-        <div class='position-absolute hm-40 text-capitalize text-nowrap bg-dark rounded dr-arrow' style='margin-top: {launchedExternal ? -13 : externalPlayback ? -9.3 : SUPPORTS.isAndroid || $settings.playerPath ? -24 : -20.5}rem !important; margin-left: {launchedExternal ? -11.1 : externalPlayback ? -9.7 : -14.3}rem !important; transition: opacity 0.1s ease-in;' class:hidden={!$showOptions}>
-
-          <!-- Fit Width Toggle -->
-          <div role='button' aria-label='Toggle Video Fit Mode' class='pointer d-none align-items-center justify-content-center font-size-16 bd-highlight py-5 px-10 rounded-top option' class:d-flex={!externalPlayback} title='Toggle between best fit and fill width' use:click={() => { toggleFitWidth(); showOptions.set(false) }}>
-            <Proportions size='2rem' strokeWidth={2.5} />
-            <div class='ml-10'>Toggle Video Cover</div>
-          </div>
-
-          <!-- Add Subtitles -->
-          <div role='button' aria-label='Add External Subtitles' class='pointer d-none align-items-center justify-content-center font-size-16 bd-highlight py-5 px-10 option' class:d-flex={!externalPlayback} title='Add External Subtitles' use:click={() => { fileInput.click(); showOptions.set(false) }}>
-            <FilePlus2 size='2rem' strokeWidth={2.5} />
-            <div class='ml-10'>Add Subtitles</div>
-          </div>
-
-          <!-- Chapter Source -->
-          <div class='dropdown dropleft with-arrow pointer bg-dark option font-size-16 bd-highlight w-full' class:d-none={externalPlayback}>
-            <div role='button' class='d-flex align-items-center justify-content-center py-5 px-10' aria-label='Change the Source of the Video Chapters' title='Change the Source of the Video Chapters' use:click={toggleDropdown}>
-              <Milestone size='2rem' strokeWidth={2.5} />
-              <span class='ml-10'>Chapter Source</span>
-            </div>
-
-            <div class='dropdown-menu dropdown-menu-right text-capitalize text-nowrap rounded'>
-              <div class='custom-radio overflow-hidden pt-5 pl-5'>
-                <input name='chapter-embed-set' type='radio' id='chapter-embed-radio' tabindex='-1' value='embedded' checked={$settings.playerChapterSkip === 'embedded'} />
-                <label for='chapter-embed-radio' use:click={(target) => { $settings.playerChapterSkip = 'embedded'; chapters = embeddedChapters; setTimeout(() => { toggleDropdown(target); showOptions.set(false); }) }} class='pb-5'>Embedded</label>
-                <input name='chapter-aniskip-set' type='radio' id='chapter-aniskip-radio' tabindex='-1' value='aniskip' checked={$settings.playerChapterSkip === 'aniskip'} />
-                <label for='chapter-aniskip-radio' use:click={(target) => { $settings.playerChapterSkip = 'aniskip'; findChapters(); setTimeout(() => { toggleDropdown(target); showOptions.set(false); }) }} class='pb-5'>Aniskip</label>
-              </div>
-            </div>
-          </div>
-
-          <!-- External Player -->
-          <div role='button' aria-label='Play the Current Video in an External Player' class='pointer d-none align-items-center justify-content-center font-size-16 bd-highlight py-5 px-10 option' class:d-flex={(!externalPlayback || launchedExternal) && (SUPPORTS.isAndroid || $settings.playerPath)} title='Play the Current Video in an External Player' use:click={() => { setCurrent(current, true); showOptions.set(false) }}>
-            <SquareArrowOutUpRight size='2rem' strokeWidth={2.5} />
-            <div class='ml-10'>External Player</div>
-          </div>
-
-          <!-- File Manager -->
-          <div role='button' aria-label='Modify Existing Files or Change to a New File' class='pointer d-flex align-items-center justify-content-center font-size-16 bd-highlight py-5 px-10 rounded-bottom option' class:rounded-top={externalPlayback && !launchedExternal} title='Modify Existing Files or Change to a New File' use:click={() => { resolvePrompt = false; modal.toggle(modal.FILE_MANAGER); showOptions.set(false) }}>
-            <SquarePen size='2rem' strokeWidth={2.5} />
-            <div class='ml-10'>File Manager</div>
-          </div>
-
-        </div>
-      </div>
-      <span class='icon text-white ctrl mr-5 d-flex align-items-center keybinds' title='Keybinds [`]' use:click={() => (showKeybinds = true)}>
+      <NestedDropdown position='top' panelHeightPadding={6} panelColor={'var(--dark-color-glass)'} containerEl={container} items={[
+          ...(!externalPlayback ? [{
+            icon: Gauge,
+            label: 'Playback speed',
+            value: playbackRate === 1 ? 'Normal' : `${playbackRate.toFixed(1)}x`,
+            children: [
+              {
+                label: '0.25x',
+                value: playbackRate === 0.25 ? '✓' : undefined,
+                valueCSS: 'text-primary font-size-18 font-weight-very-bold',
+                onSelect: () => playbackRate = video.defaultPlaybackRate = 0.25
+              },
+              {
+                label: '0.5x',
+                value: playbackRate === 0.5  ? '✓' : undefined,
+                valueCSS: 'text-primary font-size-18 font-weight-very-bold',
+                onSelect: () => playbackRate = video.defaultPlaybackRate = 0.5
+              },
+              {
+                label: '0.75x',
+                value: playbackRate === 0.75 ? '✓' : undefined,
+                valueCSS: 'text-primary font-size-18 font-weight-very-bold',
+                onSelect: () => playbackRate = video.defaultPlaybackRate = 0.75
+              },
+              {
+                label: 'Normal',
+                value: playbackRate === 1 ? '✓' : undefined,
+                valueCSS: 'text-primary font-size-18 font-weight-very-bold',
+                onSelect: () => playbackRate = video.defaultPlaybackRate = 1
+              },
+              {
+                label: '1.25x',
+                value: playbackRate === 1.25 ? '✓' : undefined,
+                valueCSS: 'text-primary font-size-18 font-weight-very-bold',
+                onSelect: () => playbackRate = video.defaultPlaybackRate = 1.25
+              },
+              {
+                label: '1.5x',
+                value: playbackRate === 1.5  ? '✓' : undefined,
+                valueCSS: 'text-primary font-size-18 font-weight-very-bold',
+                onSelect: () => playbackRate = video.defaultPlaybackRate = 1.5
+              },
+              {
+                label: '2x',
+                value: playbackRate === 2 ? '✓' : undefined,
+                valueCSS: 'text-primary font-size-18 font-weight-very-bold',
+                onSelect: () => playbackRate = video.defaultPlaybackRate = 2
+              },
+              {
+                label: '3x',
+                value: playbackRate === 3 ? '✓' : undefined,
+                valueCSS: 'text-primary font-size-18 font-weight-very-bold',
+                onSelect: () => playbackRate = video.defaultPlaybackRate = 3
+              },
+              {
+                label: '4x',
+                value: playbackRate === 4 ? '✓' : undefined,
+                valueCSS: 'text-primary font-size-18 font-weight-very-bold',
+                onSelect: () => playbackRate = video.defaultPlaybackRate = 4
+              },
+              {
+                label: '6x',
+                value: playbackRate === 6 ? '✓' : undefined,
+                valueCSS: 'text-primary font-size-18 font-weight-very-bold',
+                onSelect: () => playbackRate = video.defaultPlaybackRate = 6
+              },
+              {
+                label: '8x',
+                value: playbackRate === 8 ? '✓' : undefined,
+                valueCSS: 'text-primary font-size-18 font-weight-very-bold',
+                onSelect: () => playbackRate = video.defaultPlaybackRate = 8
+              }
+            ]
+          }] : []),
+          ...(!externalPlayback ? [{
+            icon: Milestone,
+            label: 'Chapter Source',
+            value: $settings.playerChapterSkip === 'embedded' ? 'Embedded' : 'Aniskip',
+            children: [
+              {
+                label: 'Embedded',
+                value: $settings.playerChapterSkip === 'embedded' ? '✓' : undefined,
+                valueCSS: 'text-primary font-size-18 font-weight-very-bold',
+                onSelect: () => { $settings.playerChapterSkip = 'embedded'; chapters = embeddedChapters; }
+              },
+              {
+                label: 'Aniskip',
+                value: $settings.playerChapterSkip === 'aniskip' ? '✓' : undefined,
+                valueCSS: 'text-primary font-size-18 font-weight-very-bold',
+                onSelect: () => { $settings.playerChapterSkip = 'aniskip'; findChapters(); }
+              }
+            ]
+          }] : []),
+          ...(!externalPlayback ? [{
+            icon: Proportions,
+            label: 'Video Fit',
+            value: fitWidth ? 'Fill' : 'Best fit',
+            children: [
+              {
+                label: 'Fill',
+                value: fitWidth ? '✓' : undefined,
+                valueCSS: 'text-primary font-size-18 font-weight-very-bold',
+                onSelect: () => { toggleFitWidth(false) }
+              },
+              {
+                label: 'Best fit',
+                value: !fitWidth ? '✓' : undefined,
+                valueCSS: 'text-primary font-size-18 font-weight-very-bold',
+                onSelect: () => { toggleFitWidth(true) }
+              }
+            ]
+          }] : []),
+          ...(!externalPlayback ? [{
+            icon: FilePlus2,
+            label: 'Add Subtitles',
+            close: true,
+            onSelect: () => fileInput.click()
+          }] : []),
+          ...(!externalPlayback ? [{
+            icon: ScreenShare,
+            label: 'Screenshot',
+            onSelect: () => screenshot()
+          }] : []),
+          {
+            icon: SquarePen,
+            label: 'File Manager',
+            close: true,
+            onSelect: () => { resolvePrompt = false; modal.toggle(modal.FILE_MANAGER) }
+          },
+          ...((!externalPlayback || launchedExternal) && (SUPPORTS.isAndroid || $settings.playerPath) ? [{
+            icon: SquareArrowOutUpRight,
+            label: 'External Player',
+            onSelect: () => setCurrent(current, true)
+          }] : []),
+          ...(!externalPlayback ? [{
+            icon: Contrast,
+            label: 'Video Debanding',
+            value: $settings.playerDeband ? 'On' : 'Off',
+            onSelect: () => { $settings.playerDeband = !$settings.playerDeband }
+          }] : []),
+          {
+            icon: List,
+            label: 'Stats',
+            value: stats ? 'On' : 'Off',
+            onSelect: () => toggleStats()
+          }
+        ]}>
+        <span class='icon text-white ctrl d-flex align-items-center h-full' title='More'>
+          <EllipsisVertical size='2.5rem' strokeWidth={2.5} />
+        </span>
+      </NestedDropdown>
+      <span class='icon text-white ctrl d-flex align-items-center keybinds' title='Keybinds [`]' use:click={() => (showKeybinds = true)}>
         <Keyboard size='2.5rem' strokeWidth={2.5} />
       </span>
       {#if $playPage && media?.media}
-        <span class='icon text-white ctrl mr-5 d-flex align-items-center' title='Now Playing [O]' use:click={() => modal.toggle(modal.ANIME_DETAILS, media.media)}>
+        <span class='icon text-white ctrl d-flex align-items-center' title='Now Playing [O]' use:click={() => modal.toggle(modal.ANIME_DETAILS, media.media)}>
           <Eye size='2.5rem' strokeWidth={2.5} />
         </span>
       {/if}
       {#if 'audioTracks' in HTMLVideoElement.prototype && video?.audioTracks?.length > 1}
-        <div class='dropdown dropup with-arrow' use:click={toggleDropdown}>
-          <span class='icon text-white ctrl mr-5 d-flex align-items-center h-full' title='Audio Tracks'>
+        <NestedDropdown title='Audio Tracks' direction='top' panelWidth={17} panelHeightPadding={6} panelColor={'var(--dark-color-glass)'} containerEl={container} items={Object.values(video.audioTracks).map(track => ({
+            label: (track.language?.toUpperCase() || (!Object.values(video.audioTracks).some(_track => _track.language === 'eng' || _track.language === 'en') ? 'ENG' : track.label?.toUpperCase())) + (track.label ? ' - ' + capitalize(track.label) + ')' : ''),
+            value: track.enabled ? '✓' : undefined,
+            valueCSS: 'text-primary font-size-18 font-weight-very-bold',
+            onSelect: () => selectAudio(track.id)
+          }))}>
+          <span class='icon text-white ctrl d-flex align-items-center h-full' title='Audio Tracks'>
             <ListMusic size='2.5rem' strokeWidth={2.5} />
           </span>
-          <div class='dropdown-menu dropdown-menu-right ctrl p-10 pb-0 mr-15 text-capitalize text-nowrap'>
-            <div class='custom-radio overflow-y-auto overflow-x-hidden hm-400'>
-              {#each video.audioTracks as track}
-                <input name='audio-radio-set' type='radio' id='audio-{track.id}-radio' value={track.id} checked={track.enabled} />
-                <label for='audio-{track.id}-radio' use:click={() => selectAudio(track.id)} class='pb-5'>
-                  {(track.language || (!Object.values(video.audioTracks).some(track => track.language === 'eng' || track.language === 'en') ? 'eng' : track.label)) + (track.label ? ' - ' + track.label : '')}
-                </label>
-              {/each}
-              <div class='mb-5 invisible'></div>
-            </div>
-          </div>
-        </div>
+        </NestedDropdown>
       {/if}
       {#if 'videoTracks' in HTMLVideoElement.prototype && video?.videoTracks?.length > 1}
-        <div class='dropdown dropup with-arrow' use:click={toggleDropdown}>
-          <span class='icon text-white ctrl mr-5 d-flex align-items-center h-full' title='Video Tracks'>
+        <NestedDropdown title='Video Tracks' direction='top' panelWidth={17} panelHeightPadding={6} panelColor={'var(--dark-color-glass)'} containerEl={container} items={Object.values(video.videoTracks).map(track => ({
+            label: (track.language?.toUpperCase() || (!Object.values(video.videoTracks).some(_track => _track.language === 'eng' || _track.language === 'en') ? 'ENG' : track.label?.toUpperCase())) + (track.label ? ' (' + capitalize(track.label) + ')' : ''),
+            value: track.selected ? '✓' : undefined,
+            valueCSS: 'text-primary font-size-18 font-weight-very-bold',
+            onSelect: () => selectVideo(track.id)
+          }))}>
+          <span class='icon text-white ctrl d-flex align-items-center h-full' title='Video Tracks'>
             <ListVideo size='2.5rem' strokeWidth={2.5} />
           </span>
-          <div class='dropdown-menu dropdown-menu-right ctrl p-10 pb-0 mr-15 text-capitalize text-nowrap'>
-            <div class='custom-radio overflow-y-auto overflow-x-hidden hm-400'>
-              {#each video.videoTracks as track}
-                <input name='video-radio-set' type='radio' id='video-{track.id}-radio' value={track.id} checked={track.selected} />
-                <label for='video-{track.id}-radio' use:click={() => selectVideo(track.id)} class='pb-5'>
-                  {(track.language || (!Object.values(video.videoTracks).some(track => track.language === 'eng' || track.language === 'en') ? 'eng' : track.label)) + (track.label ? ' - ' + track.label : '')}
-                </label>
-              {/each}
-              <div class='mb-5 invisible'></div>
-            </div>
-          </div>
-        </div>
+        </NestedDropdown>
       {/if}
       {#if subHeaders?.length && !externalPlayback}
-        <div class='subtitles dropdown dropup with-arrow' use:click={toggleDropdown}>
-          <span class='icon text-white ctrl mr-5 d-flex align-items-center h-full' title='Subtitles [C]'>
+        <NestedDropdown title='Subtitles/CC' direction='top' panelWidth={25} panelHeightPadding={3} panelColor={'var(--dark-color-glass)'} containerEl={container} items={[
+            {
+              icon: Settings,
+              label: 'Options',
+              children: [
+                {
+                  type: 'input',
+                  icon: Timer,
+                  label: 'Offset',
+                  inputmode: 'numeric',
+                  pattern: '-?[0-9]*.?[0-9]*',
+                  step: '0.1',
+                  min: -9999,
+                  max: 9999,
+                  value: subDelay,
+                  onInput: (/** @type {number} */ value) => subDelay = value
+                },
+                {
+                  icon: FilePlus2,
+                  label: 'Add Subtitles',
+                  close: true,
+                  onSelect: () => fileInput.click()
+                }
+              ]
+            },
+            {
+              label: 'Off',
+              icon: CaptionsOff,
+              value: subHeaders && subs?.current === -1 ? '✓' : undefined,
+              valueCSS: 'text-primary font-size-18 font-weight-very-bold',
+              onSelect: () => {
+                subs.selectCaptions(-1)
+                updateSubs()
+                cache.setEntry(caches.HISTORY, 'lastSubtitle', { ...(cache.getEntry(caches.HISTORY, 'lastSubtitle') || {}), [media?.media?.id || media?.title || media?.parseObject?.title || media?.parseObject?.file_name]: 'OFF' })
+              }
+            },
+            { type: 'separator' },
+            ...subHeaders.filter(Boolean).map(track => {
+              const trackName = (track.language?.toUpperCase() || (!Object.values(subs.headers).some(header => header.language === 'eng' || header.language === 'en') ? 'ENG' : track.type?.toUpperCase())) + (track.name ? ' (' + capitalize(track.name) + ')' : '')
+              return {
+                label: trackName,
+                value: track.number === subs.current ? '✓' : undefined,
+                valueCSS: 'text-primary font-size-18 font-weight-very-bold',
+                onSelect: () => {
+                  subs.selectCaptions(track.number)
+                  updateSubs()
+                  cache.setEntry(caches.HISTORY, 'lastSubtitle', { ...(cache.getEntry(caches.HISTORY, 'lastSubtitle') || {}), [media?.media?.id || media?.title || media?.parseObject?.title || media?.parseObject?.file_name]: trackName })
+                }
+              }
+            })
+          ]}>
+          <span class='icon text-white ctrl d-flex align-items-center h-full' title='Subtitles [C]'>
             <Captions size='2.5rem' strokeWidth={2.5} />
           </span>
-          <div class='dropdown-menu dropdown-menu-right ctrl p-10 pb-5 mr-15 text-capitalize text-nowrap'>
-            <div class='custom-radio overflow-y-auto overflow-x-hidden hm-400'>
-              <input name='subtitle-radio-set' type='radio' id='subtitle-off-radio' value='off' checked={subHeaders && subs?.current === -1} />
-              <label for='subtitle-off-radio' use:click={() => { subs.selectCaptions(-1); updateSubs(); cache.setEntry(caches.HISTORY, 'lastSubtitle', { ...(cache.getEntry(caches.HISTORY, 'lastSubtitle') || {}), [media?.media?.id || media?.title || media?.parseObject?.title || media?.parseObject?.file_name]: 'OFF' }) }} class='pb-5'> OFF </label>
-              {#each subHeaders as track}
-                {#if track}
-                  {@const trackName = (track.language || (!Object.values(subs.headers).some(header => header.language === 'eng' || header.language === 'en') ? 'eng' : track.type)) + (track.name ? ' - ' + track.name : '')}
-                  <input name='subtitle-radio-set' type='radio' id='subtitle-{track.number}-radio' value={track.number} checked={track.number === subs.current} />
-                  <label for='subtitle-{track.number}-radio' use:click={() => { subs.selectCaptions(track.number); updateSubs(); cache.setEntry(caches.HISTORY, 'lastSubtitle', { ...(cache.getEntry(caches.HISTORY, 'lastSubtitle') || {}), [media?.media?.id || media?.title || media?.parseObject?.title || media?.parseObject?.file_name]: trackName }) }} class='pb-5'>
-                    {trackName}
-                  </label>
-                {/if}
-              {/each}
-              <div class='mb-5 invisible'></div>
-              <div class='subtitle-offset'>
-                <div role='button' aria-label='Add External Subtitles' class='position-absolute not-reactive' title='Add External Subtitles' style='margin-left: 0.1rem !important; margin-top: 0.3rem !important' use:click={(target) => { fileInput.click(); toggleDropdown(target) }}>
-                  <FilePlus2 size='2rem' strokeWidth={2.5} />
-                </div>
-                <input type='text' inputmode='numeric' pattern='-?[0-9]*.?[0-9]*' step='0.1' title='Subtitle Offset' bind:value={subDelay} on:click|stopPropagation class='form-control text-right form-control-sm not-reactive' />
-              </div>
-            </div>
-          </div>
-        </div>
+        </NestedDropdown>
       {/if}
       <!--{#if 'PresentationRequest' in window && canCast && current}-->
-      <!--  <span class='icon text-white ctrl mr-5 d-flex align-items-center text-white' title='Cast Video [D]' data-name='toggleCast' use:click={toggleCast}>-->
+      <!--  <span class='icon text-white ctrl d-flex align-items-center text-white' title='Cast Video [D]' data-name='toggleCast' use:click={toggleCast}>-->
       <!--    {#if presentationConnection}-->
       <!--      <Cast size='2.5rem' fill='currentColor' strokeWidth={0} />-->
       <!--    {:else}-->
@@ -2030,7 +2145,7 @@
       <!--  </span>-->
       <!--{/if}-->
       {#if 'pictureInPictureEnabled' in document}
-        <span class='icon text-white ctrl mr-5 d-none align-items-center' class:d-flex={!externalPlayback} title='Popout Window [P]' data-name='togglePopout' use:click={togglePopout}>
+        <span class='icon text-white ctrl d-none align-items-center' class:d-flex={!externalPlayback} title='Popout Window [P]' data-name='togglePopout' use:click={togglePopout}>
           {#if pip}
             <PictureInPicture size='2.5rem' strokeWidth={2.5} />
           {:else}
@@ -2038,7 +2153,7 @@
           {/if}
         </span>
       {/if}
-      <span class='icon text-white ctrl mr-5 d-none align-items-center' class:d-flex={!externalPlayback} title='Fullscreen [F]' data-name='toggleFullscreen' use:click={toggleFullscreen}>
+      <span class='icon text-white ctrl d-none align-items-center' class:d-flex={!externalPlayback} title='Fullscreen [F]' data-name='toggleFullscreen' use:click={toggleFullscreen}>
         {#if isFullscreen}
           <Minimize size='2.5rem' strokeWidth={2.5} />
         {:else}

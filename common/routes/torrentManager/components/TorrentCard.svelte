@@ -1,23 +1,24 @@
-<script context='module'>
+<script>
   import { Database, Clapperboard, Projector, EllipsisVertical } from 'lucide-svelte'
   import { onDestroy, onMount } from 'svelte'
   import { settings } from '@/modules/settings.js'
-</script>
-<script>
   import { fastPrettyBytes } from '@/modules/util.js'
   import { add, stage, unload, untrack, complete, reannounce } from '@/modules/torrent.js'
   import { click } from '@/modules/lib/click.js'
   import { eta, createListener } from '@/modules/util.js'
   import { mediaCache } from '@/modules/cache.js'
+  import NestedDropdown from '@/components/overlays/NestedDropdown.svelte'
   import { anilistClient } from '@/modules/providers/anilist/anilist.js'
   import AnimeResolver from '@/modules/anime/animeresolver.js'
   import { copyToClipboard } from '@/modules/lib/clipboard.js'
   import { getId } from '@/modules/anime/animehash.js'
   import { modal } from '@/modules/navigation.js'
+
   export let data
   export let current = false
   export let completed = false
   export let disableRescan = false
+  export let containerEl
 
   const infoHash = data.infoHash
 
@@ -52,33 +53,12 @@
     else if (data.progress === 1) complete(infoHash)
   }
 
-  let options
-  function toggleDropdown () {
-    options.classList.toggle('active')
-    options.closest('.dropdown').classList.toggle('show')
-  }
-
+  let viewOptions = false
   const { reactive, init } = createListener([`react-${infoHash}`])
-  const { reactive: _reactive, init: _init } = createListener([`react-${infoHash}`])
-  onMount(() => {
-    init(true, true)
-    _init(true)
-    reactive.subscribe(value => {
-      if (!value && options) {
-        const dropdown = options.closest('.dropdown')
-        if (dropdown.classList.contains('show')) {
-          options.classList.toggle('active')
-          dropdown.classList.toggle('show')
-        }
-      }
-    })
-  })
-  onDestroy(() => {
-    init(false, true)
-    _init(false)
-  })
+  onMount(() => init(true))
+  onDestroy(() => init(false, true))
 </script>
-<div role='button' tabindex='0' class='details border-top py-20 text-wrap text-break-word d-flex {$_reactive && !current ? `` : `not-reactive`}' class:bg-error={completed && data.incomplete} class:current={current} class:option={!current} class:pointer={!current} class:not-allowed={current} aria-label={!current ? 'Play Torrent' : 'Currently Playing'} title={!current ? 'Play Torrent' : 'Currently Playing'} use:click={() => { if (!current) add(infoHash, search, infoHash) }} on:contextmenu|preventDefault={altClick}>
+<div role='button' tabindex='0' class='details border-top py-20 text-wrap text-break-word d-flex' class:not-reactive={!$reactive || current || viewOptions} class:bg-error={completed && data.incomplete} class:current={current} class:option={!current} class:pointer={!current} class:not-allowed={current} aria-label={!current ? 'Play Torrent' : 'Currently Playing'} title={!current ? 'Play Torrent' : 'Currently Playing'} use:click={() => { if (!current) add(infoHash, search, infoHash) }} on:contextmenu|preventDefault={altClick}>
   <div class='d-flex flex-row w-full load-in mw-0'>
     <div class='p-5 ml-20 name mw-150 flex-1 w-auto d-flex flex-column'>
       {#if resolvedId && $mediaCache[resolvedId]}
@@ -105,40 +85,64 @@
     <div class='p-5 w-150 d-none d-md-block'>{completed ? '—' : data.numLeechers || 0}<span class='text-muted text-nowrap' class:d-none={completed}>{` (${data.numPeers || 0})`}</span></div>
     <div class='p-5 w-115 d-none d-md-block'>{data.eta > 0 && data.progress < 1 ? eta(new Date(Date.now() + data.eta)) : '∞'}</div>
   </div>
-  <div class='dropdown react-{infoHash} with-arrow right-0 mr-5 mr-md-20 w-40 h-auto' use:click={toggleDropdown}>
-    <span bind:this={options} class='btn btn-square h-full bg-transparent shadow-none border-0 options d-flex align-items-center muted justify-content-center flex-shrink-0 h-full w-40' title='Options'><EllipsisVertical size='2rem' /></span>
-    <div class='dropdown-menu dropdown-menu-right pt-5 pb-5 ml-10 text-capitalize w-auto hm-400 text-nowrap'>
-      <div role='button' class='pointer d-none align-items-center justify-content-center font-size-16 rounded option details py-5 px-10' class:d-flex={!current} aria-label='Play Torrent' title='Play Torrent' use:click={() => { add(infoHash, search, infoHash); toggleDropdown() }}>
-        Play
-      </div>
-      <div role='button' class='pointer d-flex align-items-center justify-content-center font-size-16 rounded option details py-5 px-10' aria-label='Untrack Torrent' title='Untrack Torrent' use:click={() => { untrack(infoHash); toggleDropdown() }}>
-        Untrack
-      </div>
-      <div role='button' class='pointer d-none align-items-center justify-content-center font-size-16 rounded option details py-5 px-10' class:d-flex={resolvedId && $mediaCache[resolvedId]} aria-label='View Media' title='View Media' use:click={() => { viewMedia(); toggleDropdown() }}>
-        View Media
-      </div>
-      <div role='button' class='pointer d-none align-items-center justify-content-center font-size-16 rounded option details py-5 px-10' class:d-flex={!completed} aria-label='Reannounce' title='Reannounce' use:click={() => { reannounce(infoHash); toggleDropdown() }}>
-        Reannounce
-      </div>
-      <div role='button' class='pointer d-none align-items-center justify-content-center font-size-16 rounded option details py-5 px-10' class:d-flex={data.magnetURI} aria-label='Copy Magnet Link' title='Copy Magnet Link' use:click={() => { copyToClipboard(data.magnetURI, 'magnet URL'); toggleDropdown() }}>
-        Copy Magnet
-      </div>
-      <div role='button' class='pointer d-none align-items-center justify-content-center font-size-16 rounded option details py-5 px-10' class:d-flex={current} aria-label='Stop Playing' title='Stop Playing' use:click={() => { unload(infoHash, true); toggleDropdown() }}>
-        Stop Playing
-      </div>
-      <div role='button' class='pointer d-none align-items-center justify-content-center font-size-16 rounded option details py-5 px-10' class:d-flex={!completed && !current && data.progress === 1 && settings.value.torrentPersist} aria-label='Stop Seeding' title='Stop Seeding' use:click={() => { complete(infoHash); toggleDropdown() }}>
-        Stop Seeding
-      </div>
-      <div role='button' class='pointer d-none align-items-center justify-content-center font-size-16 rounded option details py-5 px-10' class:d-flex={!completed && !current && data.progress < 1 && settings.value.torrentPersist} aria-label='Stop Download' title='Stop Download' use:click={() => { unload(infoHash, true); toggleDropdown() }}>
-        Stop Download
-      </div>
-      <div role='button' class='pointer d-none align-items-center justify-content-center font-size-16 rounded option details py-5 px-10' class:d-flex={completed && !data.incomplete && settings.value.seedingLimit > 1 && !disableRescan} aria-label='Start Seeding' title='Start Seeding' use:click={() => { stage(infoHash, null, infoHash); toggleDropdown() }}>
-        Start Seeding
-      </div>
-      <div role='button' class='pointer d-none align-items-center justify-content-center font-size-16 rounded option details py-5 px-10' class:d-flex={completed && data.incomplete && settings.value.seedingLimit > 1 && !disableRescan} aria-label='Continue Downloading' title='Continue Downloading' use:click={() => { stage(infoHash, null, infoHash); toggleDropdown() }}>
-        Continue Downloading
-      </div>
-    </div>
+  <div class='react-{infoHash} mr-5 mr-md-20 w-40 h-auto'>
+    <NestedDropdown title='Options' direction='left' alignStart={true} panelWidth={20} panelHeightPadding={6} {containerEl} bind:isOpen={viewOptions} items={[
+        ...(!current ? [{
+          label: 'Play',
+          close: true,
+          onSelect: () => add(infoHash, search, infoHash)
+        }] : []),
+        {
+          label: 'Untrack',
+          close: true,
+          onSelect: () => untrack(infoHash)
+        },
+        ...(completed && data.incomplete && settings.value.seedingLimit > 1 && !disableRescan ? [{
+          label: 'Resume',
+          close: true,
+          onSelect: () => stage(infoHash, null, infoHash)
+        }] : []),
+        ...(current ? [{
+          label: 'Stop Playing',
+          close: true,
+          onSelect: () => unload(infoHash, true)
+        }] : []),
+        ...(!completed && !current && data.progress < 1 && settings.value.torrentPersist ? [{
+          label: 'Stop Download',
+          close: true,
+          onSelect: () => unload(infoHash, true)
+        }] : []),
+        ...(!completed && !current && data.progress === 1 && settings.value.torrentPersist ? [{
+          label: 'Stop Seeding',
+          close: true,
+          onSelect: () => complete(infoHash)
+        }] : []),
+        ...(completed && !data.incomplete && settings.value.seedingLimit > 1 && !disableRescan ? [{
+          label: 'Start Seeding',
+          close: true,
+          onSelect: () => stage(infoHash, null, infoHash)
+        }] : []),
+        { type: 'separator' },
+        ...(resolvedId && $mediaCache[resolvedId] ? [{
+          label: 'View Media',
+          close: true,
+          onSelect: () => viewMedia()
+        }] : []),
+        ...(!completed ? [{
+          label: 'Reannounce',
+          close: true,
+          onSelect: () => reannounce(infoHash)
+        }] : []),
+        ...(data.magnetURI ? [{
+          label: 'Copy Magnet',
+          close: true,
+          onSelect: () => copyToClipboard(data.magnetURI, 'magnet URL')
+        }] : [])
+      ]}>
+      <span class='btn btn-square h-full bg-transparent shadow-none border-0 options d-flex align-items-center muted justify-content-center flex-shrink-0 w-40' title='Options'>
+        <EllipsisVertical size='2rem' />
+      </span>
+    </NestedDropdown>
   </div>
 </div>
 <style>
