@@ -85,39 +85,39 @@
     <div class='p-5 w-150 d-none d-md-block'>{completed ? '—' : data.numLeechers || 0}<span class='text-muted text-nowrap' class:d-none={completed}>{` (${data.numPeers || 0})`}</span></div>
     <div class='p-5 w-115 d-none d-md-block'>{data.eta > 0 && data.progress < 1 ? eta(new Date(Date.now() + data.eta)) : '∞'}</div>
   </div>
-  <div class='react-{infoHash} mr-5 mr-md-20 w-40 h-auto'>
+  <div class='react-{infoHash} mr-5 mr-md-20 w-40 h-auto' class:d-none={!infoHash}>
     <NestedDropdown title='Options' direction='left' alignStart={true} panelWidth={20} panelHeightPadding={6} {containerEl} bind:isOpen={viewOptions} items={[
-        ...(!current ? [{
+        ...(!current && infoHash ? [{
           label: 'Play',
           close: true,
           onSelect: () => add(infoHash, search, infoHash)
         }] : []),
-        {
+        ...(infoHash ? [{
           label: 'Untrack',
           close: true,
           onSelect: () => untrack(infoHash)
-        },
-        ...(completed && data.incomplete && settings.value.seedingLimit > 1 && !disableRescan ? [{
+        }] : []),
+        ...(completed && data.incomplete && settings.value.seedingLimit > 1 && !disableRescan && infoHash ? [{
           label: 'Resume',
           close: true,
           onSelect: () => stage(infoHash, null, infoHash)
         }] : []),
-        ...(current ? [{
+        ...(current && infoHash ? [{
           label: 'Stop Playing',
           close: true,
           onSelect: () => unload(infoHash, true)
         }] : []),
-        ...(!completed && !current && data.progress < 1 && settings.value.torrentPersist ? [{
+        ...(!completed && !current && data.progress < 1 && settings.value.torrentPersist && infoHash ? [{
           label: 'Stop Download',
           close: true,
           onSelect: () => unload(infoHash, true)
         }] : []),
-        ...(!completed && !current && data.progress === 1 && settings.value.torrentPersist ? [{
+        ...(!completed && !current && data.progress === 1 && settings.value.torrentPersist && infoHash ? [{
           label: 'Stop Seeding',
           close: true,
           onSelect: () => complete(infoHash)
         }] : []),
-        ...(completed && !data.incomplete && settings.value.seedingLimit > 1 && !disableRescan ? [{
+        ...(completed && !data.incomplete && settings.value.seedingLimit > 1 && !disableRescan && infoHash ? [{
           label: 'Start Seeding',
           close: true,
           onSelect: () => stage(infoHash, null, infoHash)
@@ -128,7 +128,7 @@
           close: true,
           onSelect: () => viewMedia()
         }] : []),
-        ...(!completed ? [{
+        ...(!completed && infoHash ? [{
           label: 'Reannounce',
           close: true,
           onSelect: () => reannounce(infoHash)

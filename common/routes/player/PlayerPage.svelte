@@ -2055,8 +2055,8 @@
         </span>
       {/if}
       {#if 'audioTracks' in HTMLVideoElement.prototype && video?.audioTracks?.length > 1}
-        <NestedDropdown title='Audio Tracks' direction='top' panelWidth={17} panelHeightPadding={6} panelColor={'var(--dark-color-glass)'} containerEl={container} items={Object.values(video.audioTracks).map(track => ({
-            label: (track.language?.toUpperCase() || (!Object.values(video.audioTracks).some(_track => _track.language === 'eng' || _track.language === 'en') ? 'ENG' : track.label?.toUpperCase())) + (track.label ? ' - ' + capitalize(track.label) + ')' : ''),
+        <NestedDropdown title='Audio Tracks' direction='top' panelWidth={25} panelHeightPadding={6} panelColor={'var(--dark-color-glass)'} containerEl={container} items={Object.values(video.audioTracks).map(track => ({
+            label: (track.language?.toUpperCase() || (!Object.values(video.audioTracks).some(_track => _track.language === 'eng' || _track.language === 'en') ? 'ENG' : track.label?.toUpperCase())) + (track.label ? ' (' + capitalize(track.label) + ')' : ''),
             value: track.enabled ? '✓' : undefined,
             valueCSS: 'text-primary font-size-18 font-weight-very-bold',
             onSelect: () => selectAudio(track.id)
@@ -2067,7 +2067,7 @@
         </NestedDropdown>
       {/if}
       {#if 'videoTracks' in HTMLVideoElement.prototype && video?.videoTracks?.length > 1}
-        <NestedDropdown title='Video Tracks' direction='top' panelWidth={17} panelHeightPadding={6} panelColor={'var(--dark-color-glass)'} containerEl={container} items={Object.values(video.videoTracks).map(track => ({
+        <NestedDropdown title='Video Tracks' direction='top' panelWidth={25} panelHeightPadding={6} panelColor={'var(--dark-color-glass)'} containerEl={container} items={Object.values(video.videoTracks).map(track => ({
             label: (track.language?.toUpperCase() || (!Object.values(video.videoTracks).some(_track => _track.language === 'eng' || _track.language === 'en') ? 'ENG' : track.label?.toUpperCase())) + (track.label ? ' (' + capitalize(track.label) + ')' : ''),
             value: track.selected ? '✓' : undefined,
             valueCSS: 'text-primary font-size-18 font-weight-very-bold',
