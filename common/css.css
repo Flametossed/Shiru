@@ -2,7 +2,7 @@
   --ui-scale: 1;
   --default-html-font-size: 48%;
   --default-html-font-size-1600: 50%;
-  --default-html-font-size-1920: 62.5%;
+  --default-html-font-size-1920: 62%;
   --base-html-font-size: calc(var(--default-html-font-size) * var(--ui-scale));
   --base-html-font-size-1600: calc(var(--default-html-font-size-1600) * var(--ui-scale));
   --base-html-font-size-1920: calc(var(--default-html-font-size-1920) * var(--ui-scale));

@@ -2,6 +2,7 @@ package watch.shiru;
 
 import android.os.Bundle;
 import android.view.View;
+import android.webkit.WebSettings;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -20,6 +21,12 @@ public class MainActivity extends BridgeActivity {
     registerPlugin(FileManager.class);
 
     super.onCreate(savedInstanceState);
+
+    // WebViews default 8px minimum font size breaks percentage-based root font sizes,
+    // corrupting rem-based layout calculations.
+    WebSettings settings = getBridge().getWebView().getSettings();
+    settings.setMinimumFontSize(0);
+    settings.setMinimumLogicalFontSize(0);
 
     setupWebViewInsets();
     setupStatusBarOverlay();
