@@ -5,6 +5,7 @@ import { malDubs } from '@/modules/anime/animedubs.js'
 import { profiles } from '@/modules/settings.js'
 import { cache, mediaCache, mapStatus } from '@/modules/cache.js'
 import { getMediaMaxEp, hasZeroEpisode } from '@/modules/anime/anime.js'
+import { resetAnimeProgress } from '@/modules/anime/animeprogress.js'
 import { readNotification } from '@/modules/notification/manager.js'
 import { codes, matchKeys, isValidNumber } from '@/modules/util.js'
 import { toast } from 'svelte-sonner'
@@ -112,6 +113,7 @@ export default class Helper {
 
   static async entry(media, variables) {
     let res
+    const isRepeating = media?.mediaListEntry?.status === 'REPEATING'
     if (!variables.token) {
       res = await this.getClient().entry(variables)
       if (res?.data?.SaveMediaListEntry) {
@@ -129,6 +131,8 @@ export default class Helper {
         res = await malClient.entry(variables)
       }
     }
+    // reset progress for series if we start a new rewatch.
+    if (media && variables.status === 'REPEATING' && !isRepeating) resetAnimeProgress(media.id)
     return res
   }
 
@@ -215,6 +219,8 @@ export default class Helper {
             episodes: cachedMedia.episodes
           })
         }
+        // reset progress for series if we start a new rewatch.
+        if (variables.status === 'REPEATING' && status !== 'REPEATING') resetAnimeProgress(media.id)
         this.listToast(res, description, false)
 
         if (sync.value.length > 0) { // handle profile entry syncing

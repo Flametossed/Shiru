@@ -72,3 +72,10 @@ export function setAnimeProgress ({ name, mediaId, episode, currentTime, safedur
   // }
   write(data)
 }
+
+// reset progress
+export function resetAnimeProgress (mediaId) {
+  if (!mediaId) return
+  const data = read()
+  write(data.filter(item => item.mediaId !== mediaId))
+}
