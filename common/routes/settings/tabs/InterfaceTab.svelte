@@ -35,14 +35,12 @@
     <button type='button' use:click={() => ELECTRON.openDevTools()} class='btn btn-primary d-none align-items-center justify-content-center mt-10' class:d-flex={!SUPPORTS.isAndroid}><span class='text-truncate'>Open Devtools</span></button>
   </div>
 </SettingCard>
-{#if !SUPPORTS.isAndroid}
-  <SettingCard title='Donate Button' description='Enables the "Support This App" button on the side bar.'>
-    <div class='custom-switch fit-content'>
-      <input type='checkbox' id='donate' bind:checked={settings.donate} />
-      <label for='donate'>{settings.donate ? 'On' : 'Off'}</label>
-    </div>
-  </SettingCard>
-{/if}
+<SettingCard title='Donate Button' description='Enables the "Support This App" button on the side bar.'>
+  <div class='custom-switch fit-content'>
+    <input type='checkbox' id='donate' bind:checked={settings.donate} />
+    <label for='donate'>{settings.donate ? 'On' : 'Off'}</label>
+  </div>
+</SettingCard>
 <SettingCard title='Watch Together Button' description='Enables the Watch Together page and functionality. This is currently experimental so it may behave unexpectedly.'>
   <div class='custom-switch fit-content'>
     <input type='checkbox' id='w2g' bind:checked={settings.w2g} />
