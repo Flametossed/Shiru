@@ -27,6 +27,7 @@ public class MainActivity extends BridgeActivity {
     WebSettings settings = getBridge().getWebView().getSettings();
     settings.setMinimumFontSize(0);
     settings.setMinimumLogicalFontSize(0);
+    settings.setTextZoom(100);
 
     setupWebViewInsets();
     setupStatusBarOverlay();
