@@ -389,7 +389,7 @@
   })
 </script>
 <div bind:this={containerEl}>
-  <div class='controls w-full bg-very-dark position-sticky top-0 z-10 pt-md-wh-20 pb-10 px-30 mb-10'>
+  <div class='controls w-full bg-very-dark position-sticky top-0 z-10 pt-md-wh-20 pb-5 px-30 mb-10'>
     <div class='d-flex'>
       <h3 class='mb-0 font-weight-bold text-white title mr-5 font-scale-40'>{anilistClient.title(search?.media)}</h3>
       <button type='button' class='btn btn-square bg-dark-very-light mt-20 ml-auto d-flex align-items-center justify-content-center rounded-2 flex-shrink-0' use:click={close}><X size='1.7rem' strokeWidth='3'/></button>
@@ -497,7 +497,7 @@
       </div>
     </div>
   </div>
-  <div class='mt-10 mb-sm-10 px-30'>
+  <div class='mt-15 mb-sm-15 px-30'>
     {#await errors then errorResult}
       {#if errorResult?.errorCardOnly && $results?.resolved && !$results?.torrents?.length}
         <div class='mt-80'>
@@ -576,7 +576,7 @@
   }
 
   .controls {
-    box-shadow: 0 1.2rem 1.2rem var(--dark-color-dim);
+    box-shadow: 0 1rem 1rem var(--dark-color-dim);
   }
   .title {
     display: inline-block;

@@ -454,7 +454,7 @@
           {/if}
           {#await sanitiseTerms({ media, episode }, result.parseObject) then termObjects}
             {@const terms = termObjects?.map(term => term.term).filter((term, index, self) => index === self.findLastIndex(_term => _term.text === term.text))}
-            {#each terms as term, index}
+            {#each terms as term}
               <div class='rounded px-15 py-5 bg-very-dark text-nowrap text-white d-flex align-items-center'>
                 {term.text}
               </div>
