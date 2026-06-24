@@ -343,10 +343,11 @@ export function dedupe (entries) {
   /** @type {Record<string, Result>} */
   const deduped = {}
   for (const entry of entries) {
-    if (deduped[entry.hash] && !deduped[entry.hash]?.source?.managed) {
+    const key = entry.hash?.toLowerCase()
+    if (deduped[key] && !deduped[key]?.source?.managed) {
       const entryAccuracy = ACCURACY[entry.accuracy] ?? -1
-      const dupeAccuracy = ACCURACY[deduped[entry.hash].accuracy] ?? -1
-      const dupe = entryAccuracy > dupeAccuracy ? entry : deduped[entry.hash]
+      const dupeAccuracy = ACCURACY[deduped[key].accuracy] ?? -1
+      const dupe = entryAccuracy > dupeAccuracy ? entry : deduped[key]
       dupe.title = AnimeResolver.cleanFileName(entry.title)
       dupe.link = entry.link
       dupe.id ??= entry.id
@@ -357,14 +358,14 @@ export function dedupe (entries) {
       dupe.size ||= entry.size
       dupe.date ||= entry.date
       dupe.type ??= entry.type
-      deduped[entry.hash] = dupe
+      deduped[key] = dupe
     } else {
       entry.title = AnimeResolver.cleanFileName(entry.title)
       entry.seeders = entry.seeders && entry.seeders < 30_000 ? entry.seeders : 0
       entry.leechers = entry.leechers && entry.leechers < 30_000 ? entry.leechers : 0
       entry.downloads ||= 0
       entry.date ||= new Date(Date.now() - 1_000).toUTCString()
-      deduped[entry.hash] = entry
+      deduped[key] = entry
     }
   }
 
