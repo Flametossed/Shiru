@@ -567,6 +567,31 @@ class ExtensionManager {
         })
         return true
       }
+
+      // Register new extensions added to the manifest since last update
+      const existingIds = new Set(Object.values(currentExtensions).map(extension => extension.id))
+      const toAdd = latestValid.filter(config => !existingIds.has(config.id))
+      if (toAdd.length) {
+        debug(`Found ${toAdd.length} new extensions to add:`, toAdd.map(extension => extension.id))
+        settings.update((value) => {
+          const sourcesNew = { ...value.sourcesNew }
+          const extensionsNew = { ...value.extensionsNew }
+          toAdd.forEach(extension => {
+            const key = (extension.locale || (extension.update + '/')) + extension.id
+            sourcesNew[key] = extension
+            if (!extensionsNew[key]) {
+              const defaults = Object.fromEntries((extension.settings || []).map(settings => [settings.key, settings.default ?? null]))
+              extensionsNew[key] = { enabled: false, settings: defaults }
+            }
+          })
+          return { ...value, sourcesNew, extensionsNew }
+        })
+        toast.success(`Added ${toAdd.length} new extension${toAdd.length > 1 ? 's' : ''}`, {
+          description: toAdd.map(extension => extension.name || extension.id).join(', '),
+          duration: 10_000
+        })
+        return true
+      }
       return false
     } catch (error) {
       await printError('Extension update check failed', 'The previously cached version will be used if available', error)
