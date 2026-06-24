@@ -194,7 +194,7 @@
   }
 
   const movie = isMovie(search.media)
-  let batch = search.media.status === 'FINISHED' && (!settings.value.preferDubs || dubFinished()) && !movie
+  let batch = search.media.status === 'FINISHED' && (!settings.value.preferDubs || dubFinished()) && (!movie || getMediaMaxEp(search.media) > 1)
 
   const results = writable({})
   function addResults(newItems, source) {
