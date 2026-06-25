@@ -479,22 +479,24 @@ class ExtensionManager {
    * Updates the extension source repository if it has changed.
    *
    * @param {string} url The URL of the source repository.
-   * @returns {Promise<boolean>} True if updated, false if unchanged or failed.
+   * @returns {Promise<number>} The number of new entries added, or 0 if unchanged or failed.
    */
   async updateSources(url) {
     try {
       const repositoryManifest = await getManifest(url, true)
-      if (!repositoryManifest || !Array.isArray(repositoryManifest) || !repositoryManifest.every(entry => entry?.main && !entry?.update)) return false
+      if (!repositoryManifest || !Array.isArray(repositoryManifest) || !repositoryManifest.every(entry => entry?.main && !entry?.update)) return 0
       if (JSON.stringify(settings.value.extensionSources?.[url]) !== JSON.stringify(repositoryManifest)) {
-        settings.update(value => ({ ...value,  extensionSources: { ...(value.extensionSources || {}), [url]: repositoryManifest } }))
+        const existingMains = new Set((settings.value.extensionSources?.[url] || []).map(entry => entry.main))
+        const newCount = repositoryManifest.filter(entry => !existingMains.has(entry.main)).length
+        settings.update(value => ({ ...value, extensionSources: { ...(value.extensionSources || {}), [url]: repositoryManifest } }))
         debug(`Source repository updated: ${url}`)
-        return true
+        return newCount
       }
       debug(`Source repository unchanged: ${url}`)
-      return false
+      return 0
     } catch (error) {
       await printError('Failed to update Source Repository', `Unable to update repository for: ${url}`, error)
-      return false
+      return 0
     }
   }
 
@@ -513,7 +515,14 @@ class ExtensionManager {
       const sourceUrls = Object.keys(extensionSources || {})
       if (sourceUrls.length) {
         debug(`Checking ${sourceUrls.length} stored source repositories for updates...`)
-        await Promise.all(sourceUrls.map(url => this.updateSources(url)))
+        const newSourceCounts = await Promise.all(sourceUrls.map(url => this.updateSources(url)))
+        const totalNew = newSourceCounts.reduce((sum, count) => sum + count, 0)
+        if (totalNew > 0) {
+          toast.success(`Updated source repositor${sourceUrls.length > 1 ? 'ies' : 'y'}`, {
+            description: `${totalNew} new extension source${totalNew > 1 ? 's' : ''} available. Go to the Sources tab on the Extensions settings page to add them.`,
+            duration: 15_000
+          })
+        }
       }
 
       // Check for extension source updates
