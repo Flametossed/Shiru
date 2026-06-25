@@ -58,18 +58,20 @@
   function updateReady(version) {
     if (updateState.value !== 'ignored' && latestVersion === version && updateVersion.value !== version && (!document.fullscreenElement || page.value !== page.PLAYER)) {
       updateVersion.set(version)
-      updateState.value = 'ready'
-      if (settings.value.systemNotify || SUPPORTS.isAndroid) {
-        COMMON.notify({
-          title: 'Update Available!',
-          message: `An update to v${version}${semver.prerelease(version) ? ' (Nightly)' : ''} ${SUPPORTS.isAndroid || manualInstall ? 'is available for download and installation' : 'has been downloaded and is ready for installation'}.`,
-          button: [{ text: 'Update Now', activation: 'shiru://update/' }, { text: `What's New`, activation: 'shiru://changelog/' }],
-          activation: {
-            type: 'protocol',
-            launch: 'shiru://show/'
-          }
-        })
-      }
+      if (settings.value.updateVersion !== version) {
+        updateState.value = 'ready'
+        if (settings.value.systemNotify || SUPPORTS.isAndroid) {
+          COMMON.notify({
+            title: 'Update Available!',
+            message: `An update to v${version}${semver.prerelease(version) ? ' (Nightly)' : ''} ${SUPPORTS.isAndroid || manualInstall ? 'is available for download and installation' : 'has been downloaded and is ready for installation'}.`,
+            button: [{ text: 'Update Now', activation: 'shiru://update/' }, { text: `What's New`, activation: 'shiru://changelog/' }],
+            activation: {
+              type: 'protocol',
+              launch: 'shiru://show/'
+            }
+          })
+        }
+      } else updateState.value = 'ignored'
     }
   }
 
@@ -91,7 +93,10 @@
    */
   function close(ignored = false) {
     if (updating) return
-    if (ignored) $updateState = 'ignored'
+    if (ignored) {
+      $updateState = 'ignored'
+      settings.value.updateVersion = updateVersion.value
+    }
     modal.close(modal.UPDATE_PROMPT)
   }
 

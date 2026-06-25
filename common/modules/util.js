@@ -569,6 +569,7 @@ export const defaults = {
   uiScale: 1,
   presetTheme: 'default-dark',
   updateChannel: 'stable',
+  updateVersion: undefined,
   playerAutoplay: true,
   playerPause: true,
   playerAutocomplete: true,
