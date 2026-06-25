@@ -35,7 +35,7 @@
     <button type='button' use:click={() => ELECTRON.openDevTools()} class='btn btn-primary d-none align-items-center justify-content-center mt-10' class:d-flex={!SUPPORTS.isAndroid}><span class='text-truncate'>Open Devtools</span></button>
   </div>
 </SettingCard>
-<SettingCard title='Donate Button' description='Enables the "Support This App" button on the side bar.'>
+<SettingCard title='Donate Button' description='Enables the "Support This App" button on the bottom and side bar.'>
   <div class='custom-switch fit-content'>
     <input type='checkbox' id='donate' bind:checked={settings.donate} />
     <label for='donate'>{settings.donate ? 'On' : 'Off'}</label>

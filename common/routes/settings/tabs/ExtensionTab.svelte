@@ -180,14 +180,14 @@
           </div>
         </div>
       {:else}
-        {#each Object.values(settings.sourcesNew).sort((a, b) => (settings.extensionsNew[(b?.locale || (b?.update + '/')) + b?.id]?.enabled ? 1 : 0) - (settings.extensionsNew[(a?.locale || (a?.update + '/')) + a?.id]?.enabled ? 1 : 0)) as extension (( extension?.locale || (extension?.update + '/')) + extension?.id)}
+        {#each Object.values(settings.sourcesNew).sort((a, b) => (settings.extensionsNew[(b?.locale || ([b?.update].flat()[0] + '/')) + b?.id]?.enabled ? 1 : 0) - (settings.extensionsNew[(a?.locale || ([a?.update].flat()[0] + '/')) + a?.id]?.enabled ? 1 : 0)) as extension ((extension?.locale || ([extension?.update].flat()[0] + '/')) + extension?.id)}
           {#if !extension?.nsfw || (settings.adult !== 'none')}
-            {@const key = (extension?.locale || (extension?.update + '/')) + extension?.id}
+            {@const key = (extension?.locale || ([extension?.update].flat()[0] + '/')) + extension?.id}
             {@const enabled = settings.extensionsNew[key]?.enabled}
             {@const isActive = extensionManager.isActive(key)}
             {@const isInactive = $status !== 'offline' && extensionManager.isInactive(key)}
             {@const extensionName = `${(extension?.name || extension?.id).slice(0, 25)}${extension?.name?.length > 25 ? '...' : ''}`}
-            <div class='card m-0 p-15 mb-10 bg-dark-light border position-relative' style='border-color: {stringToHex(extension?.locale || extension?.update)} !important' class:extension-disabled={!settings.extensionsNew[key]?.enabled} class:extension-error={isInactive}>
+            <div class='card m-0 p-15 mb-10 bg-dark-light border position-relative' style='border-color: {stringToHex(extension?.locale || [extension?.update].flat()[0])} !important' class:extension-disabled={!settings.extensionsNew[key]?.enabled} class:extension-error={isInactive}>
               {#if enabled && isInactive}
                 <button class='btn position-absolute d-flex align-items-center justify-content-center border-0 p-0 z-10 bg-transparent icon-container' disabled={pendingSource} class:cursor-wait={pendingSource} data-toggle='tooltip' data-placement='right' data-title='Extension failed to validate. Click to retry.' use:click={() => validateExtension(key)}>
                   <div class='d-flex align-items-center justify-content-center error-indicator' style='color: var(--danger-color)'><TriangleAlert size='3.6rem' fill='var(--dark-color-light)'/></div>
@@ -362,7 +362,7 @@
   </div>
   <div class='wm-1200'>
     {#if Object.values(settings.sourcesNew)?.length}
-      {#each Object.entries(Object.values(settings.sourcesNew).reduce((a, { update, locale }) => { if (!a[update]) a[update] = { count: 0, locale }; a[update].count += 1; return a }, {})).map(([host, { count, locale }]) => ({ host, count, locale })) as extension}
+      {#each Object.entries(Object.values(settings.sourcesNew).reduce((a, { update, locale }) => { if (!a[[update].flat()[0]]) a[[update].flat()[0]] = { count: 0, locale }; a[[update].flat()[0]].count += 1; return a }, {})).map(([host, { count, locale }]) => ({ host, count, locale })) as extension}
         <div class='d-flex align-items-center bg-dark-light border rounded-2 p-10 mb-10' style='border-color: {stringToHex(extension?.locale || extension?.host)} !important'>
           <div class='d-flex align-items-center ml-10'>
             {#if extension?.locale}
@@ -408,7 +408,7 @@
     </div>
   {/if}
   {#if availableSources && Object.keys(availableSources)?.length}
-    {@const missingSources = Object.values(availableSources).flat().map(entry => entry.main).filter(main => !Object.values(settings.sourcesNew)?.some(existing => existing.update === main))}
+    {@const missingSources = Object.values(availableSources).flat().filter(entry => !Object.values(settings.sourcesNew).some(existing => [entry.main].flat().includes([existing.update].flat()[0]))).map(entry => [entry.main].flat()[0])}
     {#if missingSources.length}
       <div class='wm-1200'>
         <button type='button' class='btn w-full h-full p-5 rounded-2 d-flex align-items-center long-button' class:bg-dark-light={!viewSources} class:bg-primary={viewSources} use:click={() => { viewSources = !viewSources }}>
@@ -440,17 +440,11 @@
 {/if}
 
 <style>
-  .font-size-28 {
-    font-size: 2.8rem;
-  }
   .w-43 {
     width: 4.3rem;
   }
   .h-43 {
     height: 4.3rem;
-  }
-  .h-31 {
-    height: 3.1rem;
   }
   .mw-300 {
     max-width: 30rem;

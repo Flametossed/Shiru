@@ -16,80 +16,92 @@ const debug = Debug('ui:manager')
  * @returns {Worker} The created worker instance.
  */
 function createWorker(source) {
-  return new Worker(new URL('@/modules/extensions/worker.js', import.meta.url), { type: 'module', name: (source.locale || (source.update + '/')) + source.id })
+  return new Worker(new URL('@/modules/extensions/worker.js', import.meta.url), { type: 'module', name: (source.locale || ([source.update].flat()[0] + '/')) + source.id })
 }
 
 /**
  * Fetches and validates an extension manifest from a given URL.
  * Supports 'gh:', 'npm:', 'file:', 'extension:', and 'http(s)' protocols.
- * @param {string} url The manifest URL or file path.
+ * @param {string} urls The manifest URLs or file path.
  * @param {boolean} updateCheck If the reason for getting the manifest is to check for updates.
  * @returns {Promise<object[]|null>} A parsed manifest array or null on error.
  */
-async function getManifest(url, updateCheck = false) {
-  try {
-    if (url.startsWith('http')) return await (await fetch(url)).json()
-    if (/^[A-Z]:/.test(url) || url.startsWith('file:') || url.startsWith('extension:')) {
-      const localeURL = (url.startsWith('extension:') ? url.replace(/^extension:/, 'file:') : url.startsWith('file:') ? url.replace(/^file:(?!\/{3})/, 'file:///') : `file:///${url.replace(/\\/g, '/')}`).replace(/^file:\/+/, 'file:///')
-      const manifest = await (await fetch(localeURL + (!/\.json(\?|$)/i.test(localeURL) ? `${localeURL.endsWith('/') ? '' : '/'}index.json` : ''))).json()
-      const basePath = url.replace(/^extension:/, '').replace(/^file:(?!\/{3})/, '').replace(/^file:\/+/, '').replace(/\\/g, '/').replace(/^[\/]+/, '').replace(/[^/]+\.json$/, '')
-      for (const source of manifest) {
-        if (source?.id) source.locale = `extension://${basePath}${basePath.endsWith('/') ? '' : '/'}`
+async function getManifest(urls, updateCheck = false) {
+  for (const url of [urls].flat()) {
+    try {
+      if (url.startsWith('http')) return await (await fetch(url)).json()
+      if (/^[A-Z]:/.test(url) || url.startsWith('file:') || url.startsWith('extension:')) {
+        const localeURL = (url.startsWith('extension:') ? url.replace(/^extension:/, 'file:') : url.startsWith('file:') ? url.replace(/^file:(?!\/{3})/, 'file:///') : `file:///${url.replace(/\\/g, '/')}`).replace(/^file:\/+/, 'file:///')
+        const manifest = await (await fetch(localeURL + (!/\.json(\?|$)/i.test(localeURL) ? `${localeURL.endsWith('/') ? '' : '/'}index.json` : ''))).json()
+        const basePath = url.replace(/^extension:/, '').replace(/^file:(?!\/{3})/, '').replace(/^file:\/+/, '').replace(/\\/g, '/').replace(/^[\/]+/, '').replace(/[^/]+\.json$/, '')
+        for (const source of manifest) {
+          if (source?.id) source.locale = `extension://${basePath}${basePath.endsWith('/') ? '' : '/'}`
+        }
+        return manifest
       }
+      const {pathname, protocol} = new URL(url)
+      if (protocol !== 'gh:' && protocol !== 'npm:') throw new Error(`Unknown protocol for source, expected: 'gh:', 'npm:', 'file:', 'extension:', or 'http(s)'`)
+      const basePath = `https://esm.sh${protocol === 'gh:' ? '/gh' : ''}/${pathname}`
+      const response = await fetch(/\.json(\?|$)/i.test(basePath) ? basePath : `${basePath}/index.json`)
+      if (!response.ok) {
+        const error = new Error(`Unable to load manifest due to a connection issue ${response.status} ${response.statusText}`)
+        error.status = response.status
+        throw error
+      }
+      const manifest = await response.json()
+      if (!Array.isArray(manifest)) throw new Error('Manifest is not an array')
       return manifest
+    } catch (error) {
+      if (!updateCheck || !(error?.status === 429 || error?.status === 404 || error?.status === 503)) await printError('Failed to fetch Source', `Unable to load manifest for: ${url}`, error)
     }
-    const { pathname, protocol } = new URL(url)
-    if (protocol !== 'gh:' && protocol !== 'npm:') throw new Error(`Unknown protocol for source, expected: 'gh:', 'npm:', 'file:', 'extension:', or 'http(s)'`)
-    const basePath = `https://esm.sh${protocol === 'gh:' ? '/gh' : ''}/${pathname}`
-    const response = await fetch(/\.json(\?|$)/i.test(basePath) ? basePath : `${basePath}/index.json`)
-    if (!response.ok) throw new Error(`Unable to load manifest due to a connection issue ${response.status} ${response.statusText}`)
-    const manifest = await response.json()
-    if (!Array.isArray(manifest)) throw new Error('Manifest is not an array')
-    return manifest
-  } catch (error) {
-    if (!updateCheck || !(error?.status === 429 || error?.status === 503)) await printError('Failed to fetch Source', `Unable to load manifest for: ${url}`, error)
-    return null
   }
+  return null
 }
 
 /**
  * Fetches the JavaScript code for a given extension from the provided URL.
  * @param {string} name The extension name or ID.
- * @param {string} url The source URL.
+ * @param {string} urls The source URLs.
  * @returns {Promise<string|null>} The fetched extension code or null on failure.
  */
-async function getExtension(name, url) {
-  try {
-    if (url.startsWith('http')) return await (await fetch(url)).json()
-    if (url.startsWith('extension:')) return `${url}.js`
-    const parsedUrl = new URL(url)
-    const ghProtocol = parsedUrl.protocol === 'gh:'
-    if (ghProtocol || parsedUrl.protocol === 'npm:') {
-      const pathParts = parsedUrl.pathname.split('/')
-      try {
-        const response = await fetch(`${ghProtocol ? `https://esm.sh/gh/${pathParts[0]}/${pathParts[1]}` : `https://esm.sh/${pathParts[0]}`}/es2022/${pathParts.slice(ghProtocol ? 2 : 1).join('/')}.mjs`)
-        if (!response.ok) throw new Error(`Failed to load extension code for url ${url} ${response.status} ${response.statusText}`)
-        let code = await response.text()
-        if (code.includes('export * from') && code.includes('export { default } from')) {
-          const match = code.match(/from\s+["']([^"']+)["']/)
-          if (match && match[1]) {
-            const moduleResponse = await fetch(`https://esm.sh${match[1]}`)
-            if (!moduleResponse.ok) throw new Error(`Failed to resolve module ${match[1]}`)
-            code = await moduleResponse.text()
+async function getExtension(name, urls) {
+  for (const url of [urls].flat()) {
+    try {
+      if (url.startsWith('http')) return await (await fetch(url)).text()
+      if (url.startsWith('extension:')) return `${url}.js`
+      const parsedUrl = new URL(url)
+      const ghProtocol = parsedUrl.protocol === 'gh:'
+      if (ghProtocol || parsedUrl.protocol === 'npm:') {
+        const pathParts = parsedUrl.pathname.split('/')
+        try {
+          const response = await fetch(`${ghProtocol ? `https://esm.sh/gh/${pathParts[0]}/${pathParts[1]}` : `https://esm.sh/${pathParts[0]}`}/es2022/${pathParts.slice(ghProtocol ? 2 : 1).join('/')}.mjs`)
+          if (!response.ok) {
+            const error = new Error(`Failed to load extension code for url ${url} ${response.status} ${response.statusText}`)
+            error.status = response.status
+            throw error
           }
+          let code = await response.text()
+          if (code.includes('export * from') && code.includes('export { default } from')) {
+            const match = code.match(/from\s+["']([^"']+)["']/)
+            if (match && match[1]) {
+              const moduleResponse = await fetch(`https://esm.sh${match[1]}`)
+              if (!moduleResponse.ok) throw new Error(`Failed to resolve module ${match[1]}`)
+              code = await moduleResponse.text()
+            }
+          }
+          if (!code || code.trim().length === 0) throw new Error(`Failed to load extension code for url ${url}, extension code is empty`)
+          return code
+        } catch (error) {
+          await printError(`Failed to load extension ${name}`, 'Unable to fetch extension code', error)
+          continue
         }
-        if (!code || code.trim().length === 0) throw new Error(`Failed to load extension code for url ${url}, extension code is empty`)
-        return code
-      } catch (error) {
-        await printError(`Failed to load extension ${name}`, 'Unable to fetch extension code', error)
-        return null
       }
+      throw new Error(`Unknown protocol for extension, expected: 'gh:', 'npm:', 'file:', 'extension:', or 'http(s)'`)
+    } catch (error) {
+      await printError('Failed to fetch Extension', `Unable to load extension for: ${name} ${url}`, error)
     }
-    throw new Error(`Unknown protocol for extension, expected: 'gh:', 'npm:', 'file:', 'extension:', or 'http(s)'`)
-  } catch (error) {
-    await printError('Failed to fetch Extension', `Unable to load extension for: ${name} ${url}`, error)
-    return null
   }
+  return null
 }
 
 /** Manages loading, caching, and lifecycle of extensions and their workers. */
@@ -205,7 +217,7 @@ class ExtensionManager {
    */
   async getExtensionCode(key, worker) {
     const extension = settings.value.sourcesNew[key]
-    let newCode = await getExtension(extension?.name || extension?.id, (extension?.locale || (extension?.update + '/')) + extension?.main)
+    let newCode = await getExtension(extension?.name || extension?.id, [extension?.main].flat().map(main => (extension?.locale || ([extension?.update].flat()[0] + '/')) + main))
     if (newCode && typeof newCode === 'string' && newCode.trim().length > 0) {
       if (!extension.locale) {
         await cache.cacheEntry(caches.EXTENSIONS, key, { mappings: true }, newCode, Date.now() + getRandomInt(7, 14) * 24 * 60 * 60 * 1_000)
@@ -232,6 +244,7 @@ class ExtensionManager {
     Object.values(this.activeWorkers).forEach(worker => worker.terminate())
     Object.values(this.inactiveWorkers).forEach(worker => worker.terminate())
     this.activeWorkers = {}
+    this.inactiveWorkers = {}
     this.whenReady = createDeferred()
     this.loadExtensions(settings.value.sourcesNew)
   }
@@ -291,8 +304,8 @@ class ExtensionManager {
       const sourcesNew = { ...value.sourcesNew }
       const extensionsNew = { ...value.extensionsNew }
       for (const [_key, source] of Object.entries(sourcesNew)) {
-        if (source.update === extensionId) {
-          const key = (source.locale || (source.update + '/')) + source.id
+        if ([source.update].flat()[0] === extensionId) {
+          const key = (source.locale || ([source.update].flat()[0] + '/')) + source.id
           if (this.activeWorkers[key]) {
             this.activeWorkers[key].terminate()
             delete this.activeWorkers[key]
@@ -318,45 +331,51 @@ class ExtensionManager {
   async addSource(url) {
     if (this.pending.has(url)) return this.pending.get(url)
     const promise = (async () => {
-      const config = await getManifest(url)
-      if (!config) {
-        await printError('Failed to load source', '', { message: `Failed to load source: ${url} ${status.value !== 'offline' ? 'the source is not valid.' : 'no network connection!'}` })
-        this.pending.delete(url)
-        return `Failed to load extension(s) from the provided source '${url}': ${status.value !== 'offline' ? 'the source is not valid.' : 'no network connection!'}`
-      }
-      if (config.every(entry => entry?.main && !entry?.update)) { // source repository manifests
-        const current = settings.value.extensionSources?.[url]
-        if (JSON.stringify(current) !== JSON.stringify(config)) {
-          settings.update(value => ({ ...value, extensionSources: { ...(value.extensionSources || {}), [url]: config } }))
-          debug(`Stored new source repository: ${url}`)
-        } else {
-          debug(`Source repository unchanged: ${url}`)
+      try {
+        const config = await getManifest(url)
+        if (!config) {
+          await printError('Failed to load source', '', { message: `Failed to load source: ${url} ${status.value !== 'offline' ? 'the source is not valid.' : 'no network connection!'}` })
           this.pending.delete(url)
-          return `Source repository unchanged: ${url}`
+          return `Failed to load extension(s) from the provided source '${url}': ${status.value !== 'offline' ? 'the source is not valid.' : 'no network connection!'}`
         }
-      } else { // extension manifests
-        for (const extension of config) {
-          if (!this.validateConfig(extension)) {
-            await printError('Invalid extension format', '', { message: `Invalid extension config: ${url}` })
+        if (config.every(entry => entry?.main && !entry?.update)) { // source repository manifests
+          const current = settings.value.extensionSources?.[url]
+          if (JSON.stringify(current) !== JSON.stringify(config)) {
+            settings.update(value => ({ ...value, extensionSources: { ...(value.extensionSources || {}), [url]: config } }))
+            debug(`Stored new source repository: ${url}`)
+          } else {
+            debug(`Source repository unchanged: ${url}`)
             this.pending.delete(url)
-            return `Failed to load extension(s) from '${url}': invalid extension format.`
+            return `Source repository unchanged: ${url}`
           }
-        }
-        settings.update(value => {
-          const sourcesNew = { ...value.sourcesNew }
-          const extensionsNew = { ...value.extensionsNew }
-          config.forEach(extension => {
-            const key = (extension.locale || (extension.update + '/')) + extension.id
-            sourcesNew[key] = extension
-            if (!extensionsNew[key]) {
-              const defaults = Object.fromEntries((extension.settings || []).map(setting => [setting.key, setting.default ?? null]))
-              extensionsNew[key] = { enabled: false, settings: defaults }
+        } else { // extension manifests
+          for (const extension of config) {
+            if (!this.validateConfig(extension)) {
+              await printError('Invalid extension format', '', { message: `Invalid extension config: ${url}` })
+              this.pending.delete(url)
+              return `Failed to load extension(s) from '${url}': invalid extension format.`
             }
+          }
+          settings.update(value => {
+            const sourcesNew = { ...value.sourcesNew }
+            const extensionsNew = { ...value.extensionsNew }
+            config.forEach(extension => {
+              const key = (extension.locale || ([extension.update].flat()[0] + '/')) + extension.id
+              sourcesNew[key] = extension
+              if (!extensionsNew[key]) {
+                const defaults = Object.fromEntries((extension.settings || []).map(setting => [setting.key, setting.default ?? null]))
+                extensionsNew[key] = { enabled: false, settings: defaults }
+              }
+            })
+            return { ...value, sourcesNew, extensionsNew }
           })
-          return { ...value, sourcesNew, extensionsNew }
-        })
+        }
+        this.pending.delete(url)
+      } catch (error) {
+        await printError('Failed to load source', `An unexpected error occurred loading: ${url}`, error)
+        this.pending.delete(url)
+        return `Failed to load extension(s) from '${url}': ${error.message}`
       }
-      this.pending.delete(url)
     })()
     this.pending.set(url, promise)
     return promise
@@ -390,7 +409,7 @@ class ExtensionManager {
     if (!extensionIds?.length) return false
     const modules = !update ? Object.fromEntries(await Promise.all(extensionIds.map(async (id) => {
       try {
-        const cachedModule = await cache.cachedEntry(caches.EXTENSIONS, (extensions[id]?.locale || (extensions[id]?.update + '/')) + extensions[id]?.id, true)
+        const cachedModule = await cache.cachedEntry(caches.EXTENSIONS, (extensions[id]?.locale || ([extensions[id]?.update].flat()[0] + '/')) + extensions[id]?.id, true)
         if (!cachedModule || (typeof cachedModule === 'string' && cachedModule.trim().length === 0)) {
           debug(`Cached module for ${id} is invalid, will refetch`)
           return null
@@ -407,7 +426,7 @@ class ExtensionManager {
         if (!settings.value.extensionsNew[key]?.enabled) return
         if (!modules[key]) {
           const extension = extensions[key]
-          let newCode = await getExtension(extension?.name || extension?.id, (extension?.locale || (extension?.update + '/')) + extension?.main)
+          let newCode = await getExtension(extension?.name || extension?.id, [extension?.main].flat().map(main => (extension?.locale || ([extension?.update].flat()[0] + '/')) + main))
           if (newCode && typeof newCode === 'string' && newCode.trim().length > 0) {
             if (!extension.locale) {
               modules[key] = await cache.cacheEntry(caches.EXTENSIONS, key, { mappings: true }, newCode, Date.now() + getRandomInt(7, 14) * 24 * 60 * 60 * 1_000)
@@ -477,6 +496,7 @@ class ExtensionManager {
 
   /**
    * Updates the extension source repository if it has changed.
+   * TODO: Add an update field to the repository manifest, allow switching to new repository with retroactive updating of the cache, similar to extensions.
    *
    * @param {string} url The URL of the source repository.
    * @returns {Promise<number>} The number of new entries added, or 0 if unchanged or failed.
@@ -526,7 +546,7 @@ class ExtensionManager {
       }
 
       // Check for extension source updates
-      const latestManifests = await Promise.all([...new Set(Object.values(currentExtensions).map(ext => ext?.locale || ext?.update).filter(Boolean))].map(url => getManifest(url, true)))
+      const latestManifests = await Promise.all([...new Set(Object.values(currentExtensions).map(extension => extension?.locale || extension?.update).filter(Boolean))].map(url => getManifest(url, true)))
       const validManifests = latestManifests.filter(manifest => manifest != null && Array.isArray(manifest))
       if (validManifests.length === 0) {
         debug('No valid manifests retrieved during update check, skipping update')
@@ -539,7 +559,7 @@ class ExtensionManager {
         if (!current) continue
         const latest = latestValid.find(config => config.id === current.id)
         if (!latest) continue
-        if (latest.version !== current.version || latest.update !== current.update) toUpdate.push({ oldId, latest })
+        if (latest.version !== current.version || JSON.stringify([latest.update].flat()) !== JSON.stringify([current.update].flat())) toUpdate.push({ oldId, latest })
       }
       if (toUpdate.length) {
         debug(`Found ${toUpdate.length} extensions to update:`, toUpdate.map(update => update.oldId))
@@ -557,7 +577,7 @@ class ExtensionManager {
           const sourcesNew = { ...value.sourcesNew }
           const extensionsNew = { ...value.extensionsNew }
           toUpdate.forEach(({ oldId, latest }) => {
-            const newId = (latest.locale || (latest.update + '/')) + latest.id
+            const newId = (latest.locale || ([latest.update].flat()[0] + '/')) + latest.id
             sourcesNew[newId] = latest
             if (newId !== oldId) {
               if (extensionsNew[oldId]) {
@@ -586,7 +606,7 @@ class ExtensionManager {
           const sourcesNew = { ...value.sourcesNew }
           const extensionsNew = { ...value.extensionsNew }
           toAdd.forEach(extension => {
-            const key = (extension.locale || (extension.update + '/')) + extension.id
+            const key = (extension.locale || ([extension.update].flat()[0] + '/')) + extension.id
             sourcesNew[key] = extension
             if (!extensionsNew[key]) {
               const defaults = Object.fromEntries((extension.settings || []).map(settings => [settings.key, settings.default ?? null]))
@@ -680,6 +700,7 @@ class ExtensionManager {
   validateConfig(config) {
     if (!config || typeof config !== 'object') return false
     if (!['id', 'name', 'version', 'main', 'update', 'type'].every(prop => prop in config)) return false
+    if (typeof config.update !== 'string' && !(Array.isArray(config.update) && config.update.every(url => typeof url === 'string'))) return false
     if (Array.isArray(config.settings)) {
       return config.settings.every(setting => {
         if (!setting.key || !setting.label || !setting.type) return false

@@ -7,7 +7,7 @@ export type RepositoryIndex = RepositoryConfig[]
 
 // This is each entry in a repository index.json array.
 export interface RepositoryConfig {
-    main: string // Path to the extension source. Supports 'gh:username/repo/path', 'npm:package-name', or a direct URL.
+    main: string | string[] // Path to the extension source. Supports 'gh:username/repo/path', 'npm:package-name', or a direct URL. Can be an array of URLs to try in order as fallbacks.
 }
 
 // This is each entry in your index.json array.
@@ -16,7 +16,7 @@ export interface SourceConfig {
     name: string // Max 16 characters
     version: string // Semantic Version (SemVer), e.g. 0.0.1
     main: string // This should be the path to the extension code respective to your manifest e.g. 'sources/my-extension' if your code is located under the sources folder and is called my-extension.js
-    update: string // Path to the config file. Can be prefixed with: 'gh:' to load from a GitHub repository (e.g. 'gh:username/repo'), or 'npm:' to load from a npm package (e.g. 'npm:package-name')
+    update: string | string[] // Path to the config file. Can be prefixed with: 'gh:' to load from a GitHub repository (e.g. 'gh:username/repo'), or 'npm:' to load from a npm package (e.g. 'npm:package-name'). Can be an array of URLs to try in order as fallbacks.
     nsfw?: boolean // Should be set to true if the source has a possibility of returning NSFW results e.g. Hentai
     unregulated?: boolean // Should be set to true if the source freely allows uploads without registration e.g. anonymous uploads (this increases security risks we should let users know this)
     type?: 'torrent'
