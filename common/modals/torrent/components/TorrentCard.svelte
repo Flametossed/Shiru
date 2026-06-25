@@ -389,11 +389,11 @@
   <div class='d-flex pl-10 flex-column justify-content-between w-full h-auto position-relative' style='min-height: 10rem; min-width: 0;'>
     <div class='d-flex w-full'>
       {#if type === 'error'}
-        <div class='d-flex align-items-center justify-content-center mr-10' class:text-warning-dim={errorType === 'warning'} class:text-danger-dim={errorType === 'error'} title='Extension Error'>
+        <div class='d-flex align-items-center justify-content-center mr-10 z-1' class:text-warning-dim={errorType === 'warning'} class:text-danger-dim={errorType === 'error'} title='Extension Error'>
           <svelte:component this={errorType === 'warning' ? AlertCircle : TriangleAlert} size='2.5rem' />
         </div>
       {:else if result.accuracy === 'high'}
-        <div class='d-flex align-items-center justify-content-center mr-10 text-success-light' title='High Accuracy'>
+        <div class='d-flex align-items-center justify-content-center mr-10 text-success-light z-1' title='High Accuracy'>
           <BadgeCheck size='2.5rem' />
         </div>
       {/if}
@@ -408,9 +408,9 @@
         {/if}
       </div>
       {#if type !== 'error' && result.type === 'batch'}
-        <div class='d-flex ml-auto mr-10' title='Batch'><Database size='2.5rem'/></div>
+        <div class='d-flex ml-auto mr-10 z-1' title='Batch'><Database size='2.5rem'/></div>
       {/if}
-      <div class='d-flex' class:ml-auto={type === 'error' || result.type !== 'batch'} >
+      <div class='d-flex z-1' class:ml-auto={type === 'error' || result.type !== 'batch'} >
         {#if result.source?.icon}
           <img class='wh-25' src={(!result.source.icon.startsWith('http') ? 'data:image/png;base64,' : '') + result.source.icon} alt={result.source.name} title={result.source.name}>
         {:else if result.source?.managed}

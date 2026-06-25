@@ -2,7 +2,7 @@
   import { click } from '@/modules/lib/click.js'
   import SettingCard from '@/routes/settings/components/SettingCard.svelte'
   import ConfirmButton from '@/components/inputs/ConfirmButton.svelte'
-  import { stringToHex, capitalize, toFlags, debounce } from '@/modules/util.js'
+  import { stringToHex, capitalize, debounce } from '@/modules/util.js'
   import { extensionManager } from '@/modules/extensions/manager.js'
   import { status } from '@/modules/networking.js'
   import { slide } from 'svelte/transition'
@@ -186,6 +186,7 @@
             {@const enabled = settings.extensionsNew[key]?.enabled}
             {@const isActive = extensionManager.isActive(key)}
             {@const isInactive = $status !== 'offline' && extensionManager.isInactive(key)}
+            {@const extensionName = `${(extension?.name || extension?.id).slice(0, 25)}${extension?.name?.length > 25 ? '...' : ''}`}
             <div class='card m-0 p-15 mb-10 bg-dark-light border position-relative' style='border-color: {stringToHex(extension?.locale || extension?.update)} !important' class:extension-disabled={!settings.extensionsNew[key]?.enabled} class:extension-error={isInactive}>
               {#if enabled && isInactive}
                 <button class='btn position-absolute d-flex align-items-center justify-content-center border-0 p-0 z-10 bg-transparent icon-container' disabled={pendingSource} class:cursor-wait={pendingSource} data-toggle='tooltip' data-placement='right' data-title='Extension failed to validate. Click to retry.' use:click={() => validateExtension(key)}>
@@ -198,14 +199,14 @@
               {/if}
               <div class='d-flex'>
                 {#if extension?.icon}
-                  <img class='w-43 h-43' src={(!extension?.icon.startsWith('http') ? 'data:image/png;base64,' : '') + extension?.icon} alt={extension?.name} title={extension?.name}>
+                  <img class='w-43 h-43' src={(!extension?.icon.startsWith('http') && !extension?.icon.startsWith('data:image') ? 'data:image/png;base64,' : '') + extension?.icon} alt={extensionName} title={extensionName}>
                 {:else}
                   <FileQuestion size='4.3rem' />
                 {/if}
                 <div class='ml-10 mb-5 mb-md-0 w-full'>
                   <div class='d-flex'>
-                    <div class='font-size-18 font-weight-bold d-flex align-items-center text-break-word' title={extension?.name}>
-                      {(extension?.name || extension?.id).slice(0, 16)}{extension?.name?.length > 16 ? '...' : ''}
+                    <div class='font-size-18 font-weight-bold d-flex align-items-center text-break-word' title={extensionName}>
+                      {extensionName}
                     </div>
                     <div class='d-flex ml-auto pl-10 align-items-center gap-10 h-20'>
                       {#if extension?.settings?.length}
@@ -241,7 +242,6 @@
                 {#if extension?.speed}<span class='badge border-0 bg-light pl-10 pr-10 ml-10 mt-10 font-scale-16' data-toggle='tooltip' data-placement='top' data-title='How quickly query results are received'>{capitalize(extension?.speed)}</span>{/if}
                 {#if extension?.accuracy}<span class='badge border-0 bg-light pl-10 pr-10 ml-10 mt-10 font-scale-16'  data-toggle='tooltip' data-placement='top' data-title='How accurate the query results are'>{capitalize(extension?.accuracy)} Accuracy</span>{/if}
                 {#if extension?.nsfw} <div class='d-flex align-items-center' title='Query results include adult content'><Adult class='ml-10 mt-10' size='2.2rem' /></div>{/if}
-                {#each extension?.regions || [] as region}<span class='ml-10 font-twemoji font-size-28 h-31' title='Location: {region.toUpperCase() === `UN` ? `GLOBAL` : region}'>{toFlags(region)}</span>{/each}
               </div>
               {#if extension?.settings?.length && viewSettings[key]}
                 <div transition:slide={{ duration: 250, axis: 'y' }}>

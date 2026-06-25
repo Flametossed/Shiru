@@ -526,11 +526,12 @@
     {#if queries}
       {#await queries then queries}
         {#each queries as [key, extension] (key)}
+          {@const extensionName = `${(extension.name).slice(0, 25)}${extension?.name?.length > 25 ? '...' : ''}`}
           {#await extension.promise}
-            <TorrentCardSk name={extension.name} icon={extension.icon || 'none'} />
+            <TorrentCardSk name={extensionName} icon={extension.icon || 'none'} />
           {:then resolved}
             {#if !resolved?.errors?.length}
-              {addResults(resolved, { name: extension.name, icon: extension.icon })}
+              {addResults(resolved, { name: extensionName, icon: extension.icon })}
             {/if}
           {/await}
         {/each}
@@ -557,12 +558,13 @@
     {#if queries && !errorCardOnly}
       {#await queries then queries}
         {#each queries as [key, extension] (key)}
+          {@const extensionName = `${(extension.name).slice(0, 25)}${extension?.name?.length > 25 ? '...' : ''}`}
           {#await extension.promise then resolved}
             {#if resolved?.errors?.length}
-              <TorrentCard type='error' result={{ title: cleanErrorMessage(resolved.errors[0].message), source: { name: extension.name, icon: extension.icon } }} media={search.media} episode={search.episode} />
+              <TorrentCard type='error' result={{ title: cleanErrorMessage(resolved.errors[0].message), source: { name: extensionName, icon: extension.icon } }} media={search.media} episode={search.episode} />
             {/if}
           {:catch error}
-            <TorrentCard type='error' result={{ title: cleanErrorMessage(error?.message), source: { name: extension.name, icon: extension.icon } }} media={search.media} episode={search.episode} />
+            <TorrentCard type='error' result={{ title: cleanErrorMessage(error?.message), source: { name: extensionName, icon: extension.icon } }} media={search.media} episode={search.episode} />
           {/await}
         {/each}
       {/await}

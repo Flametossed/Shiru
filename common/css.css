@@ -718,10 +718,6 @@ body {
   font-weight: 900;
 }
 
-.font-twemoji {
-  font-family: 'Twemoji';
-}
-
 .bg-black {
   background: var(--black-color);
 }

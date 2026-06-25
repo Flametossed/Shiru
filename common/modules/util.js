@@ -413,10 +413,6 @@ export function capitalize(str) {
   return str?.replace(/\b\w/g, char => char.toUpperCase())
 }
 
-export function toFlags(code) {
-  return code.toUpperCase().split('').map(letter => String.fromCodePoint(0x1F1E6 + letter.charCodeAt(0) - 'A'.charCodeAt(0))).join('')
-}
-
 export function throttle (fn, time) {
   let wait = false
   return (...args) => {
