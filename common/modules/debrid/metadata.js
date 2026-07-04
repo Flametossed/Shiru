@@ -1,9 +1,15 @@
+import { Buffer } from 'buffer'
 import Metadata from 'matroska-metadata'
 import { arr2hex, hex2bin } from 'uint8-util'
 import { fontRx } from '@/modules/util.js'
 import { settings } from '@/modules/settings.js'
 import Debug from 'debug'
 const debug = Debug('ui:debrid:metadata')
+
+// ebml-iterator (via matroska-metadata) uses Node's global Buffer. The UI renderer is a
+// 'web' webpack target with no Buffer global (the WebTorrent worker is electron-renderer,
+// which has it natively), so provide the polyfill before any parsing runs.
+if (typeof globalThis.Buffer === 'undefined') globalThis.Buffer = Buffer
 
 /**
  * Builds a lazy Blob-like object backed by HTTP range requests to a direct URL.
