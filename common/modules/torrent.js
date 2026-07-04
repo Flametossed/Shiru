@@ -9,6 +9,7 @@ import { toast } from 'svelte-sonner'
 import { capitalize } from '@/modules/util.js'
 import clipboard from '@/modules/lib/clipboard.js'
 import { setHash } from '@/modules/anime/animehash.js'
+import { debridEnabled, resolveFiles } from '@/modules/debrid/index.js'
 import { TORRENT, ELECTRON } from '@/modules/bridge.js'
 import { get } from 'svelte/store'
 import Debug from 'debug'
@@ -138,7 +139,38 @@ export async function add(torrentID, search, hash, magnet, base64 = false) {
     media.value = search ? { media: (search.media || media.value?.media), episode: (search.episode || media.value?.episode), ...(media.value?.torrent ? { torrent: true } : { feed: true }) } : { torrent: true }
     if (hash && search) setHash(hash, { mediaId: search.media?.id, episode: search.episode, client: true })
     if (SUPPORTS.isAndroid && !settings.value.enableExternal) document.querySelector('.content-wrapper').requestFullscreen() // this WILL not work with auto-select torrents due to permissions check.
+    if (debridEnabled()) return streamDebrid(torrentID, hash, magnet, base64)
     TORRENT.stream(torrentID, (hash === torrentID && torrentID) || false, magnet, base64)
+  }
+}
+
+/**
+ * Resolves and streams a torrent through the configured debrid service (TorBox).
+ * Falls back to the WebTorrent client on failure when `debridFallback` is enabled.
+ * @param {string} torrentID - Magnet URI, hex info hash, or magnet string.
+ * @param {string} [hash] - Known info hash from the search result, if any.
+ * @param {boolean} [magnet] - Whether the source is a magnet link (for fallback).
+ * @param {boolean} [base64] - Whether the source is base64 encoded (for fallback).
+ */
+async function streamDebrid(torrentID, hash, magnet, base64) {
+  const toastId = toast.loading('Debrid', { description: 'Adding to TorBox…', duration: 100_000 })
+  try {
+    const _files = await resolveFiles(torrentID, hash, {
+      onStatus: (description) => toast.loading('Debrid', { id: toastId, description, duration: 100_000 })
+    })
+    files.set(_files)
+    toast.dismiss(toastId)
+    debug(`Debrid resolved ${_files.length} files`)
+  } catch (e) {
+    const description = '' + (e?.message || 'TorBox request failed.')
+    debug('Debrid failed:', description)
+    if (settings.value.debridFallback) {
+      toast.dismiss(toastId)
+      toast.warning('Debrid Unavailable', { description: `${description} Falling back to torrents…`, duration: 8_000 })
+      TORRENT.stream(torrentID, (hash === torrentID && torrentID) || false, magnet, base64)
+    } else {
+      toast.error('Debrid Error', { id: toastId, description, duration: 10_000 })
+    }
   }
 }
 export async function stage(torrentID, search, hash) {

@@ -8,9 +8,20 @@
   import ClampedNumber from '@/components/inputs/ClampedNumber.svelte'
   import SettingCard from '@/routes/settings/components/SettingCard.svelte'
   import { loadedTorrent, completedTorrents, seedingTorrents, stagingTorrents } from '@/modules/torrent.js'
+  import { testKey } from '@/modules/debrid/index.js'
   import { SUPPORTS } from '@/modules/support.js'
   export let settings
   export let requestFileAccess = () => {}
+
+  let testingDebrid = false
+  async function testDebrid() {
+    if (testingDebrid || !settings.debridApiKey?.trim()) return
+    testingDebrid = true
+    const result = await testKey(settings.debridApiKey)
+    testingDebrid = false
+    if (result.ok) toast.success('TorBox Connected', { description: result.plan != null ? `API key is valid. Plan: ${result.plan}` : 'API key is valid.', duration: 5_000 })
+    else toast.error('TorBox Error', { description: result.error, duration: 8_000 })
+  }
 
   let trackers = settings.trackers.join('\n') || ''
   const updateTrackers = debounce((event) => {
@@ -53,7 +64,39 @@
   </SettingCard>
 {/if}
 
-<h4 class='mb-10 font-weight-bold'>Client Settings</h4>
+<h4 class='mb-10 font-weight-bold'>Debrid</h4>
+<SettingCard title='Enable Debrid' description='Streams releases through a debrid service (TorBox) instead of downloading via peer-to-peer torrents. Requires an active TorBox account and API key. Cached releases stream instantly with no seeding.'>
+  <div class='custom-switch fit-content'>
+    <input type='checkbox' id='debrid-enabled' bind:checked={settings.debridEnabled} />
+    <label for='debrid-enabled'>{settings.debridEnabled ? 'On' : 'Off'}</label>
+  </div>
+</SettingCard>
+{#if settings.debridEnabled}
+  <SettingCard title='TorBox API Key' description='Your personal TorBox API key. Find it under Settings → API Keys at torbox.app. Stored locally and sent only to TorBox.'>
+    <div class='input-group mw-100 w-400 flex-nowrap'>
+      <input type='password' autocomplete='off' spellcheck='false' class='form-control bg-dark mw-100 text-truncate' bind:value={settings.debridApiKey} placeholder='TorBox API key' />
+      <div class='input-group-prepend'>
+        <button type='button' use:click={testDebrid} disabled={testingDebrid || !settings.debridApiKey?.trim()} class='btn btn-primary input-group-append d-flex align-items-center justify-content-center' title='Verify the API key'><span>{testingDebrid ? 'Testing…' : 'Test'}</span></button>
+      </div>
+    </div>
+  </SettingCard>
+  <SettingCard title='Fall Back to Torrents' description='If a release is not available on TorBox, or preparing it times out, play it through the normal WebTorrent client instead. Disable to only ever stream through debrid.'>
+    <div class='custom-switch fit-content'>
+      <input type='checkbox' id='debrid-fallback' bind:checked={settings.debridFallback} />
+      <label for='debrid-fallback'>{settings.debridFallback ? 'On' : 'Off'}</label>
+    </div>
+  </SettingCard>
+  <SettingCard title='Debrid Timeout' description='How long to wait for TorBox to prepare an uncached release before giving up (and falling back to torrents, if enabled). Cached releases are always instant.'>
+    <div class='input-group w-100 mw-full'>
+      <ClampedNumber bind:bindTo={settings.debridTimeout} min={10} max={600} class='form-control text-right bg-dark'/>
+      <div class='input-group-append'>
+        <span class='input-group-text bg-dark'>sec</span>
+      </div>
+    </div>
+  </SettingCard>
+{/if}
+
+<h4 class='mb-10 mt-20 font-weight-bold'>Client Settings</h4>
 <SettingCard title='Download Location' description={'Path to the folder used to store torrents. By default this is the TMP folder, which might lose data when your OS tries to reclaim storage.' + (SUPPORTS.isAndroid ? '\n\nIn Android, /sdcard/ is internal storage not external SD Cards and /storage/AB12-34CD/ is external storage not internal.' : '')}>
   <div class='input-group mw-100 w-400 flex-nowrap'>
     <div class='input-group-prepend'>

@@ -491,6 +491,13 @@ export default class TorrentClient extends WebTorrent {
         break
       } case 'current': {
         if (data.data) {
+          const directUrl = data.data.current?.url
+          if (typeof directUrl === 'string' && /^https?:\/\//i.test(directUrl) && !directUrl.includes('localhost')) {
+            // Debrid/direct source: there is no local torrent. The internal player streams the URL
+            // directly in the renderer; only the external player needs the worker to spawn it.
+            if (data.data.external && (SUPPORTS.isAndroid || this.player)) this.dispatch('externalReady')
+            return
+          }
           const torrent = await this.get(data.data.current.infoHash)
           if (!torrent || torrent.destroyed) return
           const found = torrent.files.find(file => file.path === data.data.current.path)
@@ -553,8 +560,15 @@ export default class TorrentClient extends WebTorrent {
         break
       } case 'externalPlay': {
         const startTime = Date.now()
-        const found = this.torrents.find(_torrent => _torrent.current)?.files?.find(file => file.path === data.data.current.path)
-        if (!found) return
+        const directUrl = data.data.current?.url
+        const isDirect = typeof directUrl === 'string' && /^https?:\/\//i.test(directUrl) && !directUrl.includes('localhost')
+        let found = null
+        let streamUrl = directUrl
+        if (!isDirect) {
+          found = this.torrents.find(_torrent => _torrent.current)?.files?.find(file => file.path === data.data.current.path)
+          if (!found) return
+          streamUrl = 'http://localhost:' + this.server.address().port + found.streamURL
+        }
         this.ipc.removeAllListeners('external-close')
         if (this.playerProcess) {
           this.playerProcess.removeAllListeners('close')
@@ -562,7 +576,7 @@ export default class TorrentClient extends WebTorrent {
           this.playerProcess = null
         }
         if (this.player) {
-          this.playerProcess = spawn(this.player, ['' + new URL('http://localhost:' + this.server.address().port + found.streamURL)])
+          this.playerProcess = spawn(this.player, ['' + new URL(streamUrl)])
           this.playerProcess.stdout.on('data', () => {})
           this.playerProcess.once('close', () => {
             if (this.destroyed) return
@@ -570,7 +584,11 @@ export default class TorrentClient extends WebTorrent {
             const seconds = (Date.now() - startTime) / 1000
             this.dispatch('externalWatched', seconds)
           })
-        } else if (SUPPORTS.isAndroid) this.dispatch('androidExternal', `intent://localhost:${this.server.address().port}${found.streamURL}#Intent;type=video/any;scheme=http;end;`)
+        } else if (SUPPORTS.isAndroid) {
+          this.dispatch('androidExternal', isDirect
+            ? `intent://${streamUrl.replace(/^https?:\/\//i, '')}#Intent;type=video/any;scheme=${streamUrl.startsWith('https') ? 'https' : 'http'};end;`
+            : `intent://localhost:${this.server.address().port}${found.streamURL}#Intent;type=video/any;scheme=http;end;`)
+        }
         break
       } case 'torrent': {
         const hash = data.data && data.data.hash
