@@ -94,6 +94,12 @@
       </div>
     </div>
   </SettingCard>
+  <SettingCard title='Embedded Subtitles' description='Extracts embedded subtitles, fonts and chapters from debrid streams. Subtitle track info, fonts and chapters are cheap, but reading every subtitle cue requires scanning the full video file in the background, which uses extra bandwidth. Disable to play with no embedded subtitles (external subtitle files are unaffected).'>
+    <div class='custom-switch fit-content'>
+      <input type='checkbox' id='debrid-subtitles' bind:checked={settings.debridSubtitles} />
+      <label for='debrid-subtitles'>{settings.debridSubtitles ? 'On' : 'Off'}</label>
+    </div>
+  </SettingCard>
 {/if}
 
 <h4 class='mb-10 mt-20 font-weight-bold'>Client Settings</h4>

@@ -596,6 +596,7 @@ export const defaults = {
   debridApiKey: '',
   debridFallback: true,
   debridTimeout: 60,
+  debridSubtitles: true,
   torrentPersist: false,
   torrentDHT: false,
   torrentPeX: false,

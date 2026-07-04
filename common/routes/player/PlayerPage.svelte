@@ -11,6 +11,7 @@
   import { writable } from 'simple-store-svelte'
   import { createEventDispatcher } from 'svelte'
   import Subtitles from '@/modules/subtitles.js'
+  import DebridMetadata from '@/modules/debrid/metadata.js'
   import { toTS, fastPrettyBytes, capitalize, matchPhrase, videoRx, isValidNumber, debounce } from '@/modules/util.js'
   import { toast } from 'svelte-sonner'
   import { getChaptersAniSkip } from '@/modules/anime/anime.js'
@@ -67,6 +68,7 @@
   let container = null
   let current = null
   let subs = null
+  let debridMeta = null
   let duration = 0.1
   let muted = false
   let wasPaused = null
@@ -222,6 +224,10 @@
       current = null
       currentTime = 0
       targetTime = 0
+      if (debridMeta) {
+        debridMeta.destroy()
+        debridMeta = null
+      }
       if (subs) {
         subs.destroy()
         subs = null
@@ -275,6 +281,10 @@
       completed = false
       subDelay = 0
       subDelayText = ''
+      if (debridMeta) {
+        debridMeta.destroy()
+        debridMeta = null
+      }
       if (subs) {
         subs.destroy()
         subs = null
@@ -288,6 +298,7 @@
     if (!externalPlayback) {
       src = file.url
       subs = new Subtitles(video, files, current, handleHeaders)
+      if (file.debrid) startDebridMetadata(file)
       video.load()
       await loadAnimeProgress()
     } else externalPlaying = false
@@ -306,6 +317,27 @@
     targetTime = 0
     launchedExternal = launchExternal
     TORRENT.setPlayback(file, settings.value.enableExternal || launchExternal)
+  }
+
+  // Debrid streams have no WebTorrent worker to extract embedded subtitles/fonts/chapters,
+  // so parse the Matroska container in the renderer over HTTP range requests and feed the
+  // results into the same Subtitles instance the worker path would have populated.
+  function startDebridMetadata (file) {
+    if (debridMeta) {
+      debridMeta.destroy()
+      debridMeta = null
+    }
+    debridMeta = new DebridMetadata(file, {
+      onTracks: (tracks) => subs?.handleTracks(tracks),
+      onSubtitle: (detail) => subs?.handleSubtitle(detail),
+      onFile: (data) => subs?.handleFile(data),
+      onChapters: (_chapters) => {
+        if (_chapters?.length) {
+          chapters = _chapters
+          embeddedChapters = _chapters
+        }
+      }
+    })
   }
 
   export let media
