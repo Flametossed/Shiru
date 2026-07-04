@@ -298,7 +298,10 @@
     if (!externalPlayback) {
       src = file.url
       subs = new Subtitles(video, files, current, handleHeaders)
-      if (file.debrid) startDebridMetadata(file)
+      if (file.debrid) {
+        startDebridMetadata(file)
+        loadDebridSidecarSubs(file)
+      }
       video.load()
       await loadAnimeProgress()
     } else externalPlaying = false
@@ -338,6 +341,25 @@
         }
       }
     })
+  }
+
+  // Fetches sidecar subtitle files (external .ass/.srt/… in a debrid pack) resolved by the
+  // debrid module and feeds them into the current Subtitles instance, the same way the worker
+  // delivers external subtitle files for torrents.
+  async function loadDebridSidecarSubs (file) {
+    if (!file.subFiles?.length) return
+    for (const sub of file.subFiles) {
+      if (current !== file || !subs) return
+      try {
+        const res = await fetch(sub.url)
+        if (!res.ok && res.status !== 206) continue
+        const data = await res.blob()
+        if (current !== file || !subs) return
+        subs.handleSubtitleFile({ name: sub.name, data })
+      } catch (e) {
+        // ignore individual sidecar failures
+      }
+    }
   }
 
   export let media

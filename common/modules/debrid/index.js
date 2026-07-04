@@ -1,5 +1,5 @@
 import { settings } from '@/modules/settings.js'
-import { videoRx, sleep } from '@/modules/util.js'
+import { videoRx, subRx, sleep } from '@/modules/util.js'
 import { hash as u8hash, text2arr } from 'uint8-util'
 import TorBox from './torbox.js'
 import Debug from 'debug'
@@ -165,6 +165,30 @@ export async function resolveFiles(torrentID, hash, { onStatus } = {}) {
     })
   }
   if (!files.length) throw new Error('TorBox did not return any stream links.')
+
+  // Resolve sidecar subtitle files (external .ass/.srt/… shipped alongside the video) and
+  // attach each to the video file(s) it belongs to, mirroring the worker's findSubtitleFiles:
+  // when there's a single video, every subtitle matches; otherwise match by video name.
+  const subEntries = (torrent.files || []).filter(f => subRx.test(basename(f)))
+  if (subEntries.length) {
+    const singleVideo = files.length === 1
+    const resolvedSubs = []
+    for (const f of subEntries) {
+      const name = basename(f)
+      try {
+        const url = await client.requestDownload(torrent.id, f.id)
+        if (url) resolvedSubs.push({ name, url })
+      } catch (e) {
+        debug('sub requestDownload failed for', name, e?.message || e)
+      }
+    }
+    for (const file of files) {
+      const videoBase = file.name.slice(0, file.name.lastIndexOf('.')) || file.name
+      file.subFiles = resolvedSubs.filter(sub => singleVideo || sub.name.includes(videoBase))
+    }
+    debug(`resolved ${resolvedSubs.length} sidecar subtitle file(s)`)
+  }
+
   debug(`resolved ${files.length} debrid files for ${hashOut}`)
   return files
 }
