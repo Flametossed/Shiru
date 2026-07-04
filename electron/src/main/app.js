@@ -7,7 +7,7 @@ import Jimp from 'jimp'
 import fs from 'fs'
 
 import { BrowserWindow, MessageChannelMain, Notification, Tray, Menu, nativeImage, app, dialog, ipcMain, powerMonitor, shell, session } from 'electron'
-import electronShutdownHandler from '@paymoapp/electron-shutdown-handler'
+import electronShutdownHandler from './shutdownHandler.js'
 
 import { development, getWindowState, saveWindowState, getDefaultBounds } from './util.js'
 import Discord from './discord.js'
