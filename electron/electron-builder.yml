@@ -5,8 +5,8 @@ extraMetadata:
   _description: &description "A personal anime library manager for watching and tracking your collection in real time. Lightweight, powerful, and paws-itively fast. No waiting required!"
 publish:
   - provider: github
-    owner: RockinChaos
-    repo: shiru
+    owner: Flametossed
+    repo: Shiru
 electronDownload:
   mirror: https://craftationgaming.com/api/packages/electron/
   customDir: "42.3.0"

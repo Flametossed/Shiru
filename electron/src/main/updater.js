@@ -118,8 +118,8 @@ export default class Updater {
       })
       if (this.isManualInstall) {
         const url = semver.valid(this.latestVersion) && semver.prerelease(this.latestVersion)
-          ? `https://github.com/RockinChaos/Shiru/releases/tag/v${this.latestVersion}`
-          : `https://github.com/RockinChaos/Shiru/releases/latest`
+          ? `https://github.com/Flametossed/Shiru/releases/tag/v${this.latestVersion}`
+          : `https://github.com/Flametossed/Shiru/releases/latest`
         shell.openExternal(url)
       }
       this.hasUpdate = false
