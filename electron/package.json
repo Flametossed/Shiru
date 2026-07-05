@@ -5,9 +5,9 @@
   "packageManager": "pnpm@10.34.1",
   "private": true,
   "author": "RockinChaos <RockinChaos@users.noreply.github.com>",
-  "description": "A personal anime library manager for watching and tracking your collection in real time. Lightweight, powerful, and paws-itively fast. No waiting required!",
+  "description": "Shiru - Kōtai: a fork of Shiru adding TorBox debrid streaming. A personal anime library manager for watching and tracking your collection in real time.",
   "main": "build/main.js",
-  "homepage": "https://github.com/RockinChaos/Shiru#readme",
+  "homepage": "https://github.com/Flametossed/Shiru#readme",
   "scripts": {
     "start": "cross-env NODE_ENV=development webpack build && concurrently --kill-others \"npm run web:watch\" \"npm run electron:start\"",
     "web:watch": "webpack serve",

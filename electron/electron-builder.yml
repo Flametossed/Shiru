@@ -1,5 +1,5 @@
-appId: com.github.rockinchaos.shiru
-productName: Shiru
+appId: com.flametossed.shiru-kotai
+productName: Shiru - Kōtai
 extraMetadata:
   _synopsis: &synopsis "A personal anime library manager."
   _description: &description "A personal anime library manager for watching and tracking your collection in real time. Lightweight, powerful, and paws-itively fast. No waiting required!"
@@ -30,24 +30,24 @@ asarUnpack: "**/*.node"
 toolsets:
   appimage: "1.0.2"
 portable:
-  artifactName: ${os}-${productName}-v${version}-portable.${ext}
+  artifactName: ${os}-Shiru-Kotai-v${version}-portable.${ext}
 nsis:
-  artifactName: ${os}-${productName}-v${version}-installer.${ext}
+  artifactName: ${os}-Shiru-Kotai-v${version}-installer.${ext}
   allowToChangeInstallationDirectory: true
   oneClick: false
 win:
-  artifactName: ${os}-${productName}-v${version}.${ext}
+  artifactName: ${os}-Shiru-Kotai-v${version}.${ext}
   icon: buildResources/icon.ico
   target:
     - nsis
     - portable
 linux:
-  artifactName: ${os}-${productName}-v${version}.${ext}
+  artifactName: ${os}-Shiru-Kotai-v${version}.${ext}
   icon: buildResources/icon.png
   category: AudioVideo;Video
   synopsis: *synopsis
   description: *description
-  maintainer: RockinChaos <RockinChaos@users.noreply.github.com>
+  maintainer: Flametossed <Flametossed@users.noreply.github.com>
   desktop:
     entry:
       Comment: *description
@@ -74,7 +74,7 @@ flatpak:
       Keywords: anime
       MimeType: x-scheme-handler/shiru;
 mac:
-  artifactName: ${os}-${productName}-v${version}.${ext}
+  artifactName: ${os}-Shiru-Kotai-v${version}.${ext}
   singleArchFiles: node_modules/+(register-scheme|utp-native|fs-native-extensions)/**
   entitlements: buildResources/entitlements.mac.plist
   category: public.app-category.video

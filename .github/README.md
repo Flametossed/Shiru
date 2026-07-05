@@ -22,6 +22,13 @@
 
 https://github.com/user-attachments/assets/3ff100f0-e008-4ff5-88f5-ad4290863f96
 
+> [!NOTE]
+> **Shiru - Kōtai** is a fork of [RockinChaos/Shiru](https://github.com/RockinChaos/Shiru) that adds **TorBox debrid streaming** (stream cached torrents directly through your debrid account, with embedded and sidecar subtitles, fonts, and chapters).
+>
+> - **Install:** grab builds from this fork's [releases](https://github.com/Flametossed/Shiru/releases/latest). It installs **side-by-side** with upstream Shiru (separate app id and data), so it will not overwrite an existing Shiru install.
+> - **Updates:** the in-app auto-updater checks **this fork's** releases only — it will not pull upstream builds, and upstream builds will not pull these.
+> - All upstream features below still apply. Full credit for Shiru goes to [RockinChaos](https://github.com/RockinChaos) and contributors.
+
 ## 📃 **About**
 
 **Shiru** is a feature-rich anime library manager built around speed, control, and a seamless viewing experience, with full mobile support. Your files play directly for near-instant playback, giving you full native video performance with no transcoding and no compression.
