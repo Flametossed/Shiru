@@ -18,7 +18,24 @@ env:
   PNPM_VERSION: '10.34.1'
 
 jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v6
+
+      - name: Create draft release if missing
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=$(node -p "require('./electron/package.json').version")
+          TAG="v$VERSION"
+          if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --draft --title "$VERSION" --notes ""
+          fi
+
   release-windows:
+    needs: create-release
     runs-on: windows-2022
 
     steps:
@@ -49,6 +66,7 @@ jobs:
           npm run publish
 
   release-linux:
+    needs: create-release
     runs-on: ubuntu-latest
 
     steps:
@@ -86,6 +104,7 @@ jobs:
           npm run publish
 
   release-macos:
+    needs: create-release
     runs-on: macos-latest
 
     steps:
