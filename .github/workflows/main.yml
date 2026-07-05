@@ -10,6 +10,9 @@ on:
       - '**.md'
       - '**.yml'
 
+permissions:
+  contents: write
+
 env:
   NODE_VERSION: '24.15.0'
   PNPM_VERSION: '10.34.1'
