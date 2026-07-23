@@ -481,7 +481,8 @@ export default class TorrentClient extends WebTorrent {
         this.dispatch('rescan_done')
         this.dispatch('info', `Rescan complete: ${missingCount} missing torrents found, ${removedCount} removed from cache.`)
         break
-      } case 'settings': {
+      } case 'updateSettings':
+      case 'settings': {
         this.settings = { ...data.data }
         this.throttleDownload(this.settings.downloadLimit)
         this.throttleUpload(this.settings.uploadLimit)
